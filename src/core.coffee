@@ -1,3 +1,9 @@
+if require?
+  _ = require('underscore')._
+  diff_match_patch = require('../lib/diff_match_patch')
+  dmp = new diff_match_patch.diff_match_patch
+
+
 Tandem =
   Op: class Op
     constructor: (@attributes = {})
@@ -239,9 +245,6 @@ Tandem =
       return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
 
     diff: (other) ->
-      diff_match_patch = require('./diff_match_patch')
-      dmp = new diff_match_patch.diff_match_patch
-
       diffToDelta = (diff) ->
         console.assert(diff.length > 0, "diffToDelta called with diff with length <= 0")
         originalLength = 0

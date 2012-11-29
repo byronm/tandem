@@ -1,8 +1,7 @@
 # Unit tests for the synchronization library, sync.coffee
 assert     = require('chai').assert
 _          = require('underscore')._
-jetsync    = require('../lib/jetsync')
-Tandem     = jetsync.Tandem
+Tandem     = require('../src/core').Tandem
 Delta      = Tandem.Delta
 InsertOp   = Tandem.InsertOp
 RetainOp   = Tandem.RetainOp
