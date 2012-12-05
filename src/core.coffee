@@ -135,7 +135,7 @@ class Delta
       length = 0
       for op in @ops
         length += op.getLength()
-      console.assert(length == @endLength, "Given end length is incorrect", this)
+      console.assert(length == @endLength, "Expecting end length of", length, this)
 
   isIdentity: ->
     if @startLength == @endLength
