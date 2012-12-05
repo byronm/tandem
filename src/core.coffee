@@ -96,14 +96,17 @@ class Op
 
 # Used to represent retains in the delta. [inclusive, exclusive)
 class RetainOp extends Op
-  constructor: (@start, @end, @attributes = {}) ->
-    console.assert(@start >= 0, "RetainOp start cannot be negative!", @start)
-    console.assert(@end >= @start, "RetainOp end must be >= start!", @start, @end)
-
   @copy: (subject) ->
     console.assert(RetainOp.isRetain(subject), "Copy called on non-retain", subject)
     attributes = _.clone(subject.attributes)
     return new RetainOp(subject.start, subject.end, attributes)
+
+  @isRetain: (r) ->
+    return r? && typeof r.start == "number" && typeof r.end == "number"
+
+  constructor: (@start, @end, @attributes = {}) ->
+    console.assert(@start >= 0, "RetainOp start cannot be negative!", @start)
+    console.assert(@end >= @start, "RetainOp end must be >= start!", @start, @end)
 
   getLength: ->
     return @end - @start
@@ -117,16 +120,16 @@ class RetainOp extends Op
   toString: ->
     return "{{#{@start} - #{@end}), #{super()}}"
 
-  @isRetain: (r) ->
-    return r? && typeof r.start == "number" && typeof r.end == "number"
-
 
 class InsertOp extends Op
-  constructor: (@value, @attributes = {}) ->
-
   @copy: (subject) ->
     attributes = _.clone(subject.attributes)
     return new InsertOp(subject.value, attributes)
+
+  @isInsert: (i) ->
+    return i? && typeof i.value == "string"
+
+  constructor: (@value, @attributes = {}) ->
 
   getAt: (start, length) ->
     return new InsertOp(@value.substring(start, length), op.attributes)
@@ -149,11 +152,42 @@ class InsertOp extends Op
   toString: ->
     return "{#{@value}, #{super()}}"
 
-  @isInsert: (i) ->
-    return i? && typeof i.value == "string"
-
 
 class Delta
+  @copy: (subject) ->
+    changes = []
+    for op in subject.ops
+      if Delta.isRetain(op)
+        changes.push(RetainOp.copy(op))
+      else
+        changes.push(InsertOp.copy(op))
+    return new Delta(subject.startLength, subject.endLength, changes)
+
+  @getIdentity: (length) ->
+    delta = new Delta(length, length, [new RetainOp(0, length)])
+    return delta
+
+  @getInitial: (contents) ->
+    return new Delta(0, contents.length, [new InsertOp(contents)])
+
+  @isDelta: (delta) ->
+    if (delta? && typeof delta == "object" && typeof delta.startLength == "number" &&
+        typeof delta.endLength == "number" && typeof delta.ops == "object")
+      for op in delta.ops
+        if !Delta.isRetain(op) && !Delta.isInsert(op)
+          return false
+      return true
+    return false
+
+  @isInsert: (change) ->
+    return InsertOp.isInsert(change)
+
+  @isRetain: (change) ->
+    return RetainOp.isRetain(change) || typeof(change) == "number"
+
+  @makeDelta: (obj) ->
+    return new Delta(obj.startLength, obj.endLength, obj.ops)
+
   constructor: (@startLength, @endLength, ops) ->
     unless ops?
       ops = @endLength
@@ -167,125 +201,22 @@ class Delta
     else
       @endLength = length
 
-  isIdentity: ->
-    if @startLength == @endLength
-      if @ops.length == 0
-        return true
-      index = 0
-      for op in @ops
-        if !RetainOp.isRetain(op) then return false
-        if op.start != index then return false
-        if !(op.numAttributes() == 0 || (op.numAttributes() == 1 && _.has(op.attributes, 'authorId')))
-          return false
-        index = op.end
-      if index != @endLength then return false
-      return true
-    return false
-
-  getOpsAt: (start, length) ->
-    changes = []
-    index = 0
-    if typeof length == 'undefined'
-      if typeof start == 'number'
-        range = new RetainOp(start, start + 1)
+  applyToText: (text) ->
+    delta = this
+    console.assert(text.length == delta.startLength, "Start length of delta: " + delta.startLength + " is not equal to the text: " + text.length)
+    appliedText = []
+    for elem in delta.ops
+      if Delta.isInsert(elem)
+        appliedText.push(elem.value)
       else
-        range = RetainOp.copy(start)
-    else
-      range = new RetainOp(start, start + length)
-    for op in @ops
-      if range.start == range.end then break
-      console.assert(Delta.isRetain(op) || Delta.isInsert(op), "Invalid change in op", this)
-      length = op.getLength()
-      if index <= range.start && range.start < index + length
-        start = Math.max(index, range.start)
-        end = Math.min(index + length, range.end)
-        if Delta.isInsert(op)
-          changes.push(new InsertOp(op.value.substring(start - index, end -
-            index), _.clone(op.attributes)))
-        else
-          changes.push(new RetainOp(start - index + op.start, end - index +
-            op.start, _.clone(op.attributes)))
-        range.start = end
-      index += length
-    return changes
-
-  @copy: (subject) ->
-    changes = []
-    for op in subject.ops
-      if Delta.isRetain(op)
-        changes.push(RetainOp.copy(op))
-      else
-        changes.push(InsertOp.copy(op))
-    return new Delta(subject.startLength, subject.endLength, changes)
-
-  @getInitial: (contents) ->
-    return new Delta(0, contents.length, [new InsertOp(contents)])
-
-  @getIdentity: (length) ->
-    delta = new Delta(length, length, [new RetainOp(0, length)])
-    return delta
-
-  @isDelta: (delta) ->
-    if (delta? && typeof delta == "object" && typeof delta.startLength == "number" &&
-        typeof delta.endLength == "number" && typeof delta.ops == "object")
-      for op in delta.ops
-        if !Delta.isRetain(op) && !Delta.isInsert(op)
-          return false
-      return true
-    return false
-
-  @makeDelta: (obj) ->
-    return new Delta(obj.startLength, obj.endLength, obj.ops)
-
-  @isInsert: (change) ->
-    return InsertOp.isInsert(change)
-
-  @isRetain: (change) ->
-    return RetainOp.isRetain(change) || typeof(change) == "number"
-
-  toString: ->
-    return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
-
-  diff: (other) ->
-    diffToDelta = (diff) ->
-      console.assert(diff.length > 0, "diffToDelta called with diff with length <= 0")
-      originalLength = 0
-      finalLength = 0
-      ops = []
-      # For each difference apply them separately so we do not disrupt the cursor
-      for [operation, value] in diff
-        switch operation
-          when diff_match_patch.DIFF_DELETE
-            # Deletes implied
-            originalLength += value.length
-          when diff_match_patch.DIFF_INSERT
-            ops.push(new InsertOp(value))
-            finalLength += value.length
-          when diff_match_patch.DIFF_EQUAL
-            ops.push(new RetainOp(originalLength, originalLength + value.length))
-            originalLength += value.length
-            finalLength += value.length
-      return new Delta(originalLength, finalLength, ops)
-
-    deltaToText = (delta) ->
-      return _.map(delta.ops, (op) ->
-        return if op.value? then op.value else ""
-      ).join('')
-
-    diffTexts = (oldText, newText) ->
-      diff = dmp.diff_main(oldText, newText)
-      if (diff.length > 2)
-        dmp.diff_cleanupEfficiency(diff)
-      return diff
-
-    textA = deltaToText(this)
-    textC = deltaToText(other)
-    unless textA == '' and textC == ''
-      diff = diffTexts(textA, textC)
-      insertDelta = diffToDelta(diff)
-    else
-      insertDelta = new Delta(0, 0, [])
-    return insertDelta
+        appliedText.push(text.substring(elem.start, elem.end))
+    result = appliedText.join("")
+    if delta.endLength != result.length
+      console.log "Delta", delta
+      console.log "text", text
+      console.log "result", result
+      console.assert(false, "End length of delta: " + delta.endLength + " is not equal to result text: " + result.length )
+    return result
 
   # Inserts in deltaB are given priority. Retains in deltaB are indexes into A,
   # and we take whatever is there (insert or retain).
@@ -376,6 +307,47 @@ class Delta
 
     deltaB = new Delta(insertDelta.startLength, insertDelta.endLength, Op.compact(ops))
     return deltaB
+
+  diff: (other) ->
+    diffToDelta = (diff) ->
+      console.assert(diff.length > 0, "diffToDelta called with diff with length <= 0")
+      originalLength = 0
+      finalLength = 0
+      ops = []
+      # For each difference apply them separately so we do not disrupt the cursor
+      for [operation, value] in diff
+        switch operation
+          when diff_match_patch.DIFF_DELETE
+            # Deletes implied
+            originalLength += value.length
+          when diff_match_patch.DIFF_INSERT
+            ops.push(new InsertOp(value))
+            finalLength += value.length
+          when diff_match_patch.DIFF_EQUAL
+            ops.push(new RetainOp(originalLength, originalLength + value.length))
+            originalLength += value.length
+            finalLength += value.length
+      return new Delta(originalLength, finalLength, ops)
+
+    deltaToText = (delta) ->
+      return _.map(delta.ops, (op) ->
+        return if op.value? then op.value else ""
+      ).join('')
+
+    diffTexts = (oldText, newText) ->
+      diff = dmp.diff_main(oldText, newText)
+      if (diff.length > 2)
+        dmp.diff_cleanupEfficiency(diff)
+      return diff
+
+    textA = deltaToText(this)
+    textC = deltaToText(other)
+    unless textA == '' and textC == ''
+      diff = diffTexts(textA, textC)
+      insertDelta = diffToDelta(diff)
+    else
+      insertDelta = new Delta(0, 0, [])
+    return insertDelta
 
   # We compute the follow according to the following rules:
   # 1. Insertions in deltaA become retained characters in the follow set
@@ -483,22 +455,50 @@ class Delta
     console.assert(Delta.isDelta(follow), "Follows returning invalid Delta", follow)
     return follow
 
-  applyToText: (text) ->
-    delta = this
-    console.assert(text.length == delta.startLength, "Start length of delta: " + delta.startLength + " is not equal to the text: " + text.length)
-    appliedText = []
-    for elem in delta.ops
-      if Delta.isInsert(elem)
-        appliedText.push(elem.value)
+  getOpsAt: (start, length) ->
+    changes = []
+    index = 0
+    if typeof length == 'undefined'
+      if typeof start == 'number'
+        range = new RetainOp(start, start + 1)
       else
-        appliedText.push(text.substring(elem.start, elem.end))
-    result = appliedText.join("")
-    if delta.endLength != result.length
-      console.log "Delta", delta
-      console.log "text", text
-      console.log "result", result
-      console.assert(false, "End length of delta: " + delta.endLength + " is not equal to result text: " + result.length )
-    return result
+        range = RetainOp.copy(start)
+    else
+      range = new RetainOp(start, start + length)
+    for op in @ops
+      if range.start == range.end then break
+      console.assert(Delta.isRetain(op) || Delta.isInsert(op), "Invalid change in op", this)
+      length = op.getLength()
+      if index <= range.start && range.start < index + length
+        start = Math.max(index, range.start)
+        end = Math.min(index + length, range.end)
+        if Delta.isInsert(op)
+          changes.push(new InsertOp(op.value.substring(start - index, end -
+            index), _.clone(op.attributes)))
+        else
+          changes.push(new RetainOp(start - index + op.start, end - index +
+            op.start, _.clone(op.attributes)))
+        range.start = end
+      index += length
+    return changes
+
+  isIdentity: ->
+    if @startLength == @endLength
+      if @ops.length == 0
+        return true
+      index = 0
+      for op in @ops
+        if !RetainOp.isRetain(op) then return false
+        if op.start != index then return false
+        if !(op.numAttributes() == 0 || (op.numAttributes() == 1 && _.has(op.attributes, 'authorId')))
+          return false
+        index = op.end
+      if index != @endLength then return false
+      return true
+    return false
+
+  toString: ->
+    return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
 
 
 # Expose this code to other files
