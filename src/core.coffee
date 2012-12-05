@@ -12,6 +12,43 @@ else
 
 
 class Op
+  @compact: (ops) ->
+    compacted = []
+    _.each(Op.normalize(ops), (op) ->
+      if compacted.length == 0
+        compacted.push(op) unless RetainOp.isRetain(op) && op.start == op.end
+      else
+        if RetainOp.isRetain(op) && op.start == op.end
+          return
+        last = _.last(compacted)
+        if Delta.isInsert(last) && Delta.isInsert(op) && last.attributesMatch(op)
+          # If two neighboring inserts, combine
+          last.value = last.value + op.value
+        else if RetainOp.isRetain(last) && RetainOp.isRetain(op) && last.end == op.start && last.attributesMatch(op)
+          # If two neighboring ranges first's end + 1 == second's start, combine
+          last.end = op.end
+        else
+          # Cannot coalesce with previous
+          compacted.push(op)
+    )
+    return compacted
+
+  @normalize: (ops) ->
+    normalizedOps = _.map(ops, (op) ->
+      switch typeof op
+        when 'string' then return new InsertOp(op)
+        when 'number' then return new RetainOp(op, op + 1)
+        when 'object'
+          if op.value?
+            return new InsertOp(op.value, op.attributes)
+          else if op.start? && op.end?
+            return new RetainOp(op.start, op.end, op.attributes)
+        else
+          return null
+    )
+    return _.reject(normalizedOps, (op) -> !op? || op.getLength() == 0)
+
+
   constructor: (@attributes = {}) ->
 
   addAttributes: (attributes) ->
@@ -117,25 +154,18 @@ class InsertOp extends Op
 
 
 class Delta
-  constructor: (@startLength, @endLength, @ops, skipNormalizing = false) ->
-    if @ops == undefined
-      @ops = @endLength
-      @endLength = _.reduce(@ops, (len, op) ->
-        return len + op.getLength()
-      , 0)
-    else if typeof @ops == 'boolean'
-      skipNormalizing = @ops
-      @ops = @endLength
-      @endLength = _.reduce(@ops, (len, op) ->
-        return len + op.getLength()
-      , 0)
-    if !skipNormalizing
-      normalized = this.normalizeChanges()
-      @ops = normalized.ops
-      length = 0
-      for op in @ops
-        length += op.getLength()
+  constructor: (@startLength, @endLength, ops) ->
+    unless ops?
+      ops = @endLength
+      @endLength = null
+    @ops = Op.compact(ops)
+    length = _.reduce(@ops, (count, op) ->
+      return count + op.getLength()
+    , 0)
+    if @endLength?
       console.assert(length == @endLength, "Expecting end length of", length, this)
+    else
+      @endLength = length
 
   isIdentity: ->
     if @startLength == @endLength
@@ -151,42 +181,6 @@ class Delta
       if index != @endLength then return false
       return true
     return false
-
-  normalizeChanges: ->
-    return Delta.copy(this) if @ops.length == 0
-    normalizedOps = []
-    for op in @ops
-      switch typeof op
-        when 'string' then normalizedOps.push(new InsertOp(op))
-        when 'number' then normalizedOps.push(new RetainOp(op, op + 1))
-        when 'object'
-          if op.value?
-            normalizedOps.push(new InsertOp(op.value, op.attributes))
-          else if op.start? && op.end?
-            normalizedOps.push(new RetainOp(op.start, op.end, op.attributes))
-    normalizedOps = _.reject(normalizedOps, (op) -> op.getLength() == 0)
-    return new Delta(this.startLength, this.endLength, normalizedOps, true)
-
-  compact: ->
-    normalized = this.normalizeChanges()
-    compacted = []
-    for op in normalized.ops
-      if compacted.length == 0
-        compacted.push(op) unless RetainOp.isRetain(op) && op.start == op.end
-      else
-        if RetainOp.isRetain(op) && op.start == op.end
-          continue
-        last = _.last(compacted)
-        if Delta.isInsert(last) && Delta.isInsert(op) && last.attributesMatch(op)
-          # If two neighboring inserts, combine
-          last.value = last.value + op.value
-        else if RetainOp.isRetain(last) && RetainOp.isRetain(op) && last.end == op.start && last.attributesMatch(op)
-          # If two neighboring ranges first's end + 1 == second's start, combine
-          last.end = op.end
-        else
-          # Cannot coalesce with previous
-          compacted.push(op)
-    return new Delta(this.startLength, this.endLength, compacted)
 
   getOpsAt: (start, length) ->
     changes = []
@@ -222,7 +216,7 @@ class Delta
         changes.push(RetainOp.copy(op))
       else
         changes.push(InsertOp.copy(op))
-    return new Delta(subject.startLength, subject.endLength, changes, true)
+    return new Delta(subject.startLength, subject.endLength, changes)
 
   @getInitial: (contents) ->
     return new Delta(0, contents.length, [new InsertOp(contents)])
@@ -240,8 +234,8 @@ class Delta
       return true
     return false
 
-  @makeDelta: (obj, skipNormalizing = false) ->
-    return new Delta(obj.startLength, obj.endLength, obj.ops, skipNormalizing)
+  @makeDelta: (obj) ->
+    return new Delta(obj.startLength, obj.endLength, obj.ops)
 
   @isInsert: (change) ->
     return InsertOp.isInsert(change)
@@ -299,10 +293,8 @@ class Delta
     console.assert(Delta.isDelta(deltaB), "Compose called when deltaB is not a Delta, type: " + typeof deltaB)
     console.assert(@endLength == deltaB.startLength, "startLength #{deltaB.startLength} / endlength #{this.endLength} mismatch")
 
-    deltaA = Delta.copy(this)
-    deltaB = Delta.copy(deltaB)
-    deltaA = deltaA.normalizeChanges()
-    deltaB = deltaB.normalizeChanges()
+    deltaA = new Delta(@startLength, @endLength, Op.normalize(@ops))
+    deltaB = new Delta(deltaB.startLength, deltaB.endLength, Op.normalize(deltaB.ops))
 
     composed = []
     for elem in deltaB.ops
@@ -320,8 +312,8 @@ class Delta
         composed = composed.concat(opsInRange)
       else
         console.assert(false, "Invalid op in deltaB when composing", deltaB)
-    deltaC = new Delta(deltaA.startLength, deltaB.endLength, composed)
-    deltaC = deltaC.compact()
+
+    deltaC = new Delta(deltaA.startLength, deltaB.endLength, Op.compact(composed))
     console.assert(Delta.isDelta(deltaC), "Composed returning invalid Delta", deltaC)
     return deltaC
 
@@ -382,8 +374,7 @@ class Delta
       offset += op.getLength()
     )
 
-    deltaB = new Delta(insertDelta.startLength, insertDelta.endLength, ops)
-    deltaB = deltaB.compact()
+    deltaB = new Delta(insertDelta.startLength, insertDelta.endLength, Op.compact(ops))
     return deltaB
 
   # We compute the follow according to the following rules:
@@ -396,10 +387,8 @@ class Delta
     console.assert(Delta.isDelta(deltaA), "Follows called when deltaA is not a Delta, type: " + typeof deltaA, deltaA)
     console.assert(aIsRemote?, "Remote delta not specified")
 
-    deltaA = Delta.copy(deltaA)
-    deltaB = Delta.copy(deltaB)
-    deltaA = deltaA.normalizeChanges()
-    deltaB = deltaB.normalizeChanges()
+    deltaA = new Delta(deltaA.startLength, deltaA.endLength, Op.normalize(deltaA.ops))
+    deltaB = new Delta(deltaB.startLength, deltaB.endLength, Op.normalize(deltaB.ops))
     followStartLength = deltaA.endLength
     followSet = []
     indexA = indexB = 0 # Tracks character offset in the 'document'
@@ -490,8 +479,7 @@ class Delta
     for elem in followSet
       followEndLength += elem.getLength()
 
-    follow = new Delta(followStartLength, followEndLength, followSet, true)
-    follow = follow.compact()
+    follow = new Delta(followStartLength, followEndLength, Op.compact(followSet))
     console.assert(Delta.isDelta(follow), "Follows returning invalid Delta", follow)
     return follow
 

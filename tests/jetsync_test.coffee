@@ -795,12 +795,12 @@ deltaBFinal = deltaB.compose(deltaAPrime)
 xA = deltaAFinal.applyToText("abc")
 xB = deltaBFinal.applyToText("abc")
 if (xA != xB)
-  console.log "DeltaA:", deltaA
-  console.log "DeltaB:", deltaB
-  console.log "deltaAPrime:", deltaAPrime
-  console.log "deltaBPrime:", deltaBPrime
-  console.log "deltaAFinal:", deltaAFinal
-  console.log "deltaBFinal:", deltaBFinal
+  console.info "DeltaA:", deltaA
+  console.info "DeltaB:", deltaB
+  console.info "deltaAPrime:", deltaAPrime
+  console.info "deltaBPrime:", deltaBPrime
+  console.info "deltaAFinal:", deltaAFinal
+  console.info "deltaBFinal:", deltaBFinal
   assert(false, "Documents diverged. xA is: " + xA + "xB is: " + xB)
 x = xA
 
@@ -848,6 +848,7 @@ insertAt = (delta, insertionPoint, insertions) ->
     charIndex += elem.getLength()
     elemIndex++
   delta.ops.splice(elemIndex, 0, new InsertOp(insertions))
+  delta.ops = Tandem.Op.compact(delta.ops)
   delta.endLength += insertions.length
 
 deleteAt = (delta, deletionPoint, numToDelete) ->
@@ -937,7 +938,7 @@ formatAt = (delta, formatPoint, numToFormat, attrs, reference) ->
     else
       ops.push(elem)
     charIndex += elem.getLength()
-  delta.ops = ops
+  delta.ops = Tandem.Op.compact(ops)
   delta.endLength = _.reduce(ops, (length, delta) ->
     return length + delta.getLength()
   , 0)
@@ -974,7 +975,6 @@ createDelta = (doc, docDelta) ->
   numChanges = Math.floor(Math.random() * 11)
   for i in [0...numChanges]
     addRandomChange(delta, docDelta)
-  delta = delta.compact()
   return delta
 
 ########################################
@@ -1060,17 +1060,14 @@ RetainOp(35, 37)]))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 insertAt(delta, 3, "abcdefg")
-delta = delta.compact()
 assert.deepEqual(delta, new Delta(0, 13, [new InsertOp("012abcdefg345")]))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 insertAt(delta, 0, "abcdefg")
-delta = delta.compact()
 assert.deepEqual(delta, new Delta(0, 13, [new InsertOp("abcdefg012345")]))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 insertAt(delta, 6, "abcdefg")
-delta = delta.compact()
 assert.deepEqual(delta, new Delta(0, 13, [new InsertOp("012345abcdefg")]))
 
 console.info ">>>>>>>>>> Testing formatAt <<<<<<<<<<<<<<<<<"
@@ -1175,7 +1172,7 @@ assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
 ##############################
 console.info ">>>>>>>>>> Fuzzing decompose <<<<<<<<<<"
 for i in [1...1000]
-  console.log(i) if i % 100 == 0
+  console.info(i) if i % 100 == 0
   numInsertions = getRandInt(1, 40)
   insertions = getRandStr(numInsertions)
   deltaA = new Delta(0, insertions.length, [new InsertOp(insertions)])
@@ -1188,13 +1185,12 @@ for i in [1...1000]
     attrs = attributes.slice(0, numAttrs)
     numToFormat = Math.floor(Math.random() * (deltaA.endLength - indexToFormat))
     formatAt(deltaA, indexToFormat, numToFormat, attrs, new Delta(0, 0, []))
-  deltaA = deltaA.compact()
 
   deltaC = Delta.copy(deltaA)
   numChanges = Math.floor(Math.random() * 11)
   for j in [0...numChanges]
     addRandomChange(deltaC, deltaA)
-  deltaC = deltaC.compact()
+  deltaC.ops = Tandem.Op.compact(deltaC.ops)
   decomposed = deltaC.decompose(deltaA)
   composed = deltaA.compose(decomposed)
   assert.deepEqual(deltaC, composed, "Decompose failed. DeltaA:
@@ -1210,7 +1206,7 @@ console.info ">>>>>>>>>> Fuzzing <<<<<<<<<<<<<<<<<"
 x = "cat"
 xDelta = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 for i in [0..1000]
-  console.log(i) if i % 100 == 0
+  console.info(i) if i % 100 == 0
   deltaA = createDelta(x, xDelta)
   deltaB = createDelta(x, xDelta)
   # 50/50 as to which client gets priority
@@ -1224,13 +1220,13 @@ for i in [0..1000]
   # After each client applies their own change, and the other client's
   # transformed change (follow), the documents should be consistent
   if (xA != xB)
-    console.log "DeltaA:", deltaA
-    console.log "DeltaB:", deltaB
-    console.log "deltaAPrime:", deltaAPrime
-    console.log "deltaBPrime:", deltaBPrime
-    console.log "deltaAFinal:", deltaAFinal
-    console.log "deltaBFinal:", deltaBFinal
+    console.info "DeltaA:", deltaA
+    console.info "DeltaB:", deltaB
+    console.info "deltaAPrime:", deltaAPrime
+    console.info "deltaBPrime:", deltaBPrime
+    console.info "deltaAFinal:", deltaAFinal
+    console.info "deltaBFinal:", deltaBFinal
     assert(false, "Documents diverged. xA is: " + xA + "xB is: " + xB)
   x = xA
   xDelta = xDelta.compose(deltaAFinal)
-console.log "All passed, ending with a document string of: #{x}!"
+console.info "All passed, ending with a document string of: #{x}!"
