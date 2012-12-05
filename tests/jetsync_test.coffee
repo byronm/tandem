@@ -1193,6 +1193,8 @@ for i in [1...1000]
   deltaC.ops = Tandem.Op.compact(deltaC.ops)
   decomposed = deltaC.decompose(deltaA)
   composed = deltaA.compose(decomposed)
+  deltaC.clearOpsCache()
+  composed.clearOpsCache()
   assert.deepEqual(deltaC, composed, "Decompose failed. DeltaA:
     #{deltaA.toString()} DeltaC: #{deltaC.toString()}.")
 

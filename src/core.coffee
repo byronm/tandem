@@ -221,6 +221,9 @@ class Delta
       console.assert(false, "End length of delta: " + delta.endLength + " is not equal to result text: " + result.length )
     return result
 
+  clearOpsCache: ->
+    @savedOpOffset = @savedOpIndex = undefined
+
   # Inserts in deltaB are given priority. Retains in deltaB are indexes into A,
   # and we take whatever is there (insert or retain).
   compose: (deltaB) ->
@@ -460,8 +463,11 @@ class Delta
 
   getOpsAt: (index, length) ->
     changes = []
-    offset = 0
-    for op in @ops
+    if @savedOpOffset? and @savedOpOffset < index
+      offset = @savedOpOffset
+    else
+      offset = @savedOpOffset = @savedOpIndex = 0
+    for op in @ops.slice(@savedOpIndex)
       break if offset >= index + length
       opLength = op.getLength()
       if index < offset + opLength
@@ -469,6 +475,8 @@ class Delta
         getLength = Math.min(opLength - start, index + length - offset - start)
         changes.push(op.getAt(start, getLength))
       offset += opLength
+      @savedOpIndex += 1
+      @savedOpOffset += opLength
     return changes
 
   isIdentity: ->
