@@ -108,6 +108,9 @@ class RetainOp extends Op
     console.assert(@end >= @start, "RetainOp end must be >= start!", @start, @end)
     @attributes = _.clone(attributes)
 
+  getAt: (start, length) ->
+    return new RetainOp(@start + start, @start + start + length, @attributes)
+
   getLength: ->
     return @end - @start
 
@@ -132,7 +135,7 @@ class InsertOp extends Op
     @attributes = _.clone(attributes)
 
   getAt: (start, length) ->
-    return new InsertOp(@value.substring(start, length), op.attributes)
+    return new InsertOp(@value.substr(start, length), @attributes)
 
   getLength: ->
     return @value.length
@@ -145,8 +148,8 @@ class InsertOp extends Op
 
   split: (offset) ->
     console.assert(offset <= @value.length, "Split called with offset beyond end of insert")
-    left = new InsertOp(@value.substring(0, offset), @attributes)
-    right = new InsertOp(@value.substring(offset), @attributes)
+    left = new InsertOp(@value.substr(0, offset), @attributes)
+    right = new InsertOp(@value.substr(offset), @attributes)
     return [left, right]
 
   toString: ->
@@ -233,7 +236,7 @@ class Delta
       if Delta.isInsert(elem)
         composed.push(elem)
       else if Delta.isRetain(elem)
-        opsInRange = deltaA.getOpsAt(elem)
+        opsInRange = deltaA.getOpsAt(elem.start, elem.end - elem.start)
         opsInRange = _.map(opsInRange, (op) ->
           if Delta.isInsert(op)
             return new InsertOp(op.value, op.composeAttributes(elem.attributes))
@@ -455,33 +458,17 @@ class Delta
     console.assert(Delta.isDelta(follow), "Follows returning invalid Delta", follow)
     return follow
 
-  getOpsAt: (startIndex, length) ->
-    unless length?
-      if typeof startIndex == 'number'
-        endIndex = startIndex + 1
-      else
-        endIndex = startIndex.end
-        startIndex = startIndex.start
-    else
-      endIndex = startIndex + length
+  getOpsAt: (index, length) ->
     changes = []
-    index = 0
+    offset = 0
     for op in @ops
-      if startIndex == endIndex then break
-      length = op.getLength()
-      if index <= startIndex && startIndex < index + length
-        start = Math.max(index, startIndex)
-        end = Math.min(index + length, endIndex)
-        if Delta.isInsert(op)
-          changes.push(new InsertOp(op.value.substring(start - index, end -
-            index), op.attributes))
-        else if Delta.isRetain(op)
-          changes.push(new RetainOp(start - index + op.start, end - index +
-          op.start, op.attributes))
-        else
-          console.error("Invalid change in op", this)
-        startIndex = end
-      index += length
+      break if offset >= index + length
+      opLength = op.getLength()
+      if index < offset + opLength
+        start = Math.max(index - offset, 0)
+        getLength = Math.min(opLength - start, index + length - offset - start)
+        changes.push(op.getAt(start, getLength))
+      offset += opLength
     return changes
 
   isIdentity: ->

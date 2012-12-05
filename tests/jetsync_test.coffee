@@ -912,7 +912,7 @@ formatAt = (delta, formatPoint, numToFormat, attrs, reference) ->
               if cur.attributes[attr]?
                 delete cur.attributes[attr]
               else
-                referenceElem = reference.getOpsAt(cur)
+                referenceElem = reference.getOpsAt(cur.start, cur.end - cur.start)
                 if referenceElem[0].attributes[attr]?
                   console.assert referenceElem[0].attributes[attr], "Boolean attribute on reference delta should only be true!"
                   cur.attributes[attr] = null
