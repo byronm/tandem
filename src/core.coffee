@@ -132,7 +132,7 @@ class InsertOp extends Op
     @attributes = _.clone(attributes)
 
   getAt: (start, length) ->
-    return new InsertOp(@value.substring(start, length), _.clone(op.attributes))
+    return new InsertOp(@value.substring(start, length), op.attributes)
 
   getLength: ->
     return @value.length
@@ -455,30 +455,32 @@ class Delta
     console.assert(Delta.isDelta(follow), "Follows returning invalid Delta", follow)
     return follow
 
-  getOpsAt: (start, length) ->
+  getOpsAt: (startIndex, length) ->
+    unless length?
+      if typeof startIndex == 'number'
+        endIndex = startIndex + 1
+      else
+        endIndex = startIndex.end
+        startIndex = startIndex.start
+    else
+      endIndex = startIndex + length
     changes = []
     index = 0
-    if typeof length == 'undefined'
-      if typeof start == 'number'
-        range = new RetainOp(start, start + 1)
-      else
-        range = RetainOp.copy(start)
-    else
-      range = new RetainOp(start, start + length)
     for op in @ops
-      if range.start == range.end then break
-      console.assert(Delta.isRetain(op) || Delta.isInsert(op), "Invalid change in op", this)
+      if startIndex == endIndex then break
       length = op.getLength()
-      if index <= range.start && range.start < index + length
-        start = Math.max(index, range.start)
-        end = Math.min(index + length, range.end)
+      if index <= startIndex && startIndex < index + length
+        start = Math.max(index, startIndex)
+        end = Math.min(index + length, endIndex)
         if Delta.isInsert(op)
           changes.push(new InsertOp(op.value.substring(start - index, end -
-            index), _.clone(op.attributes)))
-        else
+            index), op.attributes))
+        else if Delta.isRetain(op)
           changes.push(new RetainOp(start - index + op.start, end - index +
-            op.start, _.clone(op.attributes)))
-        range.start = end
+          op.start, op.attributes))
+        else
+          console.error("Invalid change in op", this)
+        startIndex = end
       index += length
     return changes
 
