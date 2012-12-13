@@ -224,12 +224,13 @@ class Delta
   clearOpsCache: ->
     @savedOpOffset = @savedOpIndex = undefined
 
+  canCompose: (delta) ->
+    return Delta.isDelta(delta) and @endLength == delta.startLength
+
   # Inserts in deltaB are given priority. Retains in deltaB are indexes into A,
   # and we take whatever is there (insert or retain).
   compose: (deltaB) ->
-    console.assert(Delta.isDelta(deltaB), "Compose called when deltaB is not a Delta, type: " + typeof deltaB)
-    console.assert(@endLength == deltaB.startLength, "startLength #{deltaB.startLength} / endlength #{this.endLength} mismatch")
-
+    console.assert(this.canCompose(deltaB), "Cannot compose delta", this, deltaB)
     deltaA = new Delta(@startLength, @endLength, Op.normalize(@ops))
     deltaB = new Delta(deltaB.startLength, deltaB.endLength, Op.normalize(deltaB.ops))
 
