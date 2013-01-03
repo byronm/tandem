@@ -1,3 +1,14 @@
+checkSendReady: ->
+  if @inFlight.isIdentity() and !@inLine.isIdentity()
+    @inFlight = @inLine
+    @inLine = Tandem.Delta.getIdentity(@inFlight.endLength)
+    @sendFn(@inFlight, @version, =>
+      @arrived = @arrived.compose(@inFlight)
+      @inFlight = Tandem.Delta.getIdentity(@arrived.endLength)
+      checkSendReady.call(this)
+    )
+
+
 class ClientEngine extends EventEmitter2
   @events:
     UPDATE: 'update'
@@ -7,20 +18,10 @@ class ClientEngine extends EventEmitter2
     @inFlight = Tandem.Delta.getIdentity(@arrived.endLength)
     @inLine = Tandem.Delta.getIdentity(@arrived.endLength)
 
-  checkSendReady: ->
-    if @inFlight.isIdentity() and !@inLine.isIdentity()
-      @inFlight = @inLine
-      @inLine = Tandem.Delta.getIdentity(@inFlight.endLength)
-      @sendFn(@inFlight, @version, =>
-        @arrived = @arrived.compose(@inFlight)
-        @inFlight = Tandem.Delta.getIdentity(@arrived.endLength)
-        this.checkSendReady()
-      )
-
   localUpdate: (delta) ->
     if @inLine.canCompose(delta)
       @inLine = @inLine.compose(delta)
-      this.checkSendReady()
+      checkSendReady.call(this)
     else
       console.error('Cannot compose inLine with delta', @inLine, delta)
 
@@ -36,6 +37,7 @@ class ClientEngine extends EventEmitter2
       console.error('Cannot compose inLine with delta', @inLine, delta)
 
   transform: (indexes) ->
+
 
 
 
