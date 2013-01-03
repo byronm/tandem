@@ -13,9 +13,13 @@ module.exports = function(grunt) {
         '# Jason Chen, Salesforce.com'
     },
     concat: {
-      dist: {
-        src: ['<banner:meta.banner>', 'src/*.coffee'],
-        dest: 'build/tandem.coffee'
+      client: {
+        src: ['<banner:meta.banner>', 'src/tandem.coffee', 'src/client-engine.coffee'],
+        dest: 'build/tandem-client.coffee'
+      },
+      server: {
+        src: ['<banner:meta.banner>', 'src/tandem.coffee', 'src/server-engine.coffee'],
+        dest: 'build/tandem-server.coffee'
       }
     },
     uglify: {}
