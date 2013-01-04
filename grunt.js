@@ -14,11 +14,11 @@ module.exports = function(grunt) {
     },
     concat: {
       client: {
-        src: ['<banner:meta.banner>', 'src/tandem.coffee', 'src/client-engine.coffee'],
+        src: ['<banner:meta.banner>', 'src/core.coffee', 'src/client/*.coffee'],
         dest: 'build/tandem-client.coffee'
       },
       server: {
-        src: ['<banner:meta.banner>', 'src/tandem.coffee', 'src/server-engine.coffee'],
+        src: ['<banner:meta.banner>', 'src/core.coffee', 'src/server/*.coffee'],
         dest: 'build/tandem-server.coffee'
       }
     },
