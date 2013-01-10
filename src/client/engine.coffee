@@ -1,4 +1,4 @@
-checkSendReady: ->
+checkSendReady = ->
   if @inFlight.isIdentity() and !@inLine.isIdentity()
     @inFlight = @inLine
     @inLine = Tandem.Delta.getIdentity(@inFlight.endLength)
@@ -27,6 +27,7 @@ class ClientEngine extends EventEmitter2
       console.error('Cannot compose inLine with delta', @inLine, delta)
 
   remoteUpdate: (delta, @version) ->
+    delta = Tandem.Delta.makeDelta(delta)
     flightDeltaFollows = delta.follows(@inFlight, false)
     textFollows = flightDeltaFollows.follows(@inLine, false)
     if @arrived.canCompose(delta)

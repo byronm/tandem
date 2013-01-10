@@ -1,3 +1,12 @@
+doSend = (route, packet, callback) ->
+  this.addStat(TandemNetworkAdapter.SENT, route)
+  @socket.emit(route, packet, (response) =>
+    this.addStat(TandemNetworkAdapter.ACKED, route)
+    console.info 'Callback:', response
+    callback.call(this, response)
+  )
+
+
 class TandemNetworkAdapter
   @ACKED    : 'acked'
   @RECIEVED : 'recieved'
@@ -23,15 +32,9 @@ class TandemNetworkAdapter
     @options['port'] = parseInt(parts[1]) if parts.length > 1
     @socket = io.connect("https://#{@host}", @options)
     @socket.on('reconnecting', =>
-      console.log 'reconnecting'
       @ready = false
     ).on('reconnect', =>
-      console.log 'reconnect'
       this.authenticate() if @ready == false
-    ).on('connect', =>
-      console.log 'connect'
-    ).on('ready', =>
-      console.log 'ready'
     )
     this.authenticate()
 
@@ -46,7 +49,6 @@ class TandemNetworkAdapter
       docId: @docId
       user: @user
     @socket.emit('auth', authPacket, (response) =>
-      console.log 'auth callback'
       if !response.error? || response.error.length == 0
         console.info "Connected!", response
         this.setReady() if this.ready == false
@@ -61,10 +63,10 @@ class TandemNetworkAdapter
     )
 
   on: (route, onCallback) ->
-    callback = (args...) =>
-      console.info "Got", route, args
+    callback = (packet) =>
+      console.info "Got", route, packet
       this.addStat(TandemNetworkAdapter.RECIEVED, route)
-      onCallback.apply(this, args) if onCallback?
+      onCallback.call(this, packet) if onCallback?
     @socket.removeListener(route, callback) if @listeners[route]?
     @listeners[route] = callback
     @socket.addListener(route, callback)
@@ -72,11 +74,7 @@ class TandemNetworkAdapter
   send: (route, packet, callback) ->
     if @ready
       console.info "Sending:", route, packet
-      this.addStat(TandemNetworkAdapter.SENT, route)
-      @socket.emit(route, packet, (args...) =>
-        this.addStat(TandemNetworkAdapter.ACKED, route)
-        callback.apply(this, args)
-      )
+      doSend.call(this, route, packet, callback)
     else
       console.info "Queued:", route, packet
       @sendQueue.push([route, packet, callback])
@@ -88,12 +86,7 @@ class TandemNetworkAdapter
       elem = @sendQueue.splice(0, 1)
       [route, packet, sendCallback] = elem[0]
       console.info "Sending from queue:", route, packet
-      this.addStat(TandemNetworkAdapter.SENT, route)
-      @socket.emit(route, packet, (args...) =>
-        this.addStat(TandemNetworkAdapter.ACKED, route)
-        sendCallback.apply(this, args)
-        callback()
-      )
+      doSend.call(this, route, packet, sendCallback)
     , (err) => 
       @ready = true
     )
