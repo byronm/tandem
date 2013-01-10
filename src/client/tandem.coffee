@@ -6,24 +6,25 @@ class TandemFile extends EventEmitter2
     LEAVE   : 'leave'
     UPDATE  : 'update'
 
-  @routes
+  @routes:
     JOIN    : 'user/join'
     LEAVE   : 'user/leave'
     SYNC    : 'editor/sync'
     UPDATE  : 'editor/update'
 
-  constructor: (fileId, @adapter, @engine) ->
-    @adapter.on(TandemFile.routes.UPDATE, (packet) =>
+  constructor: (@docId, @adapter, @engine) ->
+    @adapter.on(docId, TandemFile.routes.UPDATE, (packet) =>
       @engine.remoteUpdate(packet.delta, packet.version)
     )
 
   close: ->
+    @adapter.close()
 
   getUsers: ->
     return []
 
-  send: (type, packet, callback) ->
-    @adapter.emit(route, packet, (response) =>
+  send: (route, packet, callback) ->
+    @adapter.send(@docId, route, packet, (response) =>
       if response.error and response.error.length > 0
         this.emit(TandemFile.events.ERROR, response.error.join('. '))
       else
@@ -39,16 +40,21 @@ class TandemFile extends EventEmitter2
 
 
 class TandemClient
-  constructor: (endpointUrl) ->
-    @network = new Tandem.Network(endpointUrl)
+  DEFAULTS:
+    initial: null
+    latency: 0
+    version: 0
 
-  open: (fileId, authObj, initial = null, version = 0) ->
-    adapter = @network.open(fileId, authObj)
-    initial = Tandem.Delta.getInitial("") unless initial?
-    engine = new Tandem.ClientEngine(initial, version, (delta, version, callback) =>
-      adapter.send(TandemFile.routes.UPDATE, { delta: delta, version: version }, callback)
+  constructor: (@endpointUrl, @user) ->
+
+  open: (docId, authObj, options) ->
+    @options = _.extend({}, TandemClient.DEFAULTS, options)
+    options.initial = Tandem.Delta.getInitial("\n") unless options.initial?
+    @adapter = new Tandem.NetworkAdapter(@endpointUrl, docId, @user, authObj)
+    engine = new Tandem.ClientEngine(options.initial, options.version, (delta, version, callback) =>
+      @adapter.send(docId, TandemFile.routes.UPDATE, { delta: delta, version: version }, callback)
     )
-    return new TandemFile(fileId, adapter, engine)
+    return new TandemFile(docId, @adapter, engine)
 
 
 
