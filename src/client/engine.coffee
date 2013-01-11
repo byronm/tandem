@@ -12,10 +12,12 @@ checkSendReady = ->
 
 class ClientEngine extends EventEmitter2
   @events:
-    UPDATE: 'update'
+    ERROR  : 'engine-error'
+    UPDATE : 'update'
 
   # constructor: (Delta, Number, function(Delta delta, Number version, function callback))
   constructor: (@arrived, @version, @sendFn) ->
+    @id = _.uniqueId('engine-')
     @inFlight = Tandem.Delta.getIdentity(@arrived.endLength)
     @inLine = Tandem.Delta.getIdentity(@arrived.endLength)
 
@@ -24,7 +26,7 @@ class ClientEngine extends EventEmitter2
       @inLine = @inLine.compose(delta)
       checkSendReady.call(this)
     else
-      console.error('Cannot compose inLine with delta', @inLine, delta)
+      this.emit(ClientEngine.events.ERROR, 'Cannot compose inLine with local delta', @inLine, delta)
 
   remoteUpdate: (delta, @version) ->
     delta = Tandem.Delta.makeDelta(delta)
@@ -36,7 +38,7 @@ class ClientEngine extends EventEmitter2
       @inLine = @inLine.follows(flightDeltaFollows, true)
       this.emit(ClientEngine.events.UPDATE, textFollows)
     else
-      console.error('Cannot compose inLine with delta', @inLine, delta)
+      this.emit(ClientEngine.events.ERROR, 'Cannot compose inLine with remote delta', @inLine, delta)
 
   transform: (indexes) ->
 

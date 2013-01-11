@@ -4,6 +4,7 @@ class TandemFile extends EventEmitter2
     HEALTH  : 'health'
     JOIN    : 'join'
     LEAVE   : 'leave'
+    READY   : 'ready'
     UPDATE  : 'update'
 
   @routes:
@@ -13,11 +14,19 @@ class TandemFile extends EventEmitter2
     UPDATE  : 'editor/update'
 
   constructor: (@docId, @adapter, @engine) ->
-    @adapter.on(TandemFile.routes.UPDATE, (packet) =>
-      @engine.remoteUpdate(packet.delta, packet.version)
-    )
-    @engine.on(Tandem.ClientEngine.events.UPDATE, (delta) =>
-      this.emit(TandemFile.events.UPDATE, delta)
+    this.initListeners()
+    @adapter.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
+      console.log 'sync callback', response
+      if !response.error? or response.error.length == 0
+        if response.resync
+          console.log '2'
+          console.log 'gotta resync'
+        else
+          console.log '1'
+          @engine.remoteUpdate(response.delta, response.version)
+        console.log 'synced'
+      else
+        console.log 'shit'
     )
 
   close: ->
@@ -25,6 +34,18 @@ class TandemFile extends EventEmitter2
 
   getUsers: ->
     return []
+
+  initListeners: ->
+    @adapter.on(TandemFile.routes.UPDATE, (packet) =>
+      @engine.remoteUpdate(packet.delta, packet.version)
+    )
+    @engine.on(Tandem.ClientEngine.events.UPDATE, (delta) =>
+      this.emit(TandemFile.events.UPDATE, delta)
+    )
+    @engine.on(Tandem.ClientEngine.events.ERROR, (args) ->
+      console.log 'TESTER'
+      console.log engine, args
+    )
 
   send: (route, packet, callback) ->
     @adapter.send(@docId, route, packet, (response) =>
@@ -43,18 +64,11 @@ class TandemFile extends EventEmitter2
 
 
 class TandemClient
-  DEFAULTS:
-    initial: null
-    latency: 0
-    version: 0
-
   constructor: (@endpointUrl, @user) ->
 
-  open: (docId, authObj, options) ->
-    @options = _.extend({}, TandemClient.DEFAULTS, options)
-    options.initial = Tandem.Delta.getInitial("\n") unless options.initial?
+  open: (docId, authObj, initial, version = 0) ->
     @adapter = new Tandem.NetworkAdapter(@endpointUrl, docId, @user, authObj)
-    engine = new Tandem.ClientEngine(options.initial, options.version, (delta, version, callback) =>
+    engine = new Tandem.ClientEngine(initial, version, (delta, version, callback) =>
       @adapter.send(TandemFile.routes.UPDATE, { delta: delta, version: version }, callback)
     )
     return new TandemFile(docId, @adapter, engine)
