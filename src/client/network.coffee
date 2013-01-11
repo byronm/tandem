@@ -8,6 +8,9 @@ doSend = (route, packet, callback) ->
 
 
 class TandemNetworkAdapter
+  @events:
+    ERROR: 'adapter-error'
+
   @ACKED    : 'acked'
   @RECIEVED : 'recieved'
   @SENT     : 'sent'
@@ -22,6 +25,7 @@ class TandemNetworkAdapter
 
 
   constructor: (endpointUrl, @docId, @user, @authObj) ->
+    @id = _.uniqueId('adapter-')
     @listeners = []
     @sendQueue = []
     @ready = false

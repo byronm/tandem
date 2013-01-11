@@ -14,7 +14,7 @@ module.exports = function(grunt) {
     },
     concat: {
       client: {
-        src: ['<banner:meta.banner>', 'src/client/dependencies.coffee', 'src/core.coffee', 'src/client/{engine,network,tandem}.coffee'],
+        src: ['<banner:meta.banner>', 'src/client/dependencies.coffee', 'src/core.coffee', 'src/client/{engine,file,network,tandem}.coffee'],
         dest: 'build/tandem-client.coffee'
       },
       server: {
