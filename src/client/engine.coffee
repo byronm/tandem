@@ -13,7 +13,7 @@ checkSendReady = ->
 class ClientEngine extends EventEmitter2
   @events:
     ERROR  : 'engine-error'
-    UPDATE : 'update'
+    UPDATE : 'engine-update'
 
   # constructor: (Delta, Number, function(Delta delta, Number version, function callback))
   constructor: (@arrived, @version, @sendFn) ->

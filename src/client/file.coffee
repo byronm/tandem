@@ -1,15 +1,17 @@
 checkAdapterError = (response, callback) ->
   if !response.error? or response.error.length == 0
     if response.resync
-      this.resync()
+      resync.call(this)
     else
       callback.call(this, response)
   else
     this.emit(TandemFile.events.ERROR, response.error)
-    this.resync()
+    resync.call(this)
 
 initListeners = ->
-  @adapter.on(TandemFile.routes.UPDATE, (packet) =>
+  @adapter.on(Tandem.NetworkAdapter.events.READY, =>
+    sync.call(this)
+  ).on(TandemFile.routes.UPDATE, (packet) =>
     @engine.remoteUpdate(packet.delta, packet.version)
   ).on(Tandem.NetworkAdapter.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, this, args)
@@ -23,15 +25,22 @@ initListeners = ->
 resync = ->
   console.log 'resync'
 
+sync = ->
+  @adapter.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
+    checkAdapterError.call(this, response, (response) =>
+      @engine.remoteUpdate(response.delta, response.version)
+    )
+  , true)
+
 
 class TandemFile extends EventEmitter2
   @events:
     ERROR   : 'file-error'
-    HEALTH  : 'health'
-    JOIN    : 'join'
-    LEAVE   : 'leave'
-    READY   : 'ready'
-    UPDATE  : 'update'
+    HEALTH  : 'file-health'
+    JOIN    : 'file-join'
+    LEAVE   : 'file-leave'
+    READY   : 'file-ready'
+    UPDATE  : 'file-update'
 
   @routes:
     JOIN    : 'user/join'
@@ -41,11 +50,6 @@ class TandemFile extends EventEmitter2
 
   constructor: (@docId, @adapter, @engine) ->
     initListeners.call(this)
-    @adapter.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
-      checkAdapterError.call(this, response, (response) =>
-        @engine.remoteUpdate(response.delta, response.version)
-      )
-    )
 
   close: ->
     @adapter.close()
