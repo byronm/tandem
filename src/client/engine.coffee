@@ -40,6 +40,10 @@ class ClientEngine extends EventEmitter2
     else
       this.emit(ClientEngine.events.ERROR, 'Cannot compose inLine with remote delta', @inLine, delta)
 
+  resync: (delta, version) ->
+    decomposed = delta.decompose(@arrived)
+    this.remoteUpdate(decomposed, version)
+
   transform: (indexes) ->
 
 
