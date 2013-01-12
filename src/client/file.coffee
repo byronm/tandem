@@ -42,9 +42,15 @@ class TandemFile extends EventEmitter2
     READY   : 'file-ready'
     UPDATE  : 'file-update'
 
+  @health:
+    HEALTHY : 'healthy' 
+    WARNING : 'warning'
+    ERROR   : 'error'
+
   @routes:
     JOIN    : 'user/join'
     LEAVE   : 'user/leave'
+    RESYNC  : 'editor/resync'
     SYNC    : 'editor/sync'
     UPDATE  : 'editor/update'
 

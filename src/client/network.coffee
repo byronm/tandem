@@ -18,11 +18,13 @@ authenticate = ->
 
 doSend = (route, packet, callback) ->
   addStat.call(this, TandemNetworkAdapter.SENT, route)
-  @socket.emit(route, packet, (response) =>
-    addStat.call(this, TandemNetworkAdapter.ACKED, route)
-    console.info 'Callback:', response
-    callback.call(this, response)
-  )
+  setTimeout( => 
+    @socket.emit(route, packet, (response) =>
+      addStat.call(this, TandemNetworkAdapter.ACKED, route)
+      console.info 'Callback:', response
+      callback.call(this, response)
+    )
+  , TandemNetworkAdapter.latency)
 
 setReady = ->
   this.emit(TandemNetworkAdapter.events.READY)
@@ -57,6 +59,8 @@ class TandemNetworkAdapter extends EventEmitter2
     'reconnection limit'        : 30000
     'secure'                    : true
     'sync disconnect on unload' : false
+
+  @latency: 0
 
 
   constructor: (endpointUrl, @docId, @user, @authObj) ->
