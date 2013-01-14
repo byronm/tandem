@@ -29,6 +29,7 @@ initListeners = ->
     this.emit(TandemFile.events.UPDATE, delta)
   ).on(Tandem.ClientEngine.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, this, args)
+    resync.call(this)
   )
   this.on(TandemFile.events.HEALTH, (oldHealth, newHealth) =>
     @health = newHealth
