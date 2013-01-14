@@ -45,8 +45,11 @@ setReady = ->
 
 class TandemNetworkAdapter extends EventEmitter2
   @events:
-    ERROR: 'adapter-error'
-    READY: 'adapter-ready'
+    DISCONNECT  : 'disconnect'
+    ERROR       : 'adapter-error'
+    READY       : 'adapter-ready'
+    RECONNECT   : 'reconnect'
+    RECONNECTED : 'reconnected'
 
   @ACKED    : 'acked'
   @RECIEVED : 'recieved'

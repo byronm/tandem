@@ -11,16 +11,27 @@ initEngine = (initial, version) ->
 
 initListeners = ->
   @adapter.on(Tandem.NetworkAdapter.events.READY, =>
+    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
     sync.call(this)
   ).on(TandemFile.routes.UPDATE, (packet) =>
     @engine.remoteUpdate(packet.delta, packet.version)
+  ).on(Tandem.NetworkAdapter.events.RECONNECT, (transport, attempts) =>
+    sync.call(this)
+  ).on(Tandem.NetworkAdapter.events.RECONNECTING, (timeout, attempts) =>
+    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR) if attempts == 1
+  ).on(Tandem.NetworkAdapter.events.DISCONNECT, =>
+    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
   ).on(Tandem.NetworkAdapter.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, this, args)
+    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
   )
   @engine.on(Tandem.ClientEngine.events.UPDATE, (delta) =>
     this.emit(TandemFile.events.UPDATE, delta)
   ).on(Tandem.ClientEngine.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, this, args)
+  )
+  this.on(TandemFile.events.HEALTH, (oldHealth, newHealth) =>
+    @health = newHealth
   )
 
 resync = ->
@@ -42,6 +53,7 @@ sendUpdate = (delta, version, callback) ->
   )
 
 sync = ->
+  this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
   this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
     if response.resync
       resync.call(this)
@@ -72,6 +84,7 @@ class TandemFile extends EventEmitter2
     UPDATE  : 'editor/update'
 
   constructor: (@docId, @adapter, initial, version) ->
+    @health = TandemFile.health.WARNING
     initEngine.call(this, initial, version)
     initListeners.call(this)
 
