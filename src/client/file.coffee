@@ -11,6 +11,7 @@ initEngine = (initial, version) ->
 
 initListeners = ->
   @adapter.on(Tandem.NetworkAdapter.events.READY, =>
+    this.emit(TandemFile.events.READY)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
     sync.call(this)
   ).on(TandemFile.routes.UPDATE, (packet) =>
