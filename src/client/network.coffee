@@ -1,8 +1,3 @@
-addStat = (type, route) ->
-  @stats[type] = {} unless @stats[type]?
-  @stats[type][route] = 0  unless @stats[type][route]?
-  @stats[type][route] += 1
-
 authenticate = ->
   authPacket =
     auth: @authObj
@@ -17,10 +12,10 @@ authenticate = ->
   )
 
 doSend = (route, packet, callback) ->
-  addStat.call(this, TandemNetworkAdapter.SENT, route)
+  track.call(this, TandemNetworkAdapter.SEND, route, packet)
   setTimeout( => 
     @socket.emit(route, packet, (response) =>
-      addStat.call(this, TandemNetworkAdapter.ACKED, route)
+      track.call(this, TandemNetworkAdapter.CALLBACK, route, response)
       console.info 'Callback:', response
       callback.call(this, response)
     )
@@ -42,6 +37,15 @@ setReady = ->
     @ready = true
   )
 
+track = (type, route, packet) ->
+  @stats[type] = {} unless @stats[type]?
+  @stats[type][route] = 0  unless @stats[type][route]?
+  @stats[type][route] += 1
+  historyObj = {}
+  historyObj["#{type}: #{route}"] = packet
+  @history.push(historyObj)
+
+
 
 class TandemNetworkAdapter extends EventEmitter2
   @events:
@@ -51,9 +55,9 @@ class TandemNetworkAdapter extends EventEmitter2
     RECONNECT   : 'reconnect'
     RECONNECTED : 'reconnected'
 
-  @ACKED    : 'acked'
-  @RECIEVED : 'recieved'
-  @SENT     : 'sent'
+  @CALLBACK : 'callback'
+  @RECIEVE  : 'recieve'
+  @SEND     : 'send'
 
   @DEFAULTS :
     'force new connection'      : true
@@ -71,12 +75,16 @@ class TandemNetworkAdapter extends EventEmitter2
     @socketListeners = []
     @sendQueue = []
     @ready = false
-    @stats = {}
-    @options = _.clone(TandemNetworkAdapter.DEFAULTS)
+    @stats = 
+      sent      : {}
+      recieved  : {}
+      acked     : {}
+    @history = []
+    socketOptions = _.clone(TandemNetworkAdapter.DEFAULTS)
     parts = endpointUrl.split(':')
-    @host = parts[0]
-    @options['port'] = parseInt(parts[1]) if parts.length > 1
-    @socket = io.connect("https://#{@host}", @options)
+    host = parts[0]
+    socketOptions['port'] = parseInt(parts[1]) if parts.length > 1
+    @socket = io.connect("https://#{host}", socketOptions)
     @socket.on('reconnecting', =>
       @ready = false
     ).on('reconnect', =>
@@ -95,7 +103,7 @@ class TandemNetworkAdapter extends EventEmitter2
     else
       onSocketCallback = (packet) =>
         console.info "Got", route, packet
-        addStat.call(this, TandemNetworkAdapter.RECIEVED, route)
+        track.call(this, TandemNetworkAdapter.RECIEVE, route, packet)
         callback.call(this, packet) if callback?
       @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?
       @socketListeners[route] = onSocketCallback

@@ -30,15 +30,16 @@ class ClientEngine extends EventEmitter2
 
   remoteUpdate: (delta, @version) ->
     delta = Tandem.Delta.makeDelta(delta)
-    flightDeltaFollows = delta.follows(@inFlight, false)
-    textFollows = flightDeltaFollows.follows(@inLine, false)
     if @arrived.canCompose(delta)
       @arrived = @arrived.compose(delta)
+      flightDeltaFollows = delta.follows(@inFlight, false)
+      textFollows = flightDeltaFollows.follows(@inLine, false)
       @inFlight = @inFlight.follows(delta, true)
       @inLine = @inLine.follows(flightDeltaFollows, true)
       this.emit(ClientEngine.events.UPDATE, textFollows)
+      return true
     else
-      this.emit(ClientEngine.events.ERROR, 'Cannot compose inLine with remote delta', @inLine, delta)
+      return false
 
   resync: (delta, version) ->
     decomposed = delta.decompose(@arrived)
