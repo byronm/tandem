@@ -1,3 +1,5 @@
+# TODO get rid of throw, return false? Also could use math not check all the time...
+
 class ServerEngine extends EventEmitter2
   @events:
     UPDATE: 'update'
@@ -26,6 +28,3 @@ class ServerEngine extends EventEmitter2
       callback(null, delta, version)
     else
       callback("Cannot compose deltas")
-
-
-Tandem.ServerEngine = ServerEngine
