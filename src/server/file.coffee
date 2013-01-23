@@ -1,3 +1,6 @@
+Tandem       = require('../core')
+TandemEngine = require('./engine')
+
 resync: (callback) ->
   callback(
     resync: true
@@ -52,3 +55,6 @@ class TandemFile
     client.on('editor/update', (packet, callback) =>
       update.call(this, client, metadata, packet, callback)
     )
+
+
+module.exports = TandemFile

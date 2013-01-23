@@ -1,6 +1,8 @@
 # TODO get rid of throw, return false? Also could use math not check all the time...
+EventEmitter = require('events').EventEmitter
 
-class ServerEngine extends EventEmitter2
+
+class TandemServerEngine extends EventEmitter
   @events:
     UPDATE: 'update'
 
@@ -28,3 +30,6 @@ class ServerEngine extends EventEmitter2
       callback(null, delta, version)
     else
       callback("Cannot compose deltas")
+
+
+module.exports = TandemServerEngine

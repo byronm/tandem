@@ -1,3 +1,5 @@
+TandemFile = require('./file')
+
 class TandemStorage
   constructor: (@endpointUrl, options) ->
     @pads = {}
@@ -37,3 +39,6 @@ class TandemStorage
           callback(err, TandemFile.files[id])
         )
       )
+
+
+module.exports = TandemStorage

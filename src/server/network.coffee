@@ -1,3 +1,6 @@
+EventEmitter = require('events').EventEmitter
+
+
 authenticate = (packet, callback) ->
   if @packet.docId? and @packet.user?
     Storage.checkAccess(@packet.docId, @packet, (err, success) =>
@@ -44,3 +47,6 @@ class TandemNetwork extends EventEmitter
   constuctor: (server, options) ->
     @settings = _.extend({}, TandemNetwork.DEFAULTS, options)
     initNetwork.call(this, server)
+
+
+module.exports = TandemNetwork

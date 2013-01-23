@@ -1,7 +1,10 @@
+TandemNetwork = require('./network')
+TandemStorage = require('./storage')
+
 class TandemServer
   constructor: (endpointUrl, server) ->
-    @network = new Tandem.Network(server)
-    @storage = new Tandem.Storage(endpointUrl)
+    @network = new TandemNetwork(server)
+    @storage = new TandemStorage(endpointUrl)
 
     @network.on('connection', (client, metadata) ->
       # By this point, client will be authenticated
