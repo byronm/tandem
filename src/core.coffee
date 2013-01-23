@@ -480,6 +480,9 @@ class Delta
       @savedOpOffset += opLength
     return changes
 
+  # Given A and B, returns B' s.t. ABB' yields A.
+  invert: (delta) ->
+
   isIdentity: ->
     if @startLength == @endLength
       if @ops.length == 0
@@ -494,6 +497,11 @@ class Delta
       if index != @endLength then return false
       return true
     return false
+
+  isInsertsOnly: ->
+    _.every(@ops, (op) ->
+      return Delta.isInsert(op)
+    )
 
   toString: ->
     return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
