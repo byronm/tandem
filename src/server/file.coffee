@@ -1,31 +1,30 @@
 Tandem       = require('../core')
 TandemEngine = require('./engine')
 
-resync: (callback) ->
+
+resync = (callback) ->
   callback(
-    resync: true
     head: @engine.head
-    version: @engine.version
+    resync: true
     users: {}   # TODO Presence
+    version: @engine.version
   )
 
-sync: (packet, callback) ->
-  delta = Tandem.Delta.makeDelta(packet.delta)
+sync = (packet, callback) ->
   version = parseInt(packet.version)
-  if engine.transform(delta, version, (delta, version) ->
+  @engine.getDeltaSince(version, (err, delta, version, next) =>
+    return resync.call(this, callback) if err?
     callback(
       delta: delta
       users: {}   # TODO Presence
       version: version
     )
   )
-  else
-    resync.call(this, file, client, metadata, packet, callback)
 
-update: (client, metadata, packet, callback) ->
+update = (client, metadata, packet, callback) ->
   delta = Tandem.Delta.makeDelta(packet.delta)
   version = parseInt(packet.version)
-  if file.update(delta, version, (delta, version) ->
+  if @engine.update(delta, version, (err, delta, version) ->
     broadcastPacket =
       delta: delta
       docId: metadata.docId
@@ -38,19 +37,20 @@ update: (client, metadata, packet, callback) ->
     )
   )
   else
-    resync.call(this, file, client, metadata, packet, callback)
+    resync.call(this, callback)
 
 
 class TandemFile
-  constructor: (initial, version) ->
+  constructor: (@id, initial, version) ->
     @engine = new TandemEngine(initial, version)
 
   addClient: (client, metadata) ->
+    client.join(metadata.docId)
     client.on('editor/resync', (packet, callback) =>
-      resync.call(callback)
+      resync.call(this, callback)
     )
     client.on('editor/sync', (packet, callback) =>
-      sync.call(packet, callback)
+      sync.call(this, packet, callback)
     )
     client.on('editor/update', (packet, callback) =>
       update.call(this, client, metadata, packet, callback)

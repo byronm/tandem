@@ -1,16 +1,20 @@
-EventEmitter = require('events').EventEmitter
+_             = require('underscore')._
+socketio      = require('socket.io')
+EventEmitter  = require('events').EventEmitter
 
 
-authenticate = (packet, callback) ->
-  if @packet.docId? and @packet.user?
-    Storage.checkAccess(@packet.docId, @packet, (err, success) =>
+authenticate = (client, packet, callback) ->
+  # Need to leave room
+  if packet.docId? and packet.user?
+    @storage.checkAccess(packet.docId, packet, (err, success) =>
       if !err? and success
-        client.join(@packet.docId)
+        client.join(packet.docId)
         metadata = 
-          docId  : @packet.docId
-          user   : @packet.user
+          docId  : packet.docId
+          user   : packet.user
         # Presence stuff
         this.emit(TandemNetwork.events.CONNECT, client, metadata)
+        callback({ error: [] })
       else
         callback({ error: ["Access denied"] })
     )
@@ -30,7 +34,7 @@ initNetwork = (server) ->
   )
   @io.sockets.on('connection', (client) =>
     client.on('auth', (packet, callback) =>
-      authenticate.call(this, packet, callback)
+      authenticate.call(this, client, packet, callback)
     )
   )
 
@@ -44,7 +48,8 @@ class TandemNetwork extends EventEmitter
     CONNECT: 'network-connect'
 
 
-  constuctor: (server, options) ->
+  constructor: (server, @storage, options) ->
+    options = _.pick(options, _.keys(TandemNetwork.DEFAULTS))
     @settings = _.extend({}, TandemNetwork.DEFAULTS, options)
     initNetwork.call(this, server)
 

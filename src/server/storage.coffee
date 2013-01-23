@@ -1,12 +1,16 @@
-TandemFile = require('./file')
+_           = require('underscore')._
+request     = require('request')
+Tandem      = require('../core')
+TandemFile  = require('./file')
+
 
 class TandemStorage
   constructor: (@endpointUrl, options) ->
-    @pads = {}
+    @files = {}
 
   checkAccess: (docId, authObj, callback) ->
     request.get({
-      uri: @endpointUrl
+      uri: "#{@endpointUrl}/#{docId}/check_access"
       json: { auth_obj: authObj }
     }, (err, response, body) ->
       err = "Response error: #{response.statusCode}" unless response.statusCode == 200
@@ -14,29 +18,29 @@ class TandemStorage
     )
 
   clear: ->
-    TandemFile.files = {}
+    @files = {}
 
   find: (id, callback) ->
-    if TandemFile.files[id]?
-      if _.isArray(TandemFile.files[id])
-        TandemFile.files[id].push(callback)
+    if @files[id]?
+      if _.isArray(@files[id])
+        @files[id].push(callback)
       else
-        callback(null, TandemFile.files[id])
+        callback(null, @files[id])
     else
-      TandemFile.files[id] = [callback]
+      @files[id] = [callback]
       request.get({
-        uri: @endpointUrl
+        uri: "#{@endpointUrl}/#{id}"
         json: true
-      }, (err, response, body) ->
+      }, (err, response, body) =>
         err = "Response error: #{response.statusCode}" unless response.statusCode == 200
-        callbacks = TandemFile.files[id]
-        TandemFile.files[id] = undefined
+        callbacks = @files[id]
+        @files[id] = undefined
         unless err?
           head = Tandem.Delta.makeDelta(body.head)
           version = parseInt(body.version)
-          TandemFile.files[id] = new TandemFile(id, head, version)
-        _.each(callbacks, (callback) ->
-          callback(err, TandemFile.files[id])
+          @files[id] = new TandemFile(id, head, version)
+        _.each(callbacks, (callback) =>
+          callback(err, @files[id])
         )
       )
 
