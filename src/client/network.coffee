@@ -49,11 +49,11 @@ track = (type, route, packet) ->
 
 class TandemNetworkAdapter extends EventEmitter2
   @events:
-    DISCONNECT  : 'disconnect'
-    ERROR       : 'adapter-error'
-    READY       : 'adapter-ready'
-    RECONNECT   : 'reconnect'
-    RECONNECTED : 'reconnected'
+    DISCONNECT   : 'disconnect'
+    ERROR        : 'adapter-error'
+    READY        : 'adapter-ready'
+    RECONNECT    : 'reconnect'
+    RECONNECTING : 'reconnecting'
 
   @CALLBACK : 'callback'
   @RECIEVE  : 'recieve'
@@ -108,6 +108,7 @@ class TandemNetworkAdapter extends EventEmitter2
       @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?
       @socketListeners[route] = onSocketCallback
       @socket.addListener(route, onSocketCallback)
+    return this
 
   send: (route, packet, callback, priority = false) ->
     if @ready
