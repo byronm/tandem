@@ -7,7 +7,6 @@
   },
   "devDependencies": {
     "chai"              : "1.2.x",
-    "grunt-coffee"      : "0.0.x",
     "mocha"             : "1.2.x"
   },
   "main": "index",

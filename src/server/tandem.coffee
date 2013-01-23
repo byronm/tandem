@@ -9,3 +9,5 @@ class TandemServer
         file.addClient(client, metadata)
       )
     )
+
+module.exports = TandemServer
