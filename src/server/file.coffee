@@ -4,10 +4,10 @@ TandemEngine = require('./engine')
 
 resync = (callback) ->
   callback(
-    head: @engine.head
     resync: true
-    users: {}   # TODO Presence
+    head: @engine.head
     version: @engine.version
+    users: {}   # TODO Presence
   )
 
 sync = (packet, callback) ->
@@ -24,20 +24,19 @@ sync = (packet, callback) ->
 update = (client, metadata, packet, callback) ->
   delta = Tandem.Delta.makeDelta(packet.delta)
   version = parseInt(packet.version)
-  if @engine.update(delta, version, (err, delta, version) ->
+  @engine.update(delta, version, (err, delta, version) ->
+    return resync.call(this, callback) if err?
     broadcastPacket =
       delta: delta
       docId: metadata.docId
       version: version
     broadcastPacket['userId'] = metadata.user.id if metadata.user?.id?
-    client.broadcast.emit(broadcastPacket)
+    client.broadcast.emit('editor/update', broadcastPacket)
     callback(
       docId: metadata.docId
       version: version
     )
-  )
-  else
-    resync.call(this, callback)
+  )  
 
 
 class TandemFile
