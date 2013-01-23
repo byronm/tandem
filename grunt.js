@@ -1,6 +1,8 @@
 /*global module:false*/
 module.exports = function(grunt) {
 
+  grunt.loadNpmTasks('grunt-coffee');
+
   // Project configuration.
   grunt.initConfig({
     meta: {
@@ -13,19 +15,23 @@ module.exports = function(grunt) {
         '# Jason Chen, Salesforce.com'
     },
     concat: {
-      client: {
+      tandem: {
         src: ['<banner:meta.banner>', 'src/client/dependencies.coffee', 'src/core.coffee', 'src/client/{engine,file,network,tandem}.coffee'],
-        dest: 'build/tandem-client.coffee'
-      },
-      server: {
-        src: ['<banner:meta.banner>', 'src/core.coffee', 'src/server/*.coffee'],
-        dest: 'build/tandem-server.coffee'
+        dest: 'build/tandem.coffee'
       }
     },
-    uglify: {}
+    coffee: {
+      tandem: {
+        src: ['src/core.coffee', 'src/server/*.coffee'],
+        dest: 'build/server',
+        options: {
+          bare: false
+        }
+      }
+    }
   });
 
   // Default task.
-  grunt.registerTask('default', 'concat');
+  grunt.registerTask('default', 'concat coffee');
 
 };

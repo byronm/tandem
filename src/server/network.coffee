@@ -1,5 +1,5 @@
 authenticate = (packet, callback) ->
-  if @@packet.docId? and @packet.user?
+  if @packet.docId? and @packet.user?
     Storage.checkAccess(@packet.docId, @packet, (err, success) =>
       if !err? and success
         client.join(@packet.docId)

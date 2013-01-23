@@ -1,6 +1,6 @@
 if exports?
   _ = require('underscore')._
-  diff_match_patch = require('../lib/diff_match_patch')
+  diff_match_patch = require('googlediff')
   dmp = new diff_match_patch.diff_match_patch
 else
   _ = window._
