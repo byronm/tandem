@@ -738,97 +738,113 @@ testFollows = (deltaA, deltaB, aIsRemote, expected) ->
   followsError = "Incorrect follow. Got: " + computed.toString() + ", expected: " + expected.toString()
   assert.deepEqual(computed, expected, followsError)
 
-deltaA = new Delta(8, 5, [new RetainOp(0, 2), new InsertOp("si"), new RetainOp(7, 8)], 1)
-deltaB = new Delta(8, 5, [new RetainOp(0, 1), new InsertOp("e"), new RetainOp(6, 7), new InsertOp("ow")], 2)
-expected = new Delta(5, 6, [new RetainOp(0, 1), new InsertOp("e"), new RetainOp(2, 4), new InsertOp("ow")], 2)
-testFollows(deltaA, deltaB, false, expected)
+describe('follows', ->
+  it('should resolve alternating edits', ->
+    deltaA = new Delta(8, 5, [new RetainOp(0, 2), new InsertOp("si"), new RetainOp(7, 8)], 1)
+    deltaB = new Delta(8, 5, [new RetainOp(0, 1), new InsertOp("e"), new RetainOp(6, 7), new InsertOp("ow")], 2)
+    expected = new Delta(5, 6, [new RetainOp(0, 1), new InsertOp("e"), new RetainOp(2, 4), new InsertOp("ow")], 2)
+    testFollows(deltaA, deltaB, false, expected)
 
-expected = new Delta(5, 6, [new RetainOp(0, 2), new InsertOp("si"), new RetainOp(3, 5)], 1)
-testFollows(deltaB, deltaA, false, expected)
+    expected = new Delta(5, 6, [new RetainOp(0, 2), new InsertOp("si"), new RetainOp(3, 5)], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-# Test both clients prepending to the document
-deltaA = new Delta(3, 5, [new InsertOp("aa"), new RetainOp(0, 3)], 1)
-deltaB = new Delta(3, 5, [new InsertOp("bb"), new RetainOp(0, 3)], 2)
-expected = new Delta(5, 7, [new RetainOp(0, 2), new InsertOp("bb"), new RetainOp(2, 5)], 2)
-testFollows(deltaA, deltaB, true, expected)
+  it('should resolve both clients prepending to the document', ->
+    deltaA = new Delta(3, 5, [new InsertOp("aa"), new RetainOp(0, 3)], 1)
+    deltaB = new Delta(3, 5, [new InsertOp("bb"), new RetainOp(0, 3)], 2)
+    expected = new Delta(5, 7, [new RetainOp(0, 2), new InsertOp("bb"), new RetainOp(2, 5)], 2)
+    testFollows(deltaA, deltaB, true, expected)
 
-expected = new Delta(5, 7, [new InsertOp("aa"), new RetainOp(0, 5)], 1)
-testFollows(deltaB, deltaA, false, expected)
+    expected = new Delta(5, 7, [new InsertOp("aa"), new RetainOp(0, 5)], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-# Test both clients appending to the document
-deltaA = new Delta(3, 5, [new RetainOp(0, 3), new InsertOp("aa")], 1)
-deltaB = new Delta(3, 5, [new RetainOp(0, 3), new InsertOp("bb")], 2)
-expected = new Delta(5, 7, [new RetainOp(0, 5), new InsertOp("bb")], 2)
-testFollows(deltaA, deltaB, true, expected)
+  it('should resolve both clients appending to the document', ->
+    deltaA = new Delta(3, 5, [new RetainOp(0, 3), new InsertOp("aa")], 1)
+    deltaB = new Delta(3, 5, [new RetainOp(0, 3), new InsertOp("bb")], 2)
+    expected = new Delta(5, 7, [new RetainOp(0, 5), new InsertOp("bb")], 2)
+    testFollows(deltaA, deltaB, true, expected)
 
-expected = new Delta(5, 7, [new RetainOp(0, 3), new InsertOp("aa"), new RetainOp(3, 5)], 1)
-testFollows(deltaB, deltaA, false, expected)
+    expected = new Delta(5, 7, [new RetainOp(0, 3), new InsertOp("aa"), new RetainOp(3, 5)], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-# Test one client prepending, one client appending
-deltaA = new Delta(3, 5, [new InsertOp("aa"), new RetainOp(0, 3)], 1)
-deltaB = new Delta(3, 5, [new RetainOp(0, 3), new InsertOp("bb")], 2)
-expected = new Delta(5, 7, [new RetainOp(0, 5), new InsertOp("bb")], 2)
-testFollows(deltaA, deltaB, false, expected)
+  it('should resolve one client prepending, one client appending', ->
+    deltaA = new Delta(3, 5, [new InsertOp("aa"), new RetainOp(0, 3)], 1)
+    deltaB = new Delta(3, 5, [new RetainOp(0, 3), new InsertOp("bb")], 2)
+    expected = new Delta(5, 7, [new RetainOp(0, 5), new InsertOp("bb")], 2)
+    testFollows(deltaA, deltaB, false, expected)
 
-expected = new Delta(5, 7, [new InsertOp("aa"), new RetainOp(0, 5)], 1)
-testFollows(deltaB, deltaA, false, expected)
+    expected = new Delta(5, 7, [new InsertOp("aa"), new RetainOp(0, 5)], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-# Test one client prepending, one client deleting
-deltaA = new Delta(3, 5, [new InsertOp("aa"), new RetainOp(0, 3)], 1)
-deltaB = new Delta(3, 1, [new RetainOp(0, 1)], 2)
-expected = new Delta(5, 3, [new RetainOp(0, 3)], 2)
-testFollows(deltaA, deltaB, false, expected)
+  it('should resolve one client prepending, one client deleting', ->
+    deltaA = new Delta(3, 5, [new InsertOp("aa"), new RetainOp(0, 3)], 1)
+    deltaB = new Delta(3, 1, [new RetainOp(0, 1)], 2)
+    expected = new Delta(5, 3, [new RetainOp(0, 3)], 2)
+    testFollows(deltaA, deltaB, false, expected)
 
-expected = new Delta(1, 3, [new InsertOp("aa"), new RetainOp(0, 1)], 1)
-testFollows(deltaB, deltaA, false, expected)
+    expected = new Delta(1, 3, [new InsertOp("aa"), new RetainOp(0, 1)], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-# Test both clients writing into the middle of the string
-deltaA = new Delta(3, 5, [new RetainOp(0, 2), new InsertOp("aa"), new RetainOp(2, 3)], 2)
-deltaB = new Delta(3, 4, [new RetainOp(0, 2), new InsertOp("b"), new RetainOp(2, 3)], 1)
-expected = new Delta(5, 6, [new RetainOp(0, 2), new InsertOp("b"), new RetainOp(2, 5)], 1)
-testFollows(deltaA, deltaB, false, expected)
+  it('should resolve both clients inserting to the middle', ->
+    deltaA = new Delta(3, 5, [new RetainOp(0, 2), new InsertOp("aa"), new RetainOp(2, 3)], 2)
+    deltaB = new Delta(3, 4, [new RetainOp(0, 2), new InsertOp("b"), new RetainOp(2, 3)], 1)
+    expected = new Delta(5, 6, [new RetainOp(0, 2), new InsertOp("b"), new RetainOp(2, 5)], 1)
+    testFollows(deltaA, deltaB, false, expected)
 
-expected = new Delta(4, 6, [new RetainOp(0, 3), new InsertOp("aa"), new RetainOp(3, 4)], 2)
-testFollows(deltaB, deltaA, true, expected)
+    expected = new Delta(4, 6, [new RetainOp(0, 3), new InsertOp("aa"), new RetainOp(3, 4)], 2)
+    testFollows(deltaB, deltaA, true, expected)
+  )
 
-# Test both clients deleting the same amount from the end
-deltaA = new Delta(3, 1, [new RetainOp(0, 1)], 1)
-deltaB = new Delta(3, 1, [new RetainOp(0, 1)], 2)
-expected = new Delta(1, 1, [new RetainOp(0, 1)], 3)
-testFollows(deltaA, deltaB, false, expected)
-testFollows(deltaB, deltaA, false, expected)
+  it('should resolve both clients deleting from the tail', ->
+    deltaA = new Delta(3, 1, [new RetainOp(0, 1)], 1)
+    deltaB = new Delta(3, 1, [new RetainOp(0, 1)], 2)
+    expected = new Delta(1, 1, [new RetainOp(0, 1)], 3)
+    testFollows(deltaA, deltaB, false, expected)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-# Test both clients deleting different amounts from the end
-deltaA = new Delta(3, 2, [new RetainOp(0, 2)], 1)
-deltaB = new Delta(3, 0, [], 2)
-expected = new Delta(2, 0, [], 2)
-testFollows(deltaA, deltaB, false, expected)
+  it('should resolve both clients deleting different amounts from the tail', ->
+    deltaA = new Delta(3, 2, [new RetainOp(0, 2)], 1)
+    deltaB = new Delta(3, 0, [], 2)
+    expected = new Delta(2, 0, [], 2)
+    testFollows(deltaA, deltaB, false, expected)
 
-expected = new Delta(0, 0, [], 1)
-testFollows(deltaB, deltaA, false, expected)
+    expected = new Delta(0, 0, [], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-# One client deleting from the end, one from the beginning
-deltaA = new Delta(3, 1, [new RetainOp(2, 3)], 1)
-deltaB = new Delta(3, 2, [new RetainOp(0, 2)], 2)
-expected = new Delta(1, 0, [], 2)
-testFollows(deltaA, deltaB, false, expected)
+  it('should resolve one client deleting from the end, one from the beginning', ->
+    deltaA = new Delta(3, 1, [new RetainOp(2, 3)], 1)
+    deltaB = new Delta(3, 2, [new RetainOp(0, 2)], 2)
+    expected = new Delta(1, 0, [], 2)
+    testFollows(deltaA, deltaB, false, expected)
 
-expected = new Delta(2, 0, [], 1)
-testFollows(deltaB, deltaA, false, expected)
+    expected = new Delta(2, 0, [], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-deltaA = new Delta(5, 3, [new RetainOp(2, 5)], 1)
-deltaB = new Delta(5, 3, [new RetainOp(0, 3)], 2)
-expected = new Delta(3, 1, [new RetainOp(0, 1)], 2)
-testFollows(deltaA, deltaB, false, expected)
-expected = new Delta(3, 1, [new RetainOp(2, 3)], 1)
-testFollows(deltaB, deltaA, false, expected)
+  it('should resolve one client deleting from the end, one from the beginning', ->
+    deltaA = new Delta(5, 3, [new RetainOp(2, 5)], 1)
+    deltaB = new Delta(5, 3, [new RetainOp(0, 3)], 2)
+    expected = new Delta(3, 1, [new RetainOp(0, 1)], 2)
+    testFollows(deltaA, deltaB, false, expected)
+    expected = new Delta(3, 1, [new RetainOp(2, 3)], 1)
+    testFollows(deltaB, deltaA, false, expected)
+  )
 
-deltaA = new Delta(3, 25, [new RetainOp(0, 1), new InsertOp("fpwqyakxrbhdjcxvbepmkm"), new RetainOp(1, 3)], 1)
-deltaB = new Delta(3, 43, [new RetainOp(0, 1), new InsertOp("xqmxjiaykkzheizgdsnjixosvqbqkyorcfwafaqax"), new RetainOp(2, 3)], 2)
-expected = new Delta(25, 65, [new RetainOp(0, 1), new InsertOp("xqmxjiaykkzheizgdsnjixosvqbqkyorcfwafaqax"), new RetainOp(1, 23), new RetainOp(24, 25)], 1)
-testFollows(deltaA, deltaB, false, expected)
-expected = new Delta(43, 65, [new RetainOp(0, 1), new InsertOp("fpwqyakxrbhdjcxvbepmkm"), new RetainOp(1, 43)], 2)
-testFollows(deltaB, deltaA, false, expected)
+  it('should resolve this fuzzer test we once failed', ->
+    deltaA = new Delta(3, 25, [new RetainOp(0, 1), new InsertOp("fpwqyakxrbhdjcxvbepmkm"), new RetainOp(1, 3)], 1)
+    deltaB = new Delta(3, 43, [new RetainOp(0, 1), new InsertOp("xqmxjiaykkzheizgdsnjixosvqbqkyorcfwafaqax"), new RetainOp(2, 3)], 2)
+    expected = new Delta(25, 65, [new RetainOp(0, 1), new InsertOp("xqmxjiaykkzheizgdsnjixosvqbqkyorcfwafaqax"), new RetainOp(1, 23), new RetainOp(24, 25)], 1)
+    testFollows(deltaA, deltaB, false, expected)
+    expected = new Delta(43, 65, [new RetainOp(0, 1), new InsertOp("fpwqyakxrbhdjcxvbepmkm"), new RetainOp(1, 43)], 2)
+    testFollows(deltaB, deltaA, false, expected)
+  )
+)
 
 ##############################
 # Test applyDeltaToText
