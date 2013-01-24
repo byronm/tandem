@@ -75,10 +75,10 @@ class TandemNetworkAdapter extends EventEmitter2
     @socketListeners = []
     @sendQueue = []
     @ready = false
-    @stats = 
-      sent      : {}
-      recieved  : {}
-      acked     : {}
+    @stats =
+      send     : {}
+      recieve  : {}
+      callback : {}
     @history = []
     socketOptions = _.clone(TandemNetworkAdapter.DEFAULTS)
     parts = endpointUrl.split(':')
