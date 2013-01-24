@@ -60,7 +60,7 @@ class TandemNetworkAdapter extends EventEmitter2
   @SEND     : 'send'
 
   @DEFAULTS :
-    'force new connection'      : true
+    'force new connection'      : false
     'max reconnection attempts' : Infinity
     'port'                      : 443
     'reconnection limit'        : 30000
@@ -70,7 +70,9 @@ class TandemNetworkAdapter extends EventEmitter2
   @latency: 0
 
 
-  constructor: (endpointUrl, @docId, @user, @authObj) ->
+  constructor: (endpointUrl, @docId, @user, @authObj, options = {}) ->
+    options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS))
+    @settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, options)
     @id = _.uniqueId('adapter-')
     @socketListeners = []
     @sendQueue = []
@@ -80,7 +82,7 @@ class TandemNetworkAdapter extends EventEmitter2
       recieve  : {}
       callback : {}
     @history = []
-    socketOptions = _.clone(TandemNetworkAdapter.DEFAULTS)
+    socketOptions = _.clone(@settings)
     parts = endpointUrl.split(':')
     host = parts[0]
     socketOptions['port'] = parseInt(parts[1]) if parts.length > 1
