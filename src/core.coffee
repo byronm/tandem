@@ -481,7 +481,12 @@ class Delta
     return changes
 
   # Given A and B, returns B' s.t. ABB' yields A.
-  invert: (delta) ->
+  invert: (deltaB) ->
+    console.assert(isInsertsOnly(this), "Invert called on invalid delta containing non-insert ops: #{deltaA}")
+    deltaA = this
+    deltaC = deltaA.compose(deltaB)
+    inverse = deltaC.decompose(deltaA)
+    return inverse
 
   isIdentity: ->
     if @startLength == @endLength
