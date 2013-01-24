@@ -416,7 +416,7 @@ describe('compose', ->
     deltaA = new Delta(0, 3, [new InsertOp("cat")])
     deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
     expectedComposed = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-    expectedDecomposed = null
+    expectedDecomposed = deltaB
     testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
   )
 
@@ -638,76 +638,97 @@ describe('compose', ->
     expectedDecomposed = deltaB
     testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
   )
+  ##############################
+  # Test Recursive Attributes
+  ##############################
+  it('shoud propagate recursive attributes through a retain', ->
+    deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {})])
+    expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should overwrite recursive attribute through retain with new attr val', ->
+    deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'blue'}})])
+    expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'blue'}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should add new attributes to recursive attributes', ->
+    deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {bold: true}})])
+    expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red', bold: true}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should add and replace recursive attributes', ->
+    deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'blue', bold: true}})])
+    expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'blue', bold: true}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should remove and add separate recursive attributes', ->
+    deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: null, bold: true}})])
+    expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {bold: true}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should overwrite nonrecursive attr val with recursive attr val', ->
+    deltaA = new Delta(0, 1, [new InsertOp("a", {outer: 'nonobject'})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'red', bold: true}})])
+    expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red', bold: true}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should overwrite recursive attr val with nonrecursive attr val', ->
+    deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'red', bold: true}})])
+    deltaB = new Delta(1, 1, [new InsertOp("a", {outer: 'nonobject'})])
+    expectedComposed = new Delta(1, 1, [new InsertOp("a", {outer: 'nonobject'})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should add attribute when all ops are retains', ->
+    deltaA = new Delta(1, 1, [new RetainOp(0, 1)])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: 'val1'})])
+    expectedComposed = deltaB
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should replace attribute when all ops are retains', ->
+    deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: 'val1'})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: 'val2'})])
+    expectedComposed = deltaB
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should merge attributes when all ops are retains', ->
+    deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: 'val1'}})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner2: 'val2'}})])
+    expectedComposed = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: 'val1', inner2: 'val2'}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('it should remove and add attrs when all ops are retains', ->
+    deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: 'val1'}})])
+    deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: null, inner2: 'val2'}})])
+    expectedComposed = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: null, inner2: 'val2'}})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
 )
-
-##############################
-# Test Recursive Attributes
-##############################
-deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {})])
-expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'blue'}})])
-expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'blue'}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {bold: true}})])
-expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red', bold: true}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'blue', bold: true}})])
-expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'blue', bold: true}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red'}})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: null, bold: true}})])
-expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {bold: true}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 1, [new InsertOp("a", {outer: 'nonobject'})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'red', bold: true}})])
-expectedComposed = new Delta(0, 1, [new InsertOp("a", {outer: {color: 'red', bold: true}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: {color: 'red', bold: true}})])
-deltaB = new Delta(1, 1, [new InsertOp("a", {outer: 'nonobject'})])
-expectedComposed = new Delta(1, 1, [new InsertOp("a", {outer: 'nonobject'})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(1, 1, [new RetainOp(0, 1)])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: 'val1'})])
-expectedComposed = deltaB
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: 'val1'})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: 'val2'})])
-expectedComposed = deltaB
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: 'val1'}})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner2: 'val2'}})])
-expectedComposed = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: 'val1', inner2: 'val2'}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: 'val1'}})])
-deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: null, inner2: 'val2'}})])
-expectedComposed = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: null, inner2: 'val2'}})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
 
 ##############################
 # Test the follows function
