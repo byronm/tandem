@@ -267,7 +267,7 @@ class Delta
   #    retain in deltaA.
   decompose: (deltaA) ->
     deltaC = this
-    console.assert(Delta.isDelta(deltaA), "Decompose2 called when deltaA is not a Delta, type: " + typeof deltaA)
+    console.assert(Delta.isDelta(deltaA), "Decompose called when deltaA is not a Delta, type: " + typeof deltaA)
     console.assert(deltaA.startLength == @startLength, "startLength #{deltaA.startLength} / startLength #{@startLength} mismatch")
     console.assert(_.all(deltaA.ops, ((op) -> return op.value?)), "DeltaA has retain in decompose")
     console.assert(_.all(deltaC.ops, ((op) -> return op.value?)), "DeltaC has retain in decompose")
