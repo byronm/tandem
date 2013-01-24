@@ -13,11 +13,11 @@ authenticate = (client, packet, callback) ->
           docId  : packet.docId
           user   : packet.user
         # Presence stuff
-        this.emit(TandemNetwork.events.CONNECT, client, metadata)
-        # Emit will be heard after callback is sent and client sends editor/sync
+        # Emit might be heard after callback is sent and client sends editor/sync
         client.once('newListener', ->
           callback({ error: [] })
         )
+        this.emit(TandemNetwork.events.CONNECT, client, metadata)
       else
         callback({ error: ["Access denied"] })
     )
@@ -50,8 +50,7 @@ class TandemNetwork extends EventEmitter
   @events:
     CONNECT: 'network-connect'
 
-
-  constructor: (server, @storage, options) ->
+  constructor: (server, @storage, options = {}) ->
     options = _.pick(options, _.keys(TandemNetwork.DEFAULTS))
     @settings = _.extend({}, TandemNetwork.DEFAULTS, options)
     initNetwork.call(this, server)

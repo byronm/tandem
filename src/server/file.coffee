@@ -41,6 +41,7 @@ update = (client, metadata, packet, callback) ->
 
 class TandemFile
   constructor: (@id, initial, version) ->
+    @versionSaved = version
     @engine = new TandemEngine(initial, version)
 
   addClient: (client, metadata) ->
@@ -51,6 +52,15 @@ class TandemFile
     ).on('editor/update', (packet, callback) =>
       update.call(this, client, metadata, packet, callback)
     )
+
+  getHead: ->
+    return @engine.head
+
+  getVersion: ->
+    return @engine.version
+
+  isDirty: ->
+    return @engine.version != @versionSaved
 
 
 module.exports = TandemFile

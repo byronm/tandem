@@ -4,9 +4,34 @@ Tandem      = require('../core')
 TandemFile  = require('./file')
 
 
+save = (file, callback = ->) ->
+  return callback(null) if !file.isDirty()
+  version = file.getVersion()
+  request.put({
+    json: 
+      head: file.getHead()
+      version: version
+    uri: "#{@endpointUrl}/#{file.id}"
+  }, (err, response) =>
+    err = "Response error: #{response.statusCode}" unless response.statusCode == 200
+    file.versionSaved = version unless err?
+    callback(err)
+  )
+
+
 class TandemStorage
-  constructor: (@endpointUrl, options) ->
+  @DEFAULTS:
+    'save interval': 1000
+
+  constructor: (@endpointUrl, options = {}) ->
+    options = _.pick(options, _.keys(TandemStorage.DEFAULTS))
+    @settings = _.extend({}, TandemStorage.DEFAULTS, options)
     @files = {}
+    setInterval( =>
+      _.each(@files, (file, id) =>
+        save.call(this, file) unless !file? or _.isArray(file)
+      )
+    , @settings['save interval'])
 
   checkAccess: (docId, authObj, callback) ->
     request.get({
