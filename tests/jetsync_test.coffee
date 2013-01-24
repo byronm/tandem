@@ -410,200 +410,235 @@ describe('compose', ->
     expectedDecomposed = deltaB
     testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
   )
+
+  # Attribution tests
+  it('should apply bold to inserted text', ->
+    deltaA = new Delta(0, 3, [new InsertOp("cat")])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    expectedComposed = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
+    expectedDecomposed = null
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should keep attribution on inserted text after a retain', ->
+    deltaA = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
+    expectedComposed = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should not remove an attribute if it is retained with undefined', ->
+    deltaA = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: undefined})])
+    expectedComposed = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
+    expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {})])
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should apply bold to retained text', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3)])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should keep attribution on retained text after a retain', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should not remove an attribute if it is retained with undefined', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: undefined})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {})])
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should remove attribution on inserted text if it is retained with null', ->
+    deltaA = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedComposed = new Delta(0, 3, [new InsertOp("cat")])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should remove attribution on retained text if it is retained with null', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should take the final value when the same attribute is retained multiple times', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 3})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should overwrite an attribute\'s value when inserted text is retained with a different value for the same attribute', ->
+    deltaA = new Delta(3, 3, [new InsertOp("abc", {fontsize: 3})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
+    expectedComposed = new Delta(3, 3, [new InsertOp("abc", {fontsize: 5})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should support multiple attributes on the same set of characters', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true, italic: true})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+
+  it('should support multiple attributes on the same set of characters', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true, italic: true, underline: true})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should support adding and removing attributes from the same inserted characters in the same delta', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true, bold: null})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true, bold: null})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should support adding and removing attributes from the same retained characters in the same delta', ->
+    deltaA = new Delta(3, 3, [new InsertOp("abc", {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true, bold: null})])
+    expectedComposed = new Delta(3, 3, [new InsertOp("abc", {italic: true, underline: true})])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should persist null attribute if nothing to remove', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3)])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  # Nested composition tests, i.e., compose(a, compose(b, c))
+  it('should handle nested compositions', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
+    deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    testComposeAndDecompose(deltaA, deltaB.compose(deltaC), expectedComposed, expectedDecomposed)
+  )
+
+  it('should handle nested compositions', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
+    deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD))))
+    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC)).compose(deltaD))
+    assert.deepEqual(expectedComposed, (deltaA.compose(deltaB)).compose(deltaC.compose(deltaD)))
+  )
+
+  it('should handle nested compositions', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD))))
+  )
+
+  it('should handle nested compositions', ->
+    deltaA = new Delta(0, 3, [new InsertOp("abc")])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
+    deltaE = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
+    expectedComposed = new Delta(0, 3, [new InsertOp("abc")])
+    assert.deepEqual(expectedComposed, (deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))).compose(deltaE))
+  )
+
+  it('should handle nested compositions', ->
+    deltaA = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 3})])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
+    deltaC = new Delta(3, 3, [new RetainOp(0, 3)])
+    deltaD = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
+    expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
+    assert.deepEqual(expectedComposed, (deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))))
+  )
+
+  it('should handle nested compositions', ->
+    deltaA = new Delta(0, 3, [new InsertOp("abc")])
+    deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 3})])
+    deltaC = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
+    deltaD = new Delta(3, 3, [new RetainOp(0, 3)])
+    deltaE = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
+    expectedComposed = new Delta(0, 3, [new InsertOp("abc")])
+    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD.compose(deltaE)))))
+  )
+
+  # Test decompose + author attribution
+  # TODO: Move these into attribution test module?
+  it('should attribute adjacent authors', ->
+    deltaA = new Delta(0, 1, [
+            new InsertOp("a", {authorId: 'Timon'})
+          ])
+    deltaB = new Delta(1, 2, [
+               new RetainOp(0, 1)
+               new InsertOp("b", {authorId: 'Pumba'})
+          ])
+    expectedComposed = new Delta(0, 2, [
+                       new InsertOp("a", {authorId: 'Timon'})
+                       new InsertOp("b", {authorId: 'Pumba'})
+                  ])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should replace author attribute', ->
+    deltaA = new Delta(0, 1, [
+             new InsertOp("a", {authorId: 'Timon'})
+          ])
+    deltaB = new Delta(1, 2, [
+              new InsertOp("Ab", {authorId: 'Pumba'})
+          ])
+    expectedComposed = new Delta(0, 2, [
+             new InsertOp("Ab", {authorId: 'Pumba'})
+          ])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should replace author attribute', ->
+    deltaA = new Delta(0, 1, [
+             new InsertOp("a", {authorId: 'Timon'})
+    ])
+    deltaB = new Delta(1, 2, [
+               new RetainOp(0, 1, {authorId: 'Pumba'})
+               new InsertOp("b", {authorId: 'Pumba'})
+    ])
+    expectedComposed = new Delta(0, 2, [
+                       new InsertOp("ab", {authorId: 'Pumba'})
+    ])
+    expectedDecomposed = deltaB
+    testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
 )
-
-#################################################
-# Test compose/decompose with attributes
-#################################################
-# Insert text, then bold it
-deltaA = new Delta(0, 3, [new InsertOp("cat")])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-expectedComposed = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Insert bold text, then retain it
-deltaA = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
-expectedComposed = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: undefined})])
-expectedComposed = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {})])
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Retain text, then bold it
-deltaA = new Delta(3, 3, [new RetainOp(0, 3)])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Retain bold text, then retain it
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: undefined})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {})])
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Insert bold text, then unbold it
-deltaA = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedComposed = new Delta(0, 3, [new InsertOp("cat")])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Bold retained text, then unbold it
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Retain, retain with different font sizes
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 3})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Insert, retain with different font sizes
-deltaA = new Delta(3, 3, [new InsertOp("abc", {fontsize: 3})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
-expectedComposed = new Delta(3, 3, [new InsertOp("abc", {fontsize: 5})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Bold text, then italicize it
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true, italic: true})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Bold text, then italicize and underline it
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true, italic: true, underline: true})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Bold text, then italicize, underline it, and remove bold
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true, bold: null})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true, bold: null})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# Insert Bold text, then italicize, underline it, and remove bold
-deltaA = new Delta(3, 3, [new InsertOp("abc", {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {italic: true, underline: true, bold: null})])
-expectedComposed = new Delta(3, 3, [new InsertOp("abc", {italic: true, underline: true})])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(3, 3, [new RetainOp(0, 3)])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-# The following tests test nested composes, i.e., compose(a, compose(b, c))
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
-deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-testComposeAndDecompose(deltaA, deltaB.compose(deltaC), expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3)])
-deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD))))
-assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC)).compose(deltaD))
-assert.deepEqual(expectedComposed, (deltaA.compose(deltaB)).compose(deltaC.compose(deltaD)))
-
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD))))
-
-deltaA = new Delta(0, 3, [new InsertOp("abc")])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-deltaE = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-expectedComposed = new Delta(0, 3, [new InsertOp("abc")])
-assert.deepEqual(expectedComposed, (deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))).compose(deltaE))
-
-deltaA = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 3})])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
-deltaC = new Delta(3, 3, [new RetainOp(0, 3)])
-deltaD = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
-expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
-assert.deepEqual(expectedComposed, (deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))))
-
-deltaA = new Delta(0, 3, [new InsertOp("abc")])
-deltaB = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 3})])
-deltaC = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: 5})])
-deltaD = new Delta(3, 3, [new RetainOp(0, 3)])
-deltaE = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
-expectedComposed = new Delta(0, 3, [new InsertOp("abc")])
-assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD.compose(deltaE)))))
-
-# Test decompose + author attribution
-# TODO: Move these into attribution test module.
-deltaA = new Delta(0, 1, [
-        new InsertOp("a", {authorId: 'Timon'})
-      ])
-deltaB = new Delta(1, 2, [
-           new RetainOp(0, 1)
-           new InsertOp("b", {authorId: 'Pumba'})
-      ])
-expectedComposed = new Delta(0, 2, [
-                   new InsertOp("a", {authorId: 'Timon'})
-                   new InsertOp("b", {authorId: 'Pumba'})
-              ])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 1, [
-         new InsertOp("a", {authorId: 'Timon'})
-      ])
-deltaB = new Delta(1, 2, [
-          new InsertOp("Ab", {authorId: 'Pumba'})
-      ])
-expectedComposed = new Delta(0, 2, [
-         new InsertOp("Ab", {authorId: 'Pumba'})
-      ])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
-
-deltaA = new Delta(0, 1, [
-         new InsertOp("a", {authorId: 'Timon'})
-])
-deltaB = new Delta(1, 2, [
-           new RetainOp(0, 1, {authorId: 'Pumba'})
-           new InsertOp("b", {authorId: 'Pumba'})
-])
-expectedComposed = new Delta(0, 2, [
-                   new InsertOp("ab", {authorId: 'Pumba'})
-])
-expectedDecomposed = deltaB
-testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
 
 ##############################
 # Test Recursive Attributes
@@ -673,6 +708,7 @@ deltaB = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: null, inner2: 'val2
 expectedComposed = new Delta(1, 1, [new RetainOp(0, 1, {outer: {inner: null, inner2: 'val2'}})])
 expectedDecomposed = deltaB
 testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+
 ##############################
 # Test the follows function
 ##############################
