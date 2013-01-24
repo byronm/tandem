@@ -44,14 +44,11 @@ class TandemFile
     @engine = new TandemEngine(initial, version)
 
   addClient: (client, metadata) ->
-    client.join(metadata.docId)
     client.on('editor/resync', (packet, callback) =>
       resync.call(this, callback)
-    )
-    client.on('editor/sync', (packet, callback) =>
+    ).on('editor/sync', (packet, callback) =>
       sync.call(this, packet, callback)
-    )
-    client.on('editor/update', (packet, callback) =>
+    ).on('editor/update', (packet, callback) =>
       update.call(this, client, metadata, packet, callback)
     )
 

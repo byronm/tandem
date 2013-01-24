@@ -14,7 +14,10 @@ authenticate = (client, packet, callback) ->
           user   : packet.user
         # Presence stuff
         this.emit(TandemNetwork.events.CONNECT, client, metadata)
-        callback({ error: [] })
+        # Emit will be heard after callback is sent and client sends editor/sync
+        client.once('newListener', ->
+          callback({ error: [] })
+        )
       else
         callback({ error: ["Access denied"] })
     )
