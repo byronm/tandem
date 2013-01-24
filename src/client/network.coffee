@@ -49,18 +49,18 @@ track = (type, route, packet) ->
 
 class TandemNetworkAdapter extends EventEmitter2
   @events:
-    DISCONNECT  : 'disconnect'
-    ERROR       : 'adapter-error'
-    READY       : 'adapter-ready'
-    RECONNECT   : 'reconnect'
-    RECONNECTED : 'reconnected'
+    DISCONNECT   : 'disconnect'
+    ERROR        : 'adapter-error'
+    READY        : 'adapter-ready'
+    RECONNECT    : 'reconnect'
+    RECONNECTING : 'reconnecting'
 
   @CALLBACK : 'callback'
   @RECIEVE  : 'recieve'
   @SEND     : 'send'
 
   @DEFAULTS :
-    'force new connection'      : true
+    'force new connection'      : false
     'max reconnection attempts' : Infinity
     'port'                      : 443
     'reconnection limit'        : 30000
@@ -70,17 +70,19 @@ class TandemNetworkAdapter extends EventEmitter2
   @latency: 0
 
 
-  constructor: (endpointUrl, @docId, @user, @authObj) ->
+  constructor: (endpointUrl, @docId, @user, @authObj, options = {}) ->
+    options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS))
+    @settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, options)
     @id = _.uniqueId('adapter-')
     @socketListeners = []
     @sendQueue = []
     @ready = false
-    @stats = 
-      sent      : {}
-      recieved  : {}
-      acked     : {}
+    @stats =
+      send     : {}
+      recieve  : {}
+      callback : {}
     @history = []
-    socketOptions = _.clone(TandemNetworkAdapter.DEFAULTS)
+    socketOptions = _.clone(@settings)
     parts = endpointUrl.split(':')
     host = parts[0]
     socketOptions['port'] = parseInt(parts[1]) if parts.length > 1
@@ -108,6 +110,7 @@ class TandemNetworkAdapter extends EventEmitter2
       @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?
       @socketListeners[route] = onSocketCallback
       @socket.addListener(route, onSocketCallback)
+    return this
 
   send: (route, packet, callback, priority = false) ->
     if @ready
