@@ -341,8 +341,6 @@ class Delta
 
     diffTexts = (oldText, newText) ->
       diff = dmp.diff_main(oldText, newText)
-      if (diff.length > 2)
-        dmp.diff_cleanupEfficiency(diff)
       return diff
 
     textA = deltaToText(this)
