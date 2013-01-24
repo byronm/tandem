@@ -31,7 +31,7 @@ update = (client, metadata, packet, callback) ->
       docId: metadata.docId
       version: version
     broadcastPacket['userId'] = metadata.user.id if metadata.user?.id?
-    client.broadcast.emit('editor/update', broadcastPacket)
+    client.broadcast.emit(TandemFile.routes.UPDATE, broadcastPacket)
     callback(
       docId: metadata.docId
       version: version
@@ -40,16 +40,21 @@ update = (client, metadata, packet, callback) ->
 
 
 class TandemFile
+  @routes:
+    RESYNC  : 'ot/resync'
+    SYNC    : 'ot/sync'
+    UPDATE  : 'ot/update'
+
   constructor: (@id, initial, version) ->
     @versionSaved = version
     @engine = new TandemEngine(initial, version)
 
   addClient: (client, metadata) ->
-    client.on('editor/resync', (packet, callback) =>
+    client.on(TandemFile.routes.RESYNC, (packet, callback) =>
       resync.call(this, callback)
-    ).on('editor/sync', (packet, callback) =>
+    ).on(TandemFile.routes.SYNC, (packet, callback) =>
       sync.call(this, packet, callback)
-    ).on('editor/update', (packet, callback) =>
+    ).on(TandemFile.routes.UPDATE, (packet, callback) =>
       update.call(this, client, metadata, packet, callback)
     )
 

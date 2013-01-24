@@ -89,9 +89,9 @@ class TandemFile extends EventEmitter2
   @routes:
     JOIN    : 'user/join'
     LEAVE   : 'user/leave'
-    RESYNC  : 'editor/resync'
-    SYNC    : 'editor/sync'
-    UPDATE  : 'editor/update'
+    RESYNC  : 'ot/resync'
+    SYNC    : 'ot/sync'
+    UPDATE  : 'ot/update'
 
   constructor: (@docId, @adapter, initial, version) ->
     @id = _.uniqueId('file-')
