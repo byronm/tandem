@@ -3,6 +3,7 @@ authenticate = ->
     auth: @authObj
     fileId: @fileId
     user: @user
+  console.info "Attempting auth to", @fileId
   @socket.emit('auth', authPacket, (response) =>
     if !response.error? || response.error.length == 0
       console.info "Connected!", response
@@ -94,11 +95,6 @@ class TandemNetworkAdapter extends EventEmitter2
     )
     authenticate.call(this)
 
-  close: ->
-    _.each(@socketListeners, (callback, route) =>
-      @socket.removeListener(route, callback)
-    )
-
   on: (route, callback) ->
     if _.indexOf(_.values(TandemNetworkAdapter.events), route) > -1
       super
@@ -111,6 +107,10 @@ class TandemNetworkAdapter extends EventEmitter2
       @socketListeners[route] = onSocketCallback
       @socket.addListener(route, onSocketCallback)
     return this
+
+  removeAllListeners: ->
+    @socket.removeAllListeners()
+    @socketListeners = []
 
   send: (route, packet, callback, priority = false) ->
     if @ready

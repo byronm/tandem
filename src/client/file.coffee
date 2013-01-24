@@ -100,7 +100,8 @@ class TandemFile extends EventEmitter2
     initListeners.call(this)
 
   close: ->
-    @adapter.close()
+    @adapter.removeAllListeners()
+    @engine.removeAllListeners()
 
   getUsers: ->
     return []

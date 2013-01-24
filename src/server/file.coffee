@@ -1,3 +1,4 @@
+_            = require('underscore')._
 Tandem       = require('../core')
 TandemEngine = require('./engine')
 
@@ -50,6 +51,9 @@ class TandemFile
     @engine = new TandemEngine(initial, version)
 
   addClient: (client, metadata) ->
+    _.each(TandemFile.routes, (route, name) ->
+      client.removeAllListeners(route)
+    )
     client.on(TandemFile.routes.RESYNC, (packet, callback) =>
       resync.call(this, callback)
     ).on(TandemFile.routes.SYNC, (packet, callback) =>
