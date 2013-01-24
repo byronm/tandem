@@ -33,9 +33,9 @@ class TandemStorage
       )
     , @settings['save interval'])
 
-  checkAccess: (docId, authObj, callback) ->
+  checkAccess: (fileId, authObj, callback) ->
     request.get({
-      uri: "#{@endpointUrl}/#{docId}/check_access"
+      uri: "#{@endpointUrl}/#{fileId}/check_access"
       json: { auth_obj: authObj }
     }, (err, response, body) ->
       err = "Response error: #{response.statusCode}" unless response.statusCode == 200

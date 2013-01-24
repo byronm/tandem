@@ -28,12 +28,12 @@ update = (client, metadata, packet, callback) ->
     return resync.call(this, callback) if err?
     broadcastPacket =
       delta: delta
-      docId: metadata.docId
+      fileId: metadata.fileId
       version: version
     broadcastPacket['userId'] = metadata.user.id if metadata.user?.id?
     client.broadcast.emit(TandemFile.routes.UPDATE, broadcastPacket)
     callback(
-      docId: metadata.docId
+      fileId: metadata.fileId
       version: version
     )
   )  

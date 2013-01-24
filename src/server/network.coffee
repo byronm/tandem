@@ -5,14 +5,14 @@ EventEmitter  = require('events').EventEmitter
 
 authenticate = (client, packet, callback) ->
   # Need to leave room
-  if packet.docId? and packet.user?
-    @storage.checkAccess(packet.docId, packet, (err, success) =>
+  if packet.fileId? and packet.user?
+    @storage.checkAccess(packet.fileId, packet, (err, success) =>
       if !err? and success
         client.get('metadata', (err, metadata) =>
-          client.leave(metadata.docId) if !err and metadata?.docId?
-          client.join(packet.docId)
+          client.leave(metadata.fileId) if !err and metadata?.fileId?
+          client.join(packet.fileId)
           metadata = 
-            docId  : packet.docId
+            fileId  : packet.fileId
             user   : packet.user
           client.set('metadata', metadata, =>
             # Presence stuff
@@ -27,7 +27,7 @@ authenticate = (client, packet, callback) ->
         callback({ error: ["Access denied"] })
     )
   else
-    callback({ error: ["Missing docId or user info"] })
+    callback({ error: ["Missing fileId or user info"] })
 
 initNetwork = (server) ->
   @io = socketio.listen(server)

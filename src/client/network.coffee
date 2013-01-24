@@ -1,14 +1,14 @@
 authenticate = ->
   authPacket =
     auth: @authObj
-    docId: @docId
+    fileId: @fileId
     user: @user
   @socket.emit('auth', authPacket, (response) =>
     if !response.error? || response.error.length == 0
       console.info "Connected!", response
       setReady.call(this) if @ready == false
     else
-      this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document #{@docId}")
+      this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document #{@fileId}")
   )
 
 doSend = (route, packet, callback) ->
@@ -70,7 +70,7 @@ class TandemNetworkAdapter extends EventEmitter2
   @latency: 0
 
 
-  constructor: (endpointUrl, @docId, @user, @authObj, options = {}) ->
+  constructor: (endpointUrl, @fileId, @user, @authObj, options = {}) ->
     options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS))
     @settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, options)
     @id = _.uniqueId('adapter-')

@@ -93,7 +93,7 @@ class TandemFile extends EventEmitter2
     SYNC    : 'ot/sync'
     UPDATE  : 'ot/update'
 
-  constructor: (@docId, @adapter, initial, version) ->
+  constructor: (@fileId, @adapter, initial, version) ->
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
     initEngine.call(this, initial, version)
