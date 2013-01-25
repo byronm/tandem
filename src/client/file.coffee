@@ -106,6 +106,9 @@ class TandemFile extends EventEmitter2
   getUsers: ->
     return []
 
+  isDirty: ->
+    return !@engine.inFlight.isIdentity() or !@engine.inLine.isIdentity()
+
   send: (route, packet, callback, priority = false) ->
     @adapter.send(route, packet, (response) =>
       checkAdapterError.call(this, response, callback)
