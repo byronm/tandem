@@ -42,6 +42,8 @@ update = (client, metadata, packet, callback) ->
 
 class TandemFile
   @routes:
+    JOIN    : 'user/join'
+    LEAVE   : 'user/leave'
     RESYNC  : 'ot/resync'
     SYNC    : 'ot/sync'
     UPDATE  : 'ot/update'
@@ -51,15 +53,24 @@ class TandemFile
     @engine = new TandemEngine(initial, version)
 
   addClient: (client, metadata) ->
-    _.each(TandemFile.routes, (route, name) ->
-      client.removeAllListeners(route)
-    )
-    client.on(TandemFile.routes.RESYNC, (packet, callback) =>
-      resync.call(this, callback)
-    ).on(TandemFile.routes.SYNC, (packet, callback) =>
-      sync.call(this, packet, callback)
-    ).on(TandemFile.routes.UPDATE, (packet, callback) =>
-      update.call(this, client, metadata, packet, callback)
+    client.get('metadata', (err, oldMetadata) =>
+      if !err and metadata?.fileId?
+        client.broadcast.emit(TandemFile.routes.LEAVE, oldMetadata.user)
+        client.leave(metadata.fileId)
+      client.set('metadata', metadata, (err) =>
+        client.join(metadata.fileId)
+        client.broadcast.emit(TandemFile.routes.JOIN, metadata.user)
+        _.each(TandemFile.routes, (route, name) ->
+          client.removeAllListeners(route)
+        )
+        client.on(TandemFile.routes.RESYNC, (packet, callback) =>
+          resync.call(this, callback)
+        ).on(TandemFile.routes.SYNC, (packet, callback) =>
+          sync.call(this, packet, callback)
+        ).on(TandemFile.routes.UPDATE, (packet, callback) =>
+          update.call(this, client, metadata, packet, callback)
+        )
+      )
     )
 
   getHead: ->

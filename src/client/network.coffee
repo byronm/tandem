@@ -100,7 +100,6 @@ class TandemNetworkAdapter extends EventEmitter2
       super
     else
       onSocketCallback = (packet) =>
-        console.info "Got", route, packet
         track.call(this, TandemNetworkAdapter.RECIEVE, route, packet)
         callback.call(this, packet) if callback?
       @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?

@@ -4,19 +4,35 @@ checkAdapterError = (response, callback) ->
   else
     this.emit(TandemFile.events.ERROR, response.error)
 
+initAdapterListeners = ->
+  @adapter.on(TandemFile.routes.UPDATE, (packet) =>
+    unless @engine.remoteUpdate(packet.delta, packet.version)
+      console.warn "Remote update failed, requesting resync"
+      resync.call(this)
+  ).on(TandemFile.routes.JOIN, (packet) =>
+    this.emit(TandemFile.events.JOIN, packet)
+  ).on(TandemFile.routes.LEAVE, (packet) =>
+    this.emit(TandemFile.events.LEAVE, packet)
+  )
+
 initEngine = (initial, version) ->
   @engine = new Tandem.ClientEngine(initial, version, (delta, version, callback) =>
     sendUpdate.call(this, delta, version, callback)
   )
 
-initListeners = ->
+initEngineListeners = ->
+  @engine.on(Tandem.ClientEngine.events.UPDATE, (delta) =>
+    this.emit(TandemFile.events.UPDATE, delta)
+  ).on(Tandem.ClientEngine.events.ERROR, (args...) =>
+    this.emit(TandemFile.events.ERROR, this, args)
+    console.warn "Engine error, attempting resync", @id, args
+    resync.call(this)
+  )
+
+initHealthListeners = ->
   @adapter.on(Tandem.NetworkAdapter.events.READY, =>
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
     sync.call(this)
-  ).on(TandemFile.routes.UPDATE, (packet) =>
-    unless @engine.remoteUpdate(packet.delta, packet.version)
-      console.warn "Remote update failed, requesting resync"
-      resync.call(this)
   ).on(Tandem.NetworkAdapter.events.RECONNECT, (transport, attempts) =>
     sync.call(this)
   ).on(Tandem.NetworkAdapter.events.RECONNECTING, (timeout, attempts) =>
@@ -27,16 +43,14 @@ initListeners = ->
     this.emit(TandemFile.events.ERROR, this, args)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
   )
-  @engine.on(Tandem.ClientEngine.events.UPDATE, (delta) =>
-    this.emit(TandemFile.events.UPDATE, delta)
-  ).on(Tandem.ClientEngine.events.ERROR, (args...) =>
-    this.emit(TandemFile.events.ERROR, this, args)
-    console.warn "Engine error, attempting resync", @id, args
-    resync.call(this)
-  )
   this.on(TandemFile.events.HEALTH, (oldHealth, newHealth) =>
     @health = newHealth
   )
+
+initListeners = ->
+  initAdapterListeners.call(this)
+  initEngineListeners.call(this)
+  initHealthListeners.call(this)
 
 resync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)

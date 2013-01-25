@@ -12,7 +12,7 @@ authenticate = (client, packet, callback) ->
           client.leave(metadata.fileId) if !err and metadata?.fileId?
           client.join(packet.fileId)
           metadata = 
-            fileId  : packet.fileId
+            fileId : packet.fileId
             user   : packet.user
           client.set('metadata', metadata, =>
             # Presence stuff
