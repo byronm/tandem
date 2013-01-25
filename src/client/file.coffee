@@ -10,9 +10,18 @@ initAdapterListeners = ->
       console.warn "Remote update failed, requesting resync"
       resync.call(this)
   ).on(TandemFile.routes.JOIN, (packet) =>
-    this.emit(TandemFile.events.JOIN, packet)
+    if @users[packet.id]?
+      @users[packet.id].online += 1
+    else
+      @users[packet.id] = packet
+      @users[packet.id].online = 1
+      this.emit(TandemFile.events.JOIN, packet)
   ).on(TandemFile.routes.LEAVE, (packet) =>
-    this.emit(TandemFile.events.LEAVE, packet)
+    if @users[packet.id]?
+      @users[packet.id].online -= 1
+      if @users[packet.id].online == 0
+        this.emit(TandemFile.events.LEAVE, packet)
+        @users[packet.id] = undefined
   )
 
 initEngine = (initial, version) ->
@@ -110,6 +119,7 @@ class TandemFile extends EventEmitter2
   constructor: (@fileId, @adapter, initial, version) ->
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
+    @users = {}
     initEngine.call(this, initial, version)
     initListeners.call(this)
 
@@ -118,7 +128,7 @@ class TandemFile extends EventEmitter2
     @engine.removeAllListeners()
 
   getUsers: ->
-    return []
+    return @users
 
   isDirty: ->
     return !@engine.inFlight.isIdentity() or !@engine.inLine.isIdentity()
