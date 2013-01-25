@@ -228,6 +228,7 @@ testComposeAndDecompose = (deltaA, deltaB, expectedComposed, expectedDecomposed)
   assert.deepEqual(decomposed, expectedDecomposed, decomposeError)
 
 describe('compose', ->
+
   it('should append', ->
     deltaA = new Delta(0, 5, [new InsertOp("hello")])
     deltaB = new Delta(5, 11, [new RetainOp(0, 5), new InsertOp(" world")])
@@ -545,6 +546,15 @@ describe('compose', ->
     expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
     expectedDecomposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
     testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
+  )
+
+  it('should delete the head with attribution', ->
+    deltaA = new Delta(0, 11, [new InsertOp("bold", {bold: true}), new InsertOp("italics", {italics: true})])
+    deltaC = new Delta(0, 7, [new InsertOp("italics", {italics: true})])
+    console.info "DeltaC: #{deltaC.toString()}"
+    decomposed = deltaC.decompose(deltaA)
+    composed = deltaA.compose(decomposed)
+    assert.deepEqual(deltaC, composed, "")
   )
 
   # Nested composition tests, i.e., compose(a, compose(b, c))
