@@ -197,6 +197,21 @@ describe('decompose', ->
     expectedDecomposed = new Delta(8, 6, [new InsertOp("z"), new RetainOp(3, 8)])
     testDecompose(deltaA, deltaC, expectedDecomposed)
   )
+
+  it('should yield the minimal decomposition', ->
+    console.info "MINIMAL"
+    deltaA = new Delta(0, 3, [new InsertOp("ab", {bold: true}),
+                              new InsertOp("c")])
+    deltaC = new Delta(0, 4, [new InsertOp("a", {bold: true}),
+                              new InsertOp("c"),
+                              new InsertOp("b", {bold: true})
+                              new InsertOp("c")])
+
+    expectedDecomposed = new Delta(3, 4, [new RetainOp(0, 1),
+                                          new InsertOp("c"),
+                                          new RetainOp(1, 3)])
+    testDecompose(deltaA, deltaC, expectedDecomposed)
+  )
 )
 
 ##############################
