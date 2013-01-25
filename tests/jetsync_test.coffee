@@ -199,7 +199,6 @@ describe('decompose', ->
   )
 
   it('should yield the minimal decomposition', ->
-    console.info "MINIMAL"
     deltaA = new Delta(0, 3, [new InsertOp("ab", {bold: true}),
                               new InsertOp("c")])
     deltaC = new Delta(0, 4, [new InsertOp("a", {bold: true}),
