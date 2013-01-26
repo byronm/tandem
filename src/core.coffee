@@ -1,15 +1,13 @@
 if exports?
   _ = require('underscore')._
   diff_match_patch = require('googlediff')
-  dmp = new diff_match_patch
 else
   _ = window._
   diff_match_patch = window.diff_match_patch
-  diff_match_patch.DIFF_DELETE = -1
-  diff_match_patch.DIFF_EQUAL = 0
-  diff_match_patch.DIFF_INSERT = 1
-  dmp = new diff_match_patch
-
+diff_match_patch.DIFF_DELETE = -1
+diff_match_patch.DIFF_EQUAL = 0
+diff_match_patch.DIFF_INSERT = 1
+dmp = new diff_match_patch
 
 class Op
   @compact: (ops) ->
@@ -267,7 +265,7 @@ class Delta
   #    retain in deltaA.
   decompose: (deltaA) ->
     deltaC = this
-    console.assert(Delta.isDelta(deltaA), "Decompose2 called when deltaA is not a Delta, type: " + typeof deltaA)
+    console.assert(Delta.isDelta(deltaA), "Decompose called when deltaA is not a Delta, type: " + typeof deltaA)
     console.assert(deltaA.startLength == @startLength, "startLength #{deltaA.startLength} / startLength #{@startLength} mismatch")
     console.assert(_.all(deltaA.ops, ((op) -> return op.value?)), "DeltaA has retain in decompose")
     console.assert(_.all(deltaC.ops, ((op) -> return op.value?)), "DeltaC has retain in decompose")
@@ -343,8 +341,6 @@ class Delta
 
     diffTexts = (oldText, newText) ->
       diff = dmp.diff_main(oldText, newText)
-      if (diff.length > 2)
-        dmp.diff_cleanupEfficiency(diff)
       return diff
 
     textA = deltaToText(this)
@@ -480,6 +476,20 @@ class Delta
       @savedOpOffset += opLength
     return changes
 
+  # Given A and B, returns B' s.t. ABB' yields A.
+  invert: (deltaB) ->
+    console.assert(this.isInsertsOnly(), "Invert called on invalid delta containing non-insert ops: #{deltaA}")
+    deltaA = this
+    deltaC = deltaA.compose(deltaB)
+    inverse = deltaA.decompose(deltaC)
+    return inverse
+
+  isEqual: (other) ->
+    return false unless other
+    keys = ['startLength', 'endLength', 'ops']
+    return _.isEqual(_.pick(this, keys...),
+                     _.pick(other, keys...))
+
   isIdentity: ->
     if @startLength == @endLength
       if @ops.length == 0
@@ -494,6 +504,11 @@ class Delta
       if index != @endLength then return false
       return true
     return false
+
+  isInsertsOnly: ->
+    return _.every(@ops, (op) ->
+      return Delta.isInsert(op)
+    )
 
   toString: ->
     return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
