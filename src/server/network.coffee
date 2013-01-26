@@ -8,21 +8,14 @@ authenticate = (client, packet, callback) ->
   if packet.fileId? and packet.user?
     @storage.checkAccess(packet.fileId, packet, (err, success) =>
       if !err? and success
-        client.get('metadata', (err, metadata) =>
-          client.leave(metadata.fileId) if !err and metadata?.fileId?
-          client.join(packet.fileId)
-          metadata = 
-            fileId : packet.fileId
-            user   : packet.user
-          client.set('metadata', metadata, =>
-            # Presence stuff
-            # Emit might be heard after callback is sent and client sends editor/sync
-            client.once('newListener', =>
-              callback({ error: [] })
-            )
-            this.emit(TandemNetwork.events.CONNECT, client, metadata)
-          )
+        metadata = 
+          fileId : packet.fileId
+          user   : packet.user
+        # Emit might be heard after callback is sent and client sends editor/sync
+        client.once('newListener', =>
+          callback({ error: [] })
         )
+        this.emit(TandemNetwork.events.CONNECT, client, metadata)
       else
         callback({ error: ["Access denied"] })
     )

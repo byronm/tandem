@@ -2,13 +2,31 @@ _            = require('underscore')._
 Tandem       = require('../core')
 TandemEngine = require('./engine')
 
+initClientListeners = (client, metadata) ->
+  _.each(TandemFile.routes, (route, name) ->
+    client.removeAllListeners(route)
+  )
+  client.on(TandemFile.routes.RESYNC, (packet, callback) =>
+    resync.call(this, callback)
+  ).on(TandemFile.routes.SYNC, (packet, callback) =>
+    sync.call(this, packet, callback)
+  ).on(TandemFile.routes.UPDATE, (packet, callback) =>
+    update.call(this, client, metadata, packet, callback)
+  ).on(TandemFile.routes.BROADCAST, (packet, callback) =>
+    packet['userId'] = metadata.user.id if metadata.user?.id?
+    client.broadcast.emit(TandemFile.routes.BROADCAST, packet)
+    callback({}) if callback?
+  ).on('disconnect', =>
+    this.removeClient(client)
+  )
+
 
 resync = (callback) ->
   callback(
     resync: true
     head: @engine.head
     version: @engine.version
-    users: {}   # TODO Presence
+    users: @users
   )
 
 sync = (packet, callback) ->
@@ -17,7 +35,7 @@ sync = (packet, callback) ->
     return resync.call(this, callback) if err?
     callback(
       delta: delta
-      users: {}   # TODO Presence
+      users: @users
       version: version
     )
   )
@@ -29,12 +47,12 @@ update = (client, metadata, packet, callback) ->
     return resync.call(this, callback) if err?
     broadcastPacket =
       delta: delta
-      fileId: metadata.fileId
+      fileId: @id
       version: version
     broadcastPacket['userId'] = metadata.user.id if metadata.user?.id?
     client.broadcast.emit(TandemFile.routes.UPDATE, broadcastPacket)
     callback(
-      fileId: metadata.fileId
+      fileId: @id
       version: version
     )
   )  
@@ -42,35 +60,39 @@ update = (client, metadata, packet, callback) ->
 
 class TandemFile
   @routes:
-    JOIN    : 'user/join'
-    LEAVE   : 'user/leave'
-    RESYNC  : 'ot/resync'
-    SYNC    : 'ot/sync'
-    UPDATE  : 'ot/update'
+    BROADCAST : 'broadcast'
+    JOIN      : 'user/join'
+    LEAVE     : 'user/leave'
+    RESYNC    : 'ot/resync'
+    SYNC      : 'ot/sync'
+    UPDATE    : 'ot/update'
 
   constructor: (@id, initial, version) ->
     @versionSaved = version
     @engine = new TandemEngine(initial, version)
+    @users = {}
 
-  addClient: (client, metadata) ->
-    client.get('metadata', (err, oldMetadata) =>
-      if !err and metadata?.fileId?
-        client.broadcast.emit(TandemFile.routes.LEAVE, oldMetadata.user)
+  addClient: (client, metadata, callback = ->) ->
+    client.set('metadata', metadata, (err) =>
+      client.join(metadata.fileId)
+      client.broadcast.emit(TandemFile.routes.JOIN, metadata.user)
+      unless @users[metadata.user.id]?
+        @users[metadata.user.id] = _.clone(metadata.user)
+        @users[metadata.user.id].online = 0
+      @users[metadata.user.id].online += 1
+      initClientListeners.call(this, client, metadata)
+      callback()
+    )
+
+  removeClient: (client, callback = ->) ->
+    client.get('metadata', (err, metadata) =>
+      if !err and metadata?
+        client.broadcast.emit(TandemFile.routes.LEAVE, metadata.user)
         client.leave(metadata.fileId)
-      client.set('metadata', metadata, (err) =>
-        client.join(metadata.fileId)
-        client.broadcast.emit(TandemFile.routes.JOIN, metadata.user)
-        _.each(TandemFile.routes, (route, name) ->
-          client.removeAllListeners(route)
-        )
-        client.on(TandemFile.routes.RESYNC, (packet, callback) =>
-          resync.call(this, callback)
-        ).on(TandemFile.routes.SYNC, (packet, callback) =>
-          sync.call(this, packet, callback)
-        ).on(TandemFile.routes.UPDATE, (packet, callback) =>
-          update.call(this, client, metadata, packet, callback)
-        )
-      )
+        if @users[metadata.user.id]?
+          @users[metadata.user.id].online -= 1
+          @users[metadata.user.id] = undefined if @users[metadata.user.id].online == 0
+      callback()
     )
 
   getHead: ->

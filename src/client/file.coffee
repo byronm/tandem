@@ -1,6 +1,6 @@
 checkAdapterError = (response, callback) ->
   if !response.error? or response.error.length == 0
-    callback.call(this, response)
+    callback.call(this, response) if callback?
   else
     this.emit(TandemFile.events.ERROR, response.error)
 
@@ -9,6 +9,10 @@ initAdapterListeners = ->
     unless @engine.remoteUpdate(packet.delta, packet.version)
       console.warn "Remote update failed, requesting resync"
       resync.call(this)
+  ).on(TandemFile.routes.BROADCAST, (packet) =>
+    type = packet.type
+    packet = _.omit(packet, 'type')
+    this.emit(type, packet)
   ).on(TandemFile.routes.JOIN, (packet) =>
     if @users[packet.id]?
       @users[packet.id].online += 1
@@ -63,15 +67,23 @@ initListeners = ->
 
 resync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)
-  this.send(TandemFile.routes.RESYNC, {}, (response) =>
+  send.call(this, TandemFile.routes.RESYNC, {}, (response) =>
     delta = Tandem.Delta.makeDelta(response.head)
     @engine.resync(delta, response.version)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
   )
 
+send = (route, packet, callback = null, priority = false) ->
+  if callback?
+    @adapter.send(route, packet, (response) =>
+      checkAdapterError.call(this, response, callback)
+    , priority)
+  else
+    @adapter.send(route, packet)
+
 sendUpdate = (delta, version, callback) ->
   packet = { delta: delta, version: version }
-  this.send(Tandem.File.routes.UPDATE, packet, (response) =>
+  send.call(this, Tandem.File.routes.UPDATE, packet, (response) =>
     if response.resync
       console.warn "Update requesting resync", @id, packet, response
       delta = Tandem.Delta.makeDelta(response.head)
@@ -83,7 +95,8 @@ sendUpdate = (delta, version, callback) ->
 
 sync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
-  this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
+  send.call(this, TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
+    @users = response.users
     if response.resync
       console.warn "Sync requesting resync"
       resync.call(this)
@@ -110,11 +123,12 @@ class TandemFile extends EventEmitter2
     ERROR   : 'error'
 
   @routes:
-    JOIN    : 'user/join'
-    LEAVE   : 'user/leave'
-    RESYNC  : 'ot/resync'
-    SYNC    : 'ot/sync'
-    UPDATE  : 'ot/update'
+    BROADCAST : 'broadcast'
+    JOIN      : 'user/join'
+    LEAVE     : 'user/leave'
+    RESYNC    : 'ot/resync'
+    SYNC      : 'ot/sync'
+    UPDATE    : 'ot/update'
 
   constructor: (@fileId, @adapter, initial, version) ->
     @id = _.uniqueId('file-')
@@ -122,6 +136,11 @@ class TandemFile extends EventEmitter2
     @users = {}
     initEngine.call(this, initial, version)
     initListeners.call(this)
+
+  broadcast: (route, packet, callback) =>
+    packet = _.clone(packet)
+    packet.type = route
+    send.call(this, TandemFile.routes.BROADCAST, packet, callback)
 
   close: ->
     @adapter.removeAllListeners()
@@ -132,11 +151,6 @@ class TandemFile extends EventEmitter2
 
   isDirty: ->
     return !@engine.inFlight.isIdentity() or !@engine.inLine.isIdentity()
-
-  send: (route, packet, callback, priority = false) ->
-    @adapter.send(route, packet, (response) =>
-      checkAdapterError.call(this, response, callback)
-    , priority)
 
   transform: (indexes) ->
     @engine.transform(indexes)

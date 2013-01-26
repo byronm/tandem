@@ -14,12 +14,15 @@ authenticate = ->
 
 doSend = (route, packet, callback) ->
   track.call(this, TandemNetworkAdapter.SEND, route, packet)
-  setTimeout( => 
-    @socket.emit(route, packet, (response) =>
-      track.call(this, TandemNetworkAdapter.CALLBACK, route, response)
-      console.info 'Callback:', response
-      callback.call(this, response)
-    )
+  setTimeout( =>
+    if callback?
+      @socket.emit(route, packet, (response) =>
+        track.call(this, TandemNetworkAdapter.CALLBACK, route, response)
+        console.info 'Callback:', response
+        callback.call(this, response)
+      )
+    else
+      @socket.emit(route, packet)
   , TandemNetworkAdapter.latency)
 
 setReady = ->
