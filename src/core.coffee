@@ -506,7 +506,7 @@ class Delta
     return false
 
   isInsertsOnly: ->
-    _.every(@ops, (op) ->
+    return _.every(@ops, (op) ->
       return Delta.isInsert(op)
     )
 
