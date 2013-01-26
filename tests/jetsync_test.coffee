@@ -262,18 +262,18 @@ describe('compose', ->
   )
 
   it('should handle newlines following an attribution and ending the doc', ->
-    deltaA = new JetDelta(0, 4, [new JetInsert("ab"), new JetInsert("c", {bold: true}), new JetInsert("\n")])
-    deltaC = new JetDelta(0, 3, [new JetInsert("ab\n")])
-    decomposed = JetSync.decompose(deltaA, deltaC)
-    composed = JetSync.compose(deltaA, decomposed)
+    deltaA = new Delta(0, 4, [new InsertOp("ab"), new InsertOp("c", {bold: true}), new InsertOp("\n")])
+    deltaC = new Delta(0, 3, [new InsertOp("ab\n")])
+    decomposed = deltaC.decompose(deltaA)
+    composed = deltaA.compose(decomposed)
     assert(deltaC.isEqual(composed))
   )
 
   it('should handle newlines following an attribution and not ending the doc', ->
-    deltaA = new JetDelta(0, 7, [new JetInsert("ab"), new JetInsert("c", {bold: true}), new JetInsert("\ndef")])
-    deltaC = new JetDelta(0, 6, [new JetInsert("ab\ndef")])
-    decomposed = JetSync.decompose(deltaA, deltaC)
-    composed = JetSync.compose(deltaA, decomposed)
+    deltaA = new Delta(0, 7, [new InsertOp("ab"), new InsertOp("c", {bold: true}), new InsertOp("\ndef")])
+    deltaC = new Delta(0, 6, [new InsertOp("ab\ndef")])
+    decomposed = deltaC.decompose(deltaA)
+    composed = deltaA.compose(decomposed)
     assert(deltaC.isEqual(composed))
   )
 
