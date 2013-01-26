@@ -1,12 +1,41 @@
-TandemFile = require('./file')
+_           = require('underscore')._
+request     = require('request')
+Tandem      = require('../core')
+TandemFile  = require('./file')
+
+
+save = (file, callback = ->) ->
+  return callback(null) if !file.isDirty()
+  version = file.getVersion()
+  request.put({
+    json: 
+      head: file.getHead()
+      version: version
+    uri: "#{@endpointUrl}/#{file.id}"
+  }, (err, response) =>
+    err = "Response error: #{response.statusCode}" unless response.statusCode == 200
+    file.versionSaved = version unless err?
+    callback(err)
+  )
+
 
 class TandemStorage
-  constructor: (@endpointUrl, options) ->
-    @pads = {}
+  @DEFAULTS:
+    'save interval': 1000
+
+  constructor: (@endpointUrl, options = {}) ->
+    options = _.pick(options, _.keys(TandemStorage.DEFAULTS))
+    @settings = _.extend({}, TandemStorage.DEFAULTS, options)
+    @files = {}
+    setInterval( =>
+      _.each(@files, (file, id) =>
+        save.call(this, file) unless !file? or _.isArray(file)
+      )
+    , @settings['save interval'])
 
   checkAccess: (docId, authObj, callback) ->
     request.get({
-      uri: @endpointUrl
+      uri: "#{@endpointUrl}/#{docId}/check_access"
       json: { auth_obj: authObj }
     }, (err, response, body) ->
       err = "Response error: #{response.statusCode}" unless response.statusCode == 200
@@ -14,29 +43,29 @@ class TandemStorage
     )
 
   clear: ->
-    TandemFile.files = {}
+    @files = {}
 
   find: (id, callback) ->
-    if TandemFile.files[id]?
-      if _.isArray(TandemFile.files[id])
-        TandemFile.files[id].push(callback)
+    if @files[id]?
+      if _.isArray(@files[id])
+        @files[id].push(callback)
       else
-        callback(null, TandemFile.files[id])
+        callback(null, @files[id])
     else
-      TandemFile.files[id] = [callback]
+      @files[id] = [callback]
       request.get({
-        uri: @endpointUrl
+        uri: "#{@endpointUrl}/#{id}"
         json: true
-      }, (err, response, body) ->
+      }, (err, response, body) =>
         err = "Response error: #{response.statusCode}" unless response.statusCode == 200
-        callbacks = TandemFile.files[id]
-        TandemFile.files[id] = undefined
+        callbacks = @files[id]
+        @files[id] = undefined
         unless err?
           head = Tandem.Delta.makeDelta(body.head)
           version = parseInt(body.version)
-          TandemFile.files[id] = new TandemFile(id, head, version)
-        _.each(callbacks, (callback) ->
-          callback(err, TandemFile.files[id])
+          @files[id] = new TandemFile(id, head, version)
+        _.each(callbacks, (callback) =>
+          callback(err, @files[id])
         )
       )
 

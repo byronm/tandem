@@ -514,11 +514,13 @@ class Delta
     return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
 
 
-# Expose this code to other files
-root = if (typeof exports != "undefined" && exports != null) then exports else window
-root.Tandem = {
+Tandem = {
   Delta: Delta
   Op: Op
   InsertOp: InsertOp
   RetainOp: RetainOp
 }
+if exports?
+  module.exports = Tandem
+else
+  window.Tandem = Tandem
