@@ -484,6 +484,12 @@ class Delta
     inverse = deltaC.decompose(deltaA)
     return inverse
 
+  isEqual: (other) ->
+    return false unless other
+    keys = ['startLength', 'endLength', 'ops']
+    return _.isEqual(_.pick(this, keys...),
+                     _.pick(other, keys...))
+
   isIdentity: ->
     if @startLength == @endLength
       if @ops.length == 0
