@@ -261,6 +261,22 @@ describe('compose', ->
     testComposeAndDecompose(deltaA, deltaB, expectedComposed, expectedDecomposed)
   )
 
+  it('should handle newlines following an attribution and ending the doc', ->
+    deltaA = new JetDelta(0, 4, [new JetInsert("ab"), new JetInsert("c", {bold: true}), new JetInsert("\n")])
+    deltaC = new JetDelta(0, 3, [new JetInsert("ab\n")])
+    decomposed = JetSync.decompose(deltaA, deltaC)
+    composed = JetSync.compose(deltaA, decomposed)
+    assert(deltaC.isEqual(composed))
+  )
+
+  it('should handle newlines following an attribution and not ending the doc', ->
+    deltaA = new JetDelta(0, 7, [new JetInsert("ab"), new JetInsert("c", {bold: true}), new JetInsert("\ndef")])
+    deltaC = new JetDelta(0, 6, [new JetInsert("ab\ndef")])
+    decomposed = JetSync.decompose(deltaA, deltaC)
+    composed = JetSync.compose(deltaA, decomposed)
+    assert(deltaC.isEqual(composed))
+  )
+
   it('should insert a character that appears later in the original document', ->
     deltaA = new Delta(0, 5, [new InsertOp("abczd")])
     deltaB = new Delta(5, 6, [new RetainOp(0, 1), new InsertOp("z"), new
