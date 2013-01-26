@@ -1098,6 +1098,25 @@ describe('isInsertsOnly', ->
   )
 )
 
+describe('invert', ->
+  it('should handle deleting the document', ->
+    deltaA = new Delta(0, 1, [new InsertOp("a")])
+    deltaB = new Delta(1, 0, [])
+    inverse = deltaA.invert(deltaB)
+    expectedInverse = new Delta(0, 1, [new InsertOp("a")])
+    assert(inverse.isEqual(expectedInverse),
+      "Expected: #{expectedInverse} but got: #{inverse}")
+  )
+
+  it('should handle deleting the tail of the document', ->
+    deltaA = new Delta(0, 3, [new InsertOp("abc")])
+    deltaB = new Delta(3, 1, [new RetainOp(0, 1)])
+    expectedInverse = new Delta(1, 3, [new RetainOp(0, 1), new InsertOp("bc")])
+    inverse = deltaA.invert(deltaB)
+    assert(((deltaA.compose(deltaB)).compose(inverse)).isEqual(deltaA))
+  )
+)
+
 ##############################
 # Fuzzer to test compose, follows, and applyDeltaToText.
 # This test simulates two clients each making 10000 deltas on the document.
