@@ -16,7 +16,7 @@ testDecompose = (deltaA, deltaC, expectedDecomposed) ->
   decomposed = deltaC.decompose(deltaA)
   decomposeError = """Incorrect decomposition. Got: #{decomposed.toString()},
                     expected: #{expectedDecomposed.toString()}"""
-  assert.deepEqual(expectedDecomposed, decomposed, decomposeError)
+  assert(expectedDecomposed.isEqual(decomposed), decomposeError)
 
 describe('decompose', ->
   # Basic edit tests
@@ -219,13 +219,13 @@ describe('decompose', ->
 testComposeAndDecompose = (deltaA, deltaB, expectedComposed, expectedDecomposed) ->
   composed = deltaA.compose(deltaB)
   composeError =  "Incorrect composition. Got: #{composed.toString()}, expected: #{expectedComposed.toString()}"
-  assert.deepEqual(composed, expectedComposed, composeError)
+  assert(composed.isEqual(expectedComposed), composeError)
   return unless _.all(deltaA.ops, ((op) -> return op.value?))
   return unless _.all(composed.ops, ((op) -> return op.value?))
   decomposed = composed.decompose(deltaA)
   decomposeError = """Incorrect decomposition. Got: #{decomposed.toString()},
                     expected: #{expectedDecomposed.toString()}"""
-  assert.deepEqual(decomposed, expectedDecomposed, decomposeError)
+  assert(decomposed.isEqual(expectedDecomposed), decomposeError)
 
 describe('compose', ->
 
@@ -572,9 +572,9 @@ describe('compose', ->
     deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
     deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
     expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
-    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD))))
-    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC)).compose(deltaD))
-    assert.deepEqual(expectedComposed, (deltaA.compose(deltaB)).compose(deltaC.compose(deltaD)))
+    assert(expectedComposed.isEqual(deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))))
+    assert(expectedComposed.isEqual(deltaA.compose(deltaB.compose(deltaC)).compose(deltaD)))
+    assert(expectedComposed.isEqual((deltaA.compose(deltaB)).compose(deltaC.compose(deltaD))))
   )
 
   it('should handle nested compositions', ->
@@ -583,7 +583,7 @@ describe('compose', ->
     deltaC = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
     deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
     expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD))))
+    assert(expectedComposed.isEqual(deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))))
   )
 
   it('should handle nested compositions', ->
@@ -593,7 +593,7 @@ describe('compose', ->
     deltaD = new Delta(3, 3, [new RetainOp(0, 3, {bold: true})])
     deltaE = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
     expectedComposed = new Delta(0, 3, [new InsertOp("abc")])
-    assert.deepEqual(expectedComposed, (deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))).compose(deltaE))
+    assert(expectedComposed.isEqual((deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))).compose(deltaE)))
   )
 
   it('should handle nested compositions', ->
@@ -602,7 +602,7 @@ describe('compose', ->
     deltaC = new Delta(3, 3, [new RetainOp(0, 3)])
     deltaD = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
     expectedComposed = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
-    assert.deepEqual(expectedComposed, (deltaA.compose(deltaB.compose(deltaC.compose(deltaD)))))
+    assert(expectedComposed.isEqual((deltaA.compose(deltaB.compose(deltaC.compose(deltaD))))))
   )
 
   it('should handle nested compositions', ->
@@ -612,7 +612,7 @@ describe('compose', ->
     deltaD = new Delta(3, 3, [new RetainOp(0, 3)])
     deltaE = new Delta(3, 3, [new RetainOp(0, 3, {fontsize: null})])
     expectedComposed = new Delta(0, 3, [new InsertOp("abc")])
-    assert.deepEqual(expectedComposed, deltaA.compose(deltaB.compose(deltaC.compose(deltaD.compose(deltaE)))))
+    assert(expectedComposed.isEqual(deltaA.compose(deltaB.compose(deltaC.compose(deltaD.compose(deltaE))))))
   )
 
   # Test decompose + author attribution
@@ -666,9 +666,8 @@ describe('compose', ->
     deltaA = new Delta(10, 10, [new RetainOp(0, 10)])
     deltaB = new Delta(10, 10, [new RetainOp(0,3), new RetainOp(3,6,{bold:true}), new RetainOp(6,10)])
     composed = deltaA.compose(deltaB)
-    assert.deepEqual(deltaB, composed)
+    assert(deltaB.isEqual(composed))
   )
-
 
   ##############################
   # Test Recursive Attributes
@@ -768,7 +767,7 @@ describe('compose', ->
 testFollows = (deltaA, deltaB, aIsRemote, expected) ->
   computed = deltaB.follows(deltaA, aIsRemote)
   followsError = "Incorrect follow. Got: " + computed.toString() + ", expected: " + expected.toString()
-  assert.deepEqual(computed, expected, followsError)
+  assert(computed.isEqual(expected), followsError)
 
 describe('follows', ->
   it('should resolve alternating edits', ->
@@ -1240,189 +1239,184 @@ createDelta = (doc, docDelta) ->
 console.info "Testing fuzzer helpers"
 delta = new Delta(0, 6, [new RetainOp(0, 6)])
 deleteAt(delta, 3, 1)
-assert.deepEqual(delta, new Delta(0, 5, [new RetainOp(0, 3), new RetainOp(4, 6)]))
+assert(delta.isEqual(new Delta(0, 5, [new RetainOp(0, 3), new RetainOp(4, 6)])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 6)])
 deleteAt(delta, 3, 2)
-assert.deepEqual(delta, new Delta(0, 4, [new RetainOp(0, 3), new RetainOp(5, 6)]))
+assert(delta.isEqual(new Delta(0, 4, [new RetainOp(0, 3), new RetainOp(5, 6)])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 6)])
 deleteAt(delta, 5, 1)
-assert.deepEqual(delta, new Delta(0, 5, [new RetainOp(0, 5)]))
+assert(delta.isEqual(new Delta(0, 5, [new RetainOp(0, 5)])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 6)])
 deleteAt(delta, 5, 2)
-assert.deepEqual(delta, new Delta(0, 5, [new RetainOp(0, 5)]))
+assert(delta.isEqual(new Delta(0, 5, [new RetainOp(0, 5)])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 6)])
 deleteAt(delta, 0, 1)
-assert.deepEqual(delta, new Delta(0, 5, [new RetainOp(1, 6)]))
+assert(delta.isEqual(new Delta(0, 5, [new RetainOp(1, 6)])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 6)])
 deleteAt(delta, 0, 6)
-assert.deepEqual(delta, new Delta(0, 0, []))
+assert(delta.isEqual(new Delta(0, 0, [])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 deleteAt(delta, 0, 1)
-assert.deepEqual(delta, new Delta(0, 5, [new InsertOp("12345")]))
+assert(delta.isEqual(new Delta(0, 5, [new InsertOp("12345")])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 deleteAt(delta, 0, 4)
-assert.deepEqual(delta, new Delta(0, 2, [new InsertOp("45")]))
+assert(delta.isEqual(new Delta(0, 2, [new InsertOp("45")])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 deleteAt(delta, 3, 1)
-assert.deepEqual(delta, new Delta(0, 5, [new InsertOp("01245")]))
+assert(delta.isEqual(new Delta(0, 5, [new InsertOp("01245")])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 deleteAt(delta, 3, 3)
-assert.deepEqual(delta, new Delta(0, 3, [new InsertOp("012")]))
+assert(delta.isEqual(new Delta(0, 3, [new InsertOp("012")])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 deleteAt(delta, 3, 1)
-assert.deepEqual(delta, new Delta(0, 5, [new InsertOp("01245")]))
+assert(delta.isEqual(new Delta(0, 5, [new InsertOp("01245")])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 deleteAt(delta, 5, 1)
-assert.deepEqual(delta, new Delta(0, 5, [new InsertOp("01234")]))
+assert(delta.isEqual(new Delta(0, 5, [new InsertOp("01234")])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 3), new InsertOp("abc")])
 deleteAt(delta, 2, 3)
-assert.deepEqual(delta, new Delta(0, 3, [new RetainOp(0, 2), new
-InsertOp("c")]))
+assert(delta.isEqual(new Delta(0, 3, [new RetainOp(0, 2), new InsertOp("c")])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 3), new RetainOp(6, 9)])
 deleteAt(delta, 2, 3)
-assert.deepEqual(delta, new Delta(0, 3, [new RetainOp(0, 2), new
-RetainOp(8, 9)]))
+assert(delta.isEqual(new Delta(0, 3, [new RetainOp(0, 2), new RetainOp(8, 9)])))
 
 delta = new Delta(0, 6, [new RetainOp(0, 3), new RetainOp(6, 9)])
 deleteAt(delta, 0, 3)
-assert.deepEqual(delta, new Delta(0, 3, [new RetainOp(6, 9)]))
+assert(delta.isEqual(new Delta(0, 3, [new RetainOp(6, 9)])))
 
 delta = new Delta(0, 6, [new InsertOp("abc"), new InsertOp("efg")])
 deleteAt(delta, 2, 3)
-assert.deepEqual(delta, new Delta(0, 3, [new InsertOp("ab"), new
-InsertOp("g")]))
+assert(delta.isEqual(new Delta(0, 3, [new InsertOp("ab"), new InsertOp("g")])))
 
 delta = new Delta(0, 6, [new InsertOp("abc"), new RetainOp(3, 6)])
 deleteAt(delta, 2, 3)
-assert.deepEqual(delta, new Delta(0, 3, [new InsertOp("ab"), new
-RetainOp(5, 6)]))
+assert(delta.isEqual(new Delta(0, 3, [new InsertOp("ab"), new RetainOp(5, 6)])))
 
 delta = new Delta(37, 28, [new RetainOp(0, 21), new RetainOp(24, 26), new RetainOp(32, 37)])
 deleteAt(delta, 12, 14)
-assert.deepEqual(delta, new Delta(37, 14, [new RetainOp(0, 12), new
-RetainOp(35, 37)]))
+assert(delta.isEqual(new Delta(37, 14, [new RetainOp(0, 12), new RetainOp(35, 37)])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 insertAt(delta, 3, "abcdefg")
-assert.deepEqual(delta, new Delta(0, 13, [new InsertOp("012abcdefg345")]))
+assert(delta.isEqual(new Delta(0, 13, [new InsertOp("012abcdefg345")])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 insertAt(delta, 0, "abcdefg")
-assert.deepEqual(delta, new Delta(0, 13, [new InsertOp("abcdefg012345")]))
+assert(delta.isEqual(new Delta(0, 13, [new InsertOp("abcdefg012345")])))
 
 delta = new Delta(0, 6, [new InsertOp("012345")])
 insertAt(delta, 6, "abcdefg")
-assert.deepEqual(delta, new Delta(0, 13, [new InsertOp("012345abcdefg")]))
+assert(delta.isEqual(new Delta(0, 13, [new InsertOp("012345abcdefg")])))
 
 console.info ">>>>>>>>>> Testing formatAt <<<<<<<<<<<<<<<<<"
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 0, 1, ["bold"], reference)
 expected = new Delta(3, 6, [new InsertOp("a"), new InsertOp("bc", {bold: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 0, 1, ["bold", "italics"], reference)
 expected = new Delta(3, 6, [new InsertOp("a", {italics: true}), new InsertOp("bc", {bold: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 0, 2, ["bold"], reference)
 expected = new Delta(3, 6, [new InsertOp("ab"), new InsertOp("c", {bold: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 0, 2, ["bold", "italics"], reference)
 expected = new Delta(3, 6, [new InsertOp("ab", {italics: true}), new InsertOp("c", {bold: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 1, 2, ["bold"], reference)
 expected = new Delta(3, 6, [new InsertOp("a", {bold: true}), new InsertOp("bc"), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 1, 2, ["bold", "italics"], reference)
 expected = new Delta(3, 6, [new InsertOp("a", {bold: true}), new InsertOp("bc", {italics: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 2, 1, ["bold"], reference)
 expected = new Delta(3, 6, [new InsertOp("ab", {bold: true}), new InsertOp("c"), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 2, 1, ["bold", "italics"], reference)
 expected = new Delta(3, 6, [new InsertOp("ab", {bold: true}), new InsertOp("c", {italics: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 0, 3, ["italics"], reference)
 expected = new Delta(3, 6, [new InsertOp("abc", {bold: true, italics: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 2, 1, ["italics"], reference)
 expected = new Delta(3, 6, [new InsertOp("ab", {bold: true}), new InsertOp("c", {bold: true, italics: true}), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 3, [new RetainOp(0, 3)])
 formatAt(delta, 1, 1, ["bold"], reference)
 expected = new Delta(3, 3, [new RetainOp(0, 1), new RetainOp(1, 2, {bold: null}), new RetainOp(2, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 3, [new RetainOp(0, 3)])
 formatAt(delta, 1, 1, ["bold", "italics"], reference)
 expected = new Delta(3, 3, [new RetainOp(0, 1), new RetainOp(1, 2, {bold: null, italics: true}), new RetainOp(2, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected, "Expected #{expected} but got #{delta}"))
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 3, [new RetainOp(0, 3)])
 formatAt(delta, 0, 3, ["bold"], reference)
 expected = new Delta(3, 3, [new RetainOp(0, 3, {bold: null})])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 3, 3, ["bold"], reference)
 expected = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3, {bold: null})])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 3, 3, ["bold", "italics"], reference)
 expected = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3, {bold: null, italics: true})])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 0, 3, ["bold"], reference)
 expected = new Delta(3, 6, [new InsertOp("abc"), new RetainOp(0, 3)])
-assert.deepEqual(delta, expected, "Expected #{expected} but got #{delta}")
+assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
 ##############################
 # Fuzz decompose
@@ -1452,8 +1446,8 @@ for i in [1...1000]
   composed = deltaA.compose(decomposed)
   deltaC.clearOpsCache()
   composed.clearOpsCache()
-  assert.deepEqual(deltaC, composed, "Decompose failed. DeltaA:
-    #{deltaA.toString()} DeltaC: #{deltaC.toString()}.")
+  assert(deltaC.isEqual(composed),
+    "Decompose failed. DeltaA: #{deltaA.toString()} DeltaC: #{deltaC.toString()}.")
 
 
 ##############################
