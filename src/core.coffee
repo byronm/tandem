@@ -481,7 +481,7 @@ class Delta
     console.assert(this.isInsertsOnly(), "Invert called on invalid delta containing non-insert ops: #{deltaA}")
     deltaA = this
     deltaC = deltaA.compose(deltaB)
-    inverse = deltaC.decompose(deltaA)
+    inverse = deltaA.decompose(deltaC)
     return inverse
 
   isEqual: (other) ->
