@@ -551,10 +551,9 @@ describe('compose', ->
   it('should delete the head with attribution', ->
     deltaA = new Delta(0, 11, [new InsertOp("bold", {bold: true}), new InsertOp("italics", {italics: true})])
     deltaC = new Delta(0, 7, [new InsertOp("italics", {italics: true})])
-    console.info "DeltaC: #{deltaC.toString()}"
     decomposed = deltaC.decompose(deltaA)
     composed = deltaA.compose(decomposed)
-    assert.deepEqual(deltaC, composed, "")
+    assert(composed.isEqual(deltaC))
   )
 
   # Nested composition tests, i.e., compose(a, compose(b, c))
