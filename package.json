@@ -1,6 +1,6 @@
 {
   "name": "tandem",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "dependencies": {
     "googlediff": "0.1.0",
     "underscore": "1.4.x"
