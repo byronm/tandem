@@ -5,7 +5,7 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     meta: {
-      version: '0.1.1',
+      version: '0.1.2',
       banner: 
         '// Tandem Realtime Coauthoring Engine - v<%= meta.version %> - ' +
           '//<%= grunt.template.today("yyyy-mm-dd") %>\n' +
