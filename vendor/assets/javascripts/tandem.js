@@ -1,0 +1,10 @@
+//= require async
+//= require underscore
+//= require socket.io
+//= require diff_match_patch
+//= require eventemitter2
+//= require tandem/core.coffee
+//= require tandem/engine.coffee
+//= require tandem/file.coffee
+//= require tandem/network.coffee
+//= require tandem/tandem.coffee
