@@ -30,8 +30,8 @@ initNetwork = (server) ->
     )
   )
   @io.configure('production', =>
-    io.enable('browser client minification')
-    io.enable('browser client etag')
+    @io.enable('browser client minification')
+    @io.enable('browser client etag')
   )
   @io.sockets.on('connection', (client) =>
     client.on('auth', (packet, callback) =>
