@@ -45,10 +45,6 @@ track = (type, route, packet) ->
   @stats[type] = {} unless @stats[type]?
   @stats[type][route] = 0  unless @stats[type][route]?
   @stats[type][route] += 1
-  historyObj = {}
-  historyObj["#{type}: #{route}"] = packet
-  @history.push(historyObj)
-
 
 
 class TandemNetworkAdapter extends EventEmitter2
@@ -85,7 +81,6 @@ class TandemNetworkAdapter extends EventEmitter2
       send     : {}
       recieve  : {}
       callback : {}
-    @history = []
     socketOptions = _.clone(@settings)
     parts = endpointUrl.split(':')
     host = parts[0]

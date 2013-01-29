@@ -6,9 +6,12 @@ checkAdapterError = (response, callback) ->
 
 initAdapterListeners = ->
   @adapter.on(TandemFile.routes.UPDATE, (packet) =>
-    unless @engine.remoteUpdate(packet.delta, packet.version)
-      console.warn "Remote update failed, requesting resync"
-      resync.call(this)
+    if packet.fileId != @fileId
+      console.warn "Got update for other file", packet.fileId
+    else
+      unless @engine.remoteUpdate(packet.delta, packet.version)
+        console.warn "Remote update failed, requesting resync"
+        resync.call(this)
   ).on(TandemFile.routes.BROADCAST, (packet) =>
     type = packet.type
     packet = _.omit(packet, 'type')

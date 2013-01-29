@@ -14,7 +14,7 @@ initClientListeners = (client, metadata) ->
     update.call(this, client, metadata, packet, callback)
   ).on(TandemFile.routes.BROADCAST, (packet, callback) =>
     packet['userId'] = metadata.user.id if metadata.user?.id?
-    client.broadcast.emit(TandemFile.routes.BROADCAST, packet)
+    client.broadcast.to(@id).emit(TandemFile.routes.BROADCAST, packet)
     callback({}) if callback?
   ).on('disconnect', =>
     this.removeClient(client)
@@ -50,7 +50,7 @@ update = (client, metadata, packet, callback) ->
       fileId: @id
       version: version
     broadcastPacket['userId'] = metadata.user.id if metadata.user?.id?
-    client.broadcast.emit(TandemFile.routes.UPDATE, broadcastPacket)
+    client.broadcast.to(@id).emit(TandemFile.routes.UPDATE, broadcastPacket)
     callback(
       fileId: @id
       version: version
@@ -75,7 +75,7 @@ class TandemFile
   addClient: (client, metadata, callback = ->) ->
     client.set('metadata', metadata, (err) =>
       client.join(metadata.fileId)
-      client.broadcast.emit(TandemFile.routes.JOIN, metadata.user)
+      client.broadcast.to(@id).emit(TandemFile.routes.JOIN, metadata.user)
       unless @users[metadata.user.id]?
         @users[metadata.user.id] = _.clone(metadata.user)
         @users[metadata.user.id].online = 0
@@ -87,7 +87,7 @@ class TandemFile
   removeClient: (client, callback = ->) ->
     client.get('metadata', (err, metadata) =>
       if !err and metadata?
-        client.broadcast.emit(TandemFile.routes.LEAVE, metadata.user)
+        client.broadcast.to(@id).emit(TandemFile.routes.LEAVE, metadata.user)
         client.leave(metadata.fileId)
         if @users[metadata.user.id]?
           @users[metadata.user.id].online -= 1
