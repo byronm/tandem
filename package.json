@@ -3,7 +3,8 @@
   "version": "0.1.2",
   "dependencies": {
     "googlediff": "0.1.0",
-    "socket.io": "0.9.x",
+    "request"   : "2.12.x",
+    "socket.io" : "0.9.x",
     "underscore": "1.4.x"
   },
   "devDependencies": {
