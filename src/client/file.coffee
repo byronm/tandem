@@ -70,23 +70,15 @@ initListeners = ->
 
 resync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)
-  send.call(this, TandemFile.routes.RESYNC, {}, (response) =>
+  this.send(TandemFile.routes.RESYNC, {}, (response) =>
     delta = Tandem.Delta.makeDelta(response.head)
     @engine.resync(delta, response.version)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
   )
 
-send = (route, packet, callback = null, priority = false) ->
-  if callback?
-    @adapter.send(route, packet, (response) =>
-      checkAdapterError.call(this, response, callback)
-    , priority)
-  else
-    @adapter.send(route, packet)
-
 sendUpdate = (delta, version, callback) ->
   packet = { delta: delta, version: version }
-  send.call(this, Tandem.File.routes.UPDATE, packet, (response) =>
+  this.send(Tandem.File.routes.UPDATE, packet, (response) =>
     if response.resync
       console.warn "Update requesting resync", @id, packet, response
       delta = Tandem.Delta.makeDelta(response.head)
@@ -98,7 +90,7 @@ sendUpdate = (delta, version, callback) ->
 
 sync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
-  send.call(this, TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
+  this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
     @users = response.users
     if response.resync
       console.warn "Sync requesting resync"
@@ -143,7 +135,7 @@ class TandemFile extends EventEmitter2
   broadcast: (route, packet, callback) =>
     packet = _.clone(packet)
     packet.type = route
-    send.call(this, TandemFile.routes.BROADCAST, packet, callback)
+    this.send(TandemFile.routes.BROADCAST, packet, callback)
 
   close: ->
     @adapter.removeAllListeners()
@@ -154,6 +146,14 @@ class TandemFile extends EventEmitter2
 
   isDirty: ->
     return !@engine.inFlight.isIdentity() or !@engine.inLine.isIdentity()
+
+  send: (route, packet, callback = null, priority = false) ->
+    if callback?
+      @adapter.send(route, packet, (response) =>
+        checkAdapterError.call(this, response, callback)
+      , priority)
+    else
+      @adapter.send(route, packet)
 
   transform: (indexes) ->
     @engine.transform(indexes)
