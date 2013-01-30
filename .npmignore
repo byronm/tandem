@@ -1,0 +1,7 @@
+build
+lib
+src/client
+tests
+vendor
+grunt.js
+tandem-rails.gemspec
