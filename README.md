@@ -4,6 +4,33 @@ Tandem Realtime Coauthoring Engine
 This repository is also both a Rails gem and a Node.js module.
 
 
+How to Use
+---
+
+### Client
+
+```javascript
+var tandem = new Tandem.Client('https://node.stypi.com');
+var file = tandem.open(fileId);
+file.on('file-update', function(delta) {
+    // ...
+});
+file.update(delta);
+```
+
+### Server
+
+```javascript
+var Tandem = require('tandem')
+
+var server = require('http').Server();
+new Tandem.Server(server);
+```
+
+
+Project Organization
+---
+
 ### Top level files/directories
 
 The tandem source code is in the **src** folder. Tests are in the **tests** folder.
