@@ -125,10 +125,11 @@ class TandemFile extends EventEmitter2
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@fileId, @adapter, initial, version) ->
+  constructor: (@fileId, @adapter, initial, version = 0) ->
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
     @users = {}
+    initial or= Tandem.Delta.getInitial('')
     initEngine.call(this, initial, version)
     initListeners.call(this)
 
