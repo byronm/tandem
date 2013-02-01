@@ -75,11 +75,12 @@ class TandemFile
   addClient: (client, metadata, callback = ->) ->
     client.set('metadata', metadata, (err) =>
       client.join(metadata.fileId)
-      client.broadcast.to(@id).emit(TandemFile.routes.JOIN, metadata.user)
-      unless @users[metadata.user.id]?
-        @users[metadata.user.id] = _.clone(metadata.user)
-        @users[metadata.user.id].online = 0
-      @users[metadata.user.id].online += 1
+      if metadata.user?.id?
+        client.broadcast.to(@id).emit(TandemFile.routes.JOIN, metadata.user)
+        unless @users[metadata.user.id]?
+          @users[metadata.user.id] = _.clone(metadata.user)
+          @users[metadata.user.id].online = 0
+        @users[metadata.user.id].online += 1
       initClientListeners.call(this, client, metadata)
       callback()
     )
@@ -89,7 +90,7 @@ class TandemFile
       if !err and metadata?
         client.broadcast.to(@id).emit(TandemFile.routes.LEAVE, metadata.user)
         client.leave(metadata.fileId)
-        if @users[metadata.user.id]?
+        if metadata.user?.id? and @users[metadata.user.id]?
           @users[metadata.user.id].online -= 1
           @users[metadata.user.id] = undefined if @users[metadata.user.id].online == 0
       callback()
