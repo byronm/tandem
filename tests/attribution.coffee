@@ -1,8 +1,6 @@
-should    = require('should')
-util      = require('util')
+expect = require('chai').expect
 
-jetsync   = require('../../lib/jetsync')
-Tandem    = jetsync.Tandem
+Tandem    = require('../src/core')
 Delta     = Tandem.Delta
 InsertOp  = Tandem.InsertOp
 RetainOp  = Tandem.RetainOp
@@ -22,7 +20,7 @@ describe('compose', ->
         new InsertOp("a", {authorId: 'Timon'})
         new InsertOp("b", {authorId: 'Pumba'})
       ])
-      composed.should.eql(expected)
+      expect(composed).to.deep.equal(expected)
     )
 
     it('should compose a text replacement by another author', ->
@@ -36,7 +34,7 @@ describe('compose', ->
       expected = new Delta(0, 2, [
         new InsertOp("Ab", {authorId: 'Pumba'})
       ])
-      composed.should.eql(expected)
+      expect(composed).to.deep.equal(expected)
     )
 
     it('should compose a same text replacement by another author', ->
@@ -51,7 +49,7 @@ describe('compose', ->
       expected = new Delta(0, 2, [
         new InsertOp("ab", {authorId: 'Pumba'})
       ])
-      composed.should.eql(expected)
+      expect(composed).to.deep.equal(expected)
     )
   )
 )
