@@ -23,7 +23,15 @@ module.exports = function(grunt) {
     },
     concat: {
       tandem: {
-        src: ['<banner:meta.banner>', 'src/client/dependencies.js', 'includes/*.js', 'build/tandem.js'],
+        src: [
+          '<banner:meta.banner>', 
+          'node_modules/async/lib/async.js',
+          'node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js',
+          'node_modules/underscore/underscore.js',
+          'vendor/assets/javascripts/diff_match_patch.js',
+          'vendor/assets/javascripts/eventemitter2.js',
+          'build/tandem.js'
+        ],
         dest: 'build/tandem.js'
       }
     }
