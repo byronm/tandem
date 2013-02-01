@@ -202,6 +202,40 @@ class Delta
     else
       @endLength = length
 
+  # insertFn(index, text), deleteFn(index, length), applyAttrFn(index, length, attribute, value)
+  apply: (insertFn, deleteFn, applyAttrFn, context = null) ->
+    return if this.isIdentity()
+    index = 0       # Stores where the last retain end was, so if we see another one, we know to delete
+    offset = 0      # Tracks how many characters inserted to correctly offset new text
+    retains = []
+    _.each(delta.ops, (op) =>
+      if Tandem.Delta.isInsert(op)
+        insertFn.call(context, index + offset, op.value)
+        retains.push(new Tandem.RetainOp(index + offset, index + offset + op.getLength(), op.attributes))
+        offset += op.getLength()
+      else if Tandem.Delta.isRetain(op)
+        if op.start > index
+          deleteFn.call(context, index + offset, op.start - index)
+          offset -= (op.start - index)
+        retains.push(new Tandem.RetainOp(op.start + offset, op.end + offset, op.attributes))
+        index = op.end
+      else
+        console.warn('Unrecognized type in delta', op)
+    )
+    # If end of text was deleted
+    if delta.endLength < delta.startLength + offset
+      deleteFn.call(context, delta.endLength, delta.startLength + offset - delta.endLength)
+    _.each(retains, (op) =>
+      # In case we have instruction that is replace attr1 with attr2 by att1 -> null -> attr2
+      # we need to apply null first since otherwise attr1 -> attr2 -> null is not what we want
+      _.each(op.attributes, (value, format) =>
+        applyAttrFn.call(context, op.start, op.end - op.start, format, value) if value == null
+      )
+      _.each(op.attributes, (value, format) =>
+        applyAttrFn.call(context, op.start, op.end - op.start, format, value) if value?
+      )
+    )
+
   applyToText: (text) ->
     delta = this
     console.assert(text.length == delta.startLength, "Start length of delta: " + delta.startLength + " is not equal to the text: " + text.length)
