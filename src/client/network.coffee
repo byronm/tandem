@@ -64,7 +64,6 @@ class TandemNetworkAdapter extends EventEmitter2
     'max reconnection attempts' : Infinity
     'port'                      : 443
     'reconnection limit'        : 30000
-    'secure'                    : true
     'sync disconnect on unload' : false
 
   @latency: 0
@@ -82,10 +81,12 @@ class TandemNetworkAdapter extends EventEmitter2
       recieve  : {}
       callback : {}
     socketOptions = _.clone(@settings)
-    parts = endpointUrl.split(':')
-    host = parts[0]
-    socketOptions['port'] = parseInt(parts[1]) if parts.length > 1
-    @socket = io.connect("https://#{host}", socketOptions)
+    a = document.createElement('a')
+    a.href = endpointUrl
+    protocol = if a.protocol == 'http:' or a.protocol == 'https:' then a.protocol else 'http:'
+    socketOptions['secure'] = true if protocol == 'https:'
+    socketOptions['port'] = a.port if a.port
+    @socket = io.connect("#{protocol}//#{a.host}", socketOptions)
     @socket.on('reconnecting', =>
       @ready = false
     ).on('reconnect', =>
