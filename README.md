@@ -61,3 +61,4 @@ Until we write a script, version numbers will have to be updated in the followin
 - lib/tandem/version.rb
 - grunt.js
 - package.json
+- all package.json's in demo folder
