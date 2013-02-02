@@ -29,7 +29,7 @@ class RetainOp extends Op
     return [left, right]
 
   toString: ->
-    return "{{#{@start} - #{@end}), #{super()}}"
+    return "{{#{@start} - #{@end}), #{this.printAttributes()}}"
 
 
 module.exports = RetainOp

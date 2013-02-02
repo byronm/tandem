@@ -31,7 +31,7 @@ class InsertOp extends Op
     return [left, right]
 
   toString: ->
-    return "{#{@value}, #{super()}}"
+    return "{#{@value}, #{this.printAttributes()}}"
     
     
 module.exports = InsertOp

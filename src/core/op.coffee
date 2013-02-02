@@ -1,6 +1,11 @@
 _ = require('underscore')._ if module?
 
 
+# TODO fix code duplication
+isInsert = (i) ->
+  return i? && typeof i.value == "string"
+
+
 class Op
   constructor: (attributes = {}) ->
     @attributes = _.clone(attributes)
@@ -21,7 +26,7 @@ class Op
       return oldAttrs if !newAttrs
       resolvedAttrs = _.clone(oldAttrs)
       for key, value of newAttrs
-        if value == null
+        if isInsert(that) and value == null
           delete resolvedAttrs[key]
         else if typeof value != 'undefined'
           if typeof resolvedAttrs[key] == 'object' and typeof value == 'object' and _.all([resolvedAttrs[key], newAttrs[key]], ((val) -> val != null))
@@ -31,20 +36,11 @@ class Op
       return resolvedAttrs
     return resolveAttributes(@attributes, attributes)
 
-  numAttributes: () ->
+  numAttributes: ->
     _.keys(@attributes).length
 
-  toString: ->
-    printAttrs = (attrs) ->
-      attr_str = ""
-      for key, value of @attributes
-        attr_str += key + ":"
-        if typeof value == 'object' and value != null
-          attr_str += "{" + printAttrs(value) + "},"
-        else
-          attr_str += value + ","
-      return "{" + attr_str + "}"
-    return printAttrs(@attributes)
+  printAttributes: ->
+    return JSON.stringify(@attributes)
 
 
 module.exports = Op

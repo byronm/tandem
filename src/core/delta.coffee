@@ -435,7 +435,7 @@ class Delta
     @ops = _.reject(normalizedOps, (op) -> !op? || op.getLength() == 0)
 
   toString: ->
-    return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
+    return "{(#{@startLength}->#{@endLength}) [#{@ops.join(', ')}]}"
 
 
 module.exports = Delta
