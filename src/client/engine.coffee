@@ -1,11 +1,14 @@
+Delta = require('../core/delta')
+
+
 checkSendReady = ->
   if @inFlight.isIdentity() and !@inLine.isIdentity()
     @inFlight = @inLine
-    @inLine = Tandem.Delta.getIdentity(@inFlight.endLength)
+    @inLine = Delta.getIdentity(@inFlight.endLength)
     @sendFn(@inFlight, @version, (response) =>
       @version = response.version
       @arrived = @arrived.compose(@inFlight)
-      @inFlight = Tandem.Delta.getIdentity(@arrived.endLength)
+      @inFlight = Delta.getIdentity(@arrived.endLength)
       checkSendReady.call(this)
     )
 
@@ -18,8 +21,8 @@ class ClientEngine extends EventEmitter2
   # constructor: (Delta, Number, function(Delta delta, Number version, function callback))
   constructor: (@arrived, @version, @sendFn) ->
     @id = _.uniqueId('engine-')
-    @inFlight = Tandem.Delta.getIdentity(@arrived.endLength)
-    @inLine = Tandem.Delta.getIdentity(@arrived.endLength)
+    @inFlight = Delta.getIdentity(@arrived.endLength)
+    @inLine = Delta.getIdentity(@arrived.endLength)
 
   localUpdate: (delta) ->
     if @inLine.canCompose(delta)
@@ -29,7 +32,7 @@ class ClientEngine extends EventEmitter2
       this.emit(ClientEngine.events.ERROR, 'Cannot compose inLine with local delta', @inLine, delta)
 
   remoteUpdate: (delta, @version) ->
-    delta = Tandem.Delta.makeDelta(delta)
+    delta = Delta.makeDelta(delta)
     if @arrived.canCompose(delta)
       @arrived = @arrived.compose(delta)
       flightDeltaFollows = delta.follows(@inFlight, false)
@@ -48,6 +51,4 @@ class ClientEngine extends EventEmitter2
   transform: (indexes) ->
 
 
-
-
-Tandem.ClientEngine = ClientEngine
+module.exports = ClientEngine

@@ -1,7 +1,7 @@
 _         = require('underscore')._
 expect    = require('chai').expect
 
-Tandem    = require('../src/core')
+Tandem    = require('../src/core/tandem')
 Delta     = Tandem.Delta
 InsertOp  = Tandem.InsertOp
 RetainOp  = Tandem.RetainOp

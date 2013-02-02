@@ -1,7 +1,7 @@
 # Unit tests for the synchronization library, sync.coffee
 assert     = require('chai').assert
 _          = require('underscore')._
-Tandem     = require('../src/core')
+Tandem     = require('../src/core/tandem')
 Delta      = Tandem.Delta
 InsertOp   = Tandem.InsertOp
 RetainOp   = Tandem.RetainOp
@@ -1229,8 +1229,8 @@ insertAt = (delta, insertionPoint, insertions) ->
     charIndex += elem.getLength()
     elemIndex++
   delta.ops.splice(elemIndex, 0, new InsertOp(insertions))
-  delta.ops = Tandem.Op.compact(delta.ops)
   delta.endLength += insertions.length
+  delta.compact()
 
 deleteAt = (delta, deletionPoint, numToDelete) ->
   charIndex = 0
@@ -1319,10 +1319,11 @@ formatAt = (delta, formatPoint, numToFormat, attrs, reference) ->
     else
       ops.push(elem)
     charIndex += elem.getLength()
-  delta.ops = Tandem.Op.compact(ops)
   delta.endLength = _.reduce(ops, (length, delta) ->
     return length + delta.getLength()
   , 0)
+  delta.ops = ops
+  delta.compact()
 
 addRandomChange = (delta, docDelta) ->
   chance = Math.random()
@@ -1566,11 +1567,9 @@ for i in [1...1000]
   numChanges = Math.floor(Math.random() * 11)
   for j in [0...numChanges]
     addRandomChange(deltaC, deltaA)
-  deltaC.ops = Tandem.Op.compact(deltaC.ops)
+  deltaC.compact()
   decomposed = deltaC.decompose(deltaA)
   composed = deltaA.compose(decomposed)
-  deltaC.clearOpsCache()
-  composed.clearOpsCache()
   assert(deltaC.isEqual(composed),
     "Decompose failed. DeltaA: #{deltaA.toString()} DeltaC: #{deltaC.toString()}.")
 

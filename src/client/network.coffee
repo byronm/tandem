@@ -123,5 +123,4 @@ class TandemNetworkAdapter extends EventEmitter2
         @sendQueue.push([route, packet, callback])
 
 
-
-Tandem.NetworkAdapter = TandemNetworkAdapter
+module.exports = TandemNetworkAdapter

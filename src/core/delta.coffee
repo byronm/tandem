@@ -1,157 +1,13 @@
-if exports?
-  _ = require('underscore')._
-  diff_match_patch = require('googlediff')
-else
-  _ = window._
-  diff_match_patch = window.diff_match_patch
-diff_match_patch.DIFF_DELETE = -1
-diff_match_patch.DIFF_EQUAL = 0
-diff_match_patch.DIFF_INSERT = 1
-dmp = new diff_match_patch
+_                 = require('underscore')._ if module?
+diff_match_patch  = require('googlediff')
+Op                = require('./op')
+InsertOp          = require('./insert')
+RetainOp          = require('./retain')
 
-class Op
-  @compact: (ops) ->
-    compacted = []
-    _.each(Op.normalize(ops), (op) ->
-      if compacted.length == 0
-        compacted.push(op) unless RetainOp.isRetain(op) && op.start == op.end
-      else
-        if RetainOp.isRetain(op) && op.start == op.end
-          return
-        last = _.last(compacted)
-        if Delta.isInsert(last) && Delta.isInsert(op) && last.attributesMatch(op)
-          # If two neighboring inserts, combine
-          last.value = last.value + op.value
-        else if RetainOp.isRetain(last) && RetainOp.isRetain(op) && last.end == op.start && last.attributesMatch(op)
-          # If two neighboring ranges first's end + 1 == second's start, combine
-          last.end = op.end
-        else
-          # Cannot coalesce with previous
-          compacted.push(op)
-    )
-    return compacted
-
-  @normalize: (ops) ->
-    normalizedOps = _.map(ops, (op) ->
-      switch typeof op
-        when 'string' then return new InsertOp(op)
-        when 'number' then return new RetainOp(op, op + 1)
-        when 'object'
-          if op.value?
-            return new InsertOp(op.value, op.attributes)
-          else if op.start? && op.end?
-            return new RetainOp(op.start, op.end, op.attributes)
-        else
-          return null
-    )
-    return _.reject(normalizedOps, (op) -> !op? || op.getLength() == 0)
-
-
-  constructor: (attributes = {}) ->
-    @attributes = _.clone(attributes)
-
-  addAttributes: (attributes) ->
-    addedAttributes = {}
-    for key, value of attributes when @attributes[key] == undefined
-      addedAttributes[key] = value
-    return addedAttributes
-
-  attributesMatch: (other) ->
-    otherAttributes = other.attributes || {}
-    return _.isEqual(@attributes, otherAttributes)
-
-  composeAttributes: (attributes) ->
-    that = this
-    resolveAttributes = (oldAttrs, newAttrs) ->
-      return oldAttrs if !newAttrs
-      resolvedAttrs = _.clone(oldAttrs)
-      for key, value of newAttrs
-        if Delta.isInsert(that) && value == null
-          delete resolvedAttrs[key]
-        else if typeof value != 'undefined'
-          if typeof resolvedAttrs[key] == 'object' and typeof value == 'object' and _.all([resolvedAttrs[key], newAttrs[key]], ((val) -> val != null))
-            resolvedAttrs[key] = resolveAttributes(resolvedAttrs[key], value)
-          else
-            resolvedAttrs[key] = value
-      return resolvedAttrs
-    return resolveAttributes(@attributes, attributes)
-
-  numAttributes: () ->
-    _.keys(@attributes).length
-
-  toString: ->
-    printAttrs = (attrs) ->
-      attr_str = ""
-      for key, value of @attributes
-        attr_str += key + ":"
-        if typeof value == 'object' and value != null
-          attr_str += "{" + printAttrs(value) + "},"
-        else
-          attr_str += value + ","
-      return "{" + attr_str + "}"
-    return printAttrs(@attributes)
-
-
-# Used to represent retains in the delta. [inclusive, exclusive)
-class RetainOp extends Op
-  @copy: (subject) ->
-    console.assert(RetainOp.isRetain(subject), "Copy called on non-retain", subject)
-    return new RetainOp(subject.start, subject.end, subject.attributes)
-
-  @isRetain: (r) ->
-    return r? && typeof r.start == "number" && typeof r.end == "number"
-
-  constructor: (@start, @end, attributes = {}) ->
-    console.assert(@start >= 0, "RetainOp start cannot be negative!", @start)
-    console.assert(@end >= @start, "RetainOp end must be >= start!", @start, @end)
-    @attributes = _.clone(attributes)
-
-  getAt: (start, length) ->
-    return new RetainOp(@start + start, @start + start + length, @attributes)
-
-  getLength: ->
-    return @end - @start
-
-  split: (offset) ->
-    console.assert(offset <= @end, "Split called with offset beyond end of retain")
-    left = new RetainOp(@start, @start + offset, @attributes)
-    right = new RetainOp(@start + offset, @end, @attributes)
-    return [left, right]
-
-  toString: ->
-    return "{{#{@start} - #{@end}), #{super()}}"
-
-
-class InsertOp extends Op
-  @copy: (subject) ->
-    return new InsertOp(subject.value, subject.attributes)
-
-  @isInsert: (i) ->
-    return i? && typeof i.value == "string"
-
-  constructor: (@value, attributes = {}) ->
-    @attributes = _.clone(attributes)
-
-  getAt: (start, length) ->
-    return new InsertOp(@value.substr(start, length), @attributes)
-
-  getLength: ->
-    return @value.length
-
-  join: (other) ->
-    if _.isEqual(@attributes, other.attributes)
-      return new InsertOp(@value + second.value, @attributes)
-    else
-      throw Error
-
-  split: (offset) ->
-    console.assert(offset <= @value.length, "Split called with offset beyond end of insert")
-    left = new InsertOp(@value.substr(0, offset), @attributes)
-    right = new InsertOp(@value.substr(offset), @attributes)
-    return [left, right]
-
-  toString: ->
-    return "{#{@value}, #{super()}}"
+dmp = new diff_match_patch()
+dmp.DIFF_DELETE = -1
+dmp.DIFF_EQUAL  = 0
+dmp.DIFF_INSERT = 1
 
 
 class Delta
@@ -189,11 +45,11 @@ class Delta
   @makeDelta: (obj) ->
     return new Delta(obj.startLength, obj.endLength, obj.ops)
 
-  constructor: (@startLength, @endLength, ops) ->
+  constructor: (@startLength, @endLength, @ops) ->
     unless ops?
       ops = @endLength
       @endLength = null
-    @ops = Op.compact(ops)
+    this.compact()
     length = _.reduce(@ops, (count, op) ->
       return count + op.getLength()
     , 0)
@@ -209,15 +65,15 @@ class Delta
     offset = 0      # Tracks how many characters inserted to correctly offset new text
     retains = []
     _.each(@ops, (op) =>
-      if Tandem.Delta.isInsert(op)
+      if Delta.isInsert(op)
         insertFn.call(context, index + offset, op.value)
-        retains.push(new Tandem.RetainOp(index + offset, index + offset + op.getLength(), op.attributes))
+        retains.push(new RetainOp(index + offset, index + offset + op.getLength(), op.attributes))
         offset += op.getLength()
-      else if Tandem.Delta.isRetain(op)
+      else if Delta.isRetain(op)
         if op.start > index
           deleteFn.call(context, index + offset, op.start - index)
           offset -= (op.start - index)
-        retains.push(new Tandem.RetainOp(op.start + offset, op.end + offset, op.attributes))
+        retains.push(new RetainOp(op.start + offset, op.end + offset, op.attributes))
         index = op.end
       else
         console.warn('Unrecognized type in delta', op)
@@ -253,18 +109,37 @@ class Delta
       console.assert(false, "End length of delta: " + delta.endLength + " is not equal to result text: " + result.length )
     return result
 
-  clearOpsCache: ->
-    @savedOpOffset = @savedOpIndex = undefined
-
   canCompose: (delta) ->
     return Delta.isDelta(delta) and @endLength == delta.startLength
+
+  compact: ->
+    this.normalize()
+    compacted = []
+    _.each(@ops, (op) ->
+      if compacted.length == 0
+        compacted.push(op) unless RetainOp.isRetain(op) && op.start == op.end
+      else
+        if RetainOp.isRetain(op) && op.start == op.end
+          return
+        last = _.last(compacted)
+        if InsertOp.isInsert(last) && InsertOp.isInsert(op) && last.attributesMatch(op)
+          # If two neighboring inserts, combine
+          last.value = last.value + op.value
+        else if RetainOp.isRetain(last) && RetainOp.isRetain(op) && last.end == op.start && last.attributesMatch(op)
+          # If two neighboring ranges first's end + 1 == second's start, combine
+          last.end = op.end
+        else
+          # Cannot coalesce with previous
+          compacted.push(op)
+    )
+    @ops = compacted
 
   # Inserts in deltaB are given priority. Retains in deltaB are indexes into A,
   # and we take whatever is there (insert or retain).
   compose: (deltaB) ->
     console.assert(this.canCompose(deltaB), "Cannot compose delta", this, deltaB)
-    deltaA = new Delta(@startLength, @endLength, Op.normalize(@ops))
-    deltaB = new Delta(deltaB.startLength, deltaB.endLength, Op.normalize(deltaB.ops))
+    deltaA = new Delta(@startLength, @endLength, @ops)
+    deltaB = new Delta(deltaB.startLength, deltaB.endLength, deltaB.ops)
 
     composed = []
     for elem in deltaB.ops
@@ -283,7 +158,7 @@ class Delta
       else
         console.assert(false, "Invalid op in deltaB when composing", deltaB)
 
-    deltaC = new Delta(deltaA.startLength, deltaB.endLength, Op.compact(composed))
+    deltaC = new Delta(deltaA.startLength, deltaB.endLength, composed)
     console.assert(Delta.isDelta(deltaC), "Composed returning invalid Delta", deltaC)
     return deltaC
 
@@ -344,7 +219,7 @@ class Delta
       offset += op.getLength()
     )
 
-    deltaB = new Delta(insertDelta.startLength, insertDelta.endLength, Op.compact(ops))
+    deltaB = new Delta(insertDelta.startLength, insertDelta.endLength, ops)
     return deltaB
 
   diff: (other) ->
@@ -356,13 +231,13 @@ class Delta
       # For each difference apply them separately so we do not disrupt the cursor
       for [operation, value] in diff
         switch operation
-          when diff_match_patch.DIFF_DELETE
+          when dmp.DIFF_DELETE
             # Deletes implied
             originalLength += value.length
-          when diff_match_patch.DIFF_INSERT
+          when dmp.DIFF_INSERT
             ops.push(new InsertOp(value))
             finalLength += value.length
-          when diff_match_patch.DIFF_EQUAL
+          when dmp.DIFF_EQUAL
             ops.push(new RetainOp(originalLength, originalLength + value.length))
             originalLength += value.length
             finalLength += value.length
@@ -396,8 +271,8 @@ class Delta
     console.assert(Delta.isDelta(deltaA), "Follows called when deltaA is not a Delta, type: " + typeof deltaA, deltaA)
     console.assert(aIsRemote?, "Remote delta not specified")
 
-    deltaA = new Delta(deltaA.startLength, deltaA.endLength, Op.normalize(deltaA.ops))
-    deltaB = new Delta(deltaB.startLength, deltaB.endLength, Op.normalize(deltaB.ops))
+    deltaA = new Delta(deltaA.startLength, deltaA.endLength, deltaA.ops)
+    deltaB = new Delta(deltaB.startLength, deltaB.endLength, deltaB.ops)
     followStartLength = deltaA.endLength
     followSet = []
     indexA = indexB = 0 # Tracks character offset in the 'document'
@@ -488,7 +363,7 @@ class Delta
     for elem in followSet
       followEndLength += elem.getLength()
 
-    follow = new Delta(followStartLength, followEndLength, Op.compact(followSet))
+    follow = new Delta(followStartLength, followEndLength, followSet)
     console.assert(Delta.isDelta(follow), "Follows returning invalid Delta", follow)
     return follow
 
@@ -544,17 +419,23 @@ class Delta
       return Delta.isInsert(op)
     )
 
+  normalize: ->
+    normalizedOps = _.map(@ops, (op) ->
+      switch typeof op
+        when 'string' then return new InsertOp(op)
+        when 'number' then return new RetainOp(op, op + 1)
+        when 'object'
+          if op.value?
+            return new InsertOp(op.value, op.attributes)
+          else if op.start? && op.end?
+            return new RetainOp(op.start, op.end, op.attributes)
+        else
+          return null
+    )
+    @ops = _.reject(normalizedOps, (op) -> !op? || op.getLength() == 0)
+
   toString: ->
     return "{(#{@startLength}->#{@endLength})[#{@ops.join(', ')}]}"
 
 
-Tandem = {
-  Delta: Delta
-  Op: Op
-  InsertOp: InsertOp
-  RetainOp: RetainOp
-}
-if exports?
-  module.exports = Tandem
-else
-  window.Tandem = Tandem
+module.exports = Delta

@@ -1,5 +1,13 @@
-TandemNetwork = require('./network')
-TandemStorage = require('./storage')
+TandemDelta     = require('../core/delta')
+TandemOp        = require('../core/op')
+TandemInsertOp  = require('../core/insert')
+TandemRetainOp  = require('../core/retain')
+
+TandemEngine    = require('./engine')
+TandemFile      = require('./file')
+TandemNetwork   = require('./network')
+TandemStorage   = require('./storage')
+
 
 addClient = (client, metadata, callback = ->) ->
   @storage.find(metadata.fileId, (err, file) =>
@@ -41,4 +49,14 @@ class TandemServer
     )
 
 
-module.exports = TandemServer
+module.exports =
+  Delta     : TandemDelta
+  Op        : TandemOp
+  InsertOp  : TandemInsertOp
+  RetainOp  : TandemRetainOp
+
+  Engine    : TandemEngine
+  File      : TandemFile
+  Network   : TandemNetwork
+  Server    : TandemServer
+  Storage   : TandemStorage

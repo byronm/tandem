@@ -1,3 +1,8 @@
+Delta = require('../core/delta')
+TandemEngine = require('./engine')
+TandemNetworkAdapter = require('./network')
+
+
 checkAdapterError = (response, callback) ->
   if !response.error? or response.error.length == 0
     callback.call(this, response) if callback?
@@ -32,30 +37,30 @@ initAdapterListeners = ->
   )
 
 initEngine = (initial, version) ->
-  @engine = new Tandem.ClientEngine(initial, version, (delta, version, callback) =>
+  @engine = new TandemEngine(initial, version, (delta, version, callback) =>
     sendUpdate.call(this, delta, version, callback)
   )
 
 initEngineListeners = ->
-  @engine.on(Tandem.ClientEngine.events.UPDATE, (delta) =>
+  @engine.on(TandemEngine.events.UPDATE, (delta) =>
     this.emit(TandemFile.events.UPDATE, delta)
-  ).on(Tandem.ClientEngine.events.ERROR, (args...) =>
+  ).on(TandemEngine.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, this, args)
     console.warn "Engine error, attempting resync", @id, args
     resync.call(this)
   )
 
 initHealthListeners = ->
-  @adapter.on(Tandem.NetworkAdapter.events.READY, =>
+  @adapter.on(TandemNetworkAdapter.events.READY, =>
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
     sync.call(this)
-  ).on(Tandem.NetworkAdapter.events.RECONNECT, (transport, attempts) =>
+  ).on(TandemNetworkAdapter.events.RECONNECT, (transport, attempts) =>
     sync.call(this)
-  ).on(Tandem.NetworkAdapter.events.RECONNECTING, (timeout, attempts) =>
+  ).on(TandemNetworkAdapter.events.RECONNECTING, (timeout, attempts) =>
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR) if attempts == 1
-  ).on(Tandem.NetworkAdapter.events.DISCONNECT, =>
+  ).on(TandemNetworkAdapter.events.DISCONNECT, =>
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
-  ).on(Tandem.NetworkAdapter.events.ERROR, (args...) =>
+  ).on(TandemNetworkAdapter.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, this, args)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
   )
@@ -71,17 +76,17 @@ initListeners = ->
 resync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)
   this.send(TandemFile.routes.RESYNC, {}, (response) =>
-    delta = Tandem.Delta.makeDelta(response.head)
+    delta = Delta.makeDelta(response.head)
     @engine.resync(delta, response.version)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
   )
 
 sendUpdate = (delta, version, callback) ->
   packet = { delta: delta, version: version }
-  this.send(Tandem.File.routes.UPDATE, packet, (response) =>
+  this.send(TandemFile.routes.UPDATE, packet, (response) =>
     if response.resync
       console.warn "Update requesting resync", @id, packet, response
-      delta = Tandem.Delta.makeDelta(response.head)
+      delta = Delta.makeDelta(response.head)
       @engine.resync(delta, response.version)
       sendUpdate.call(this, @engine.inFlight, @engine.version, callback)
     else
@@ -129,7 +134,7 @@ class TandemFile extends EventEmitter2
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
     @users = {}
-    initial or= Tandem.Delta.getInitial('')
+    initial or= Delta.getInitial('')
     initEngine.call(this, initial, version)
     initListeners.call(this)
 
@@ -163,4 +168,4 @@ class TandemFile extends EventEmitter2
     @engine.localUpdate(delta)
 
 
-Tandem.File = TandemFile
+module.exports = TandemFile
