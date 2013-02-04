@@ -11,7 +11,9 @@ deleteAt = function(index, length) {
 }
 
 textToDelta = function(oldText, newText) {
-  
+  oldDelta = Tandem.Delta.getInitial(oldText);
+  newDelta = Tandem.Delta.getInitial(newText);
+  return newDelta.decompose(oldDelta);
 }
 
 
@@ -26,7 +28,7 @@ $(document).ready(function () {
   $('#editor').keydown(function() {
     text = $(this).val() 
   }).keyup(function() {
-    delta = diffToDelta(text, $(this).val())
+    delta = textToDelta(text, $(this).val())
     file.update(delta)
   });
 })
