@@ -1,13 +1,5 @@
-body {
-  margin: 0px;
-  padding: 0px;
-}
-
 #editor {
   border: 1px solid #777;
-  height: 400px;
-  left: 50%;
-  margin-left: -400px;
-  margin-top: 10px;
-  width: 800px;
+  height: 300px;
+  width: 400px;
 }
