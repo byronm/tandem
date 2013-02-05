@@ -37,12 +37,12 @@ The tandem source code is in the **src** folder. Tests are in the **tests** fold
 
 All other files/directories are just supporting npm/bundler, build, or documentation files.
 
-    build - js client build target, symbolic link to vendor/assets/javascripts
+    build - js client build target, symbolic link to vendor/assets/javascripts/tandem
     demo - demos
     lib - bundler
     src - source code
     tests - tests written for Mocha on node.js
-    vendor/assets/javascripts - js build target
+    vendor/assets/javascripts/tandem - js build target
     grunt.js - js build tool
     index.js - npm
     package.json - npm
