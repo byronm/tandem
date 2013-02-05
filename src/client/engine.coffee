@@ -1,7 +1,7 @@
 Delta = require('../core/delta')
 
 
-checkSendReady = ->
+sendIfReady = ->
   if @inFlight.isIdentity() and !@inLine.isIdentity()
     @inFlight = @inLine
     @inLine = Delta.getIdentity(@inFlight.endLength)
@@ -9,7 +9,7 @@ checkSendReady = ->
       @version = response.version
       @arrived = @arrived.compose(@inFlight)
       @inFlight = Delta.getIdentity(@arrived.endLength)
-      checkSendReady.call(this)
+      sendIfReady.call(this)
     )
 
 
@@ -27,7 +27,7 @@ class ClientEngine extends EventEmitter2
   localUpdate: (delta) ->
     if @inLine.canCompose(delta)
       @inLine = @inLine.compose(delta)
-      checkSendReady.call(this)
+      sendIfReady.call(this)
     else
       this.emit(ClientEngine.events.ERROR, 'Cannot compose inLine with local delta', @inLine, delta)
 

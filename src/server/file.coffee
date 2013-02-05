@@ -20,7 +20,6 @@ initClientListeners = (client, metadata) ->
     this.removeClient(client)
   )
 
-
 resync = (callback) ->
   callback(
     resync: true
@@ -88,7 +87,7 @@ class TandemFile
   removeClient: (client, callback = ->) ->
     client.get('metadata', (err, metadata) =>
       if !err and metadata?
-        client.broadcast.to(@id).emit(TandemFile.routes.LEAVE, metadata.user)
+        client.broadcast.to(@id).emit(TandemFile.routes.LEAVE, metadata.user) if metadata.user?
         client.leave(metadata.fileId)
         if metadata.user?.id? and @users[metadata.user.id]?
           @users[metadata.user.id].online -= 1

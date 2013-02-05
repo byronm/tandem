@@ -20,15 +20,18 @@ textToDelta = function(oldText, newText) {
 $(document).ready(function () {
   var tandem = new Tandem.Client('http://localhost:8080');
   var file = tandem.open('1337');
+  var text = '';
+
   file.on('file-update', function(delta) {
-    delta.apply(insertAt, deleteAt)
+    delta.apply(insertAt, deleteAt);
+    text = $('#editor').val();
   });
 
-  text = ''
-  $('#editor').keydown(function() {
-    text = $(this).val() 
-  }).keyup(function() {
-    delta = textToDelta(text, $(this).val())
-    file.update(delta)
+  // Use input instead of key listeners to avoid race condition complexities 
+  $('#editor').bind('input', function() {
+    var newText = $(this).val();
+    var delta = textToDelta(text, newText);
+    text = newText;
+    file.update(delta);
   });
 })
