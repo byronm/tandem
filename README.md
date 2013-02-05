@@ -38,11 +38,11 @@ The tandem source code is in the **src** folder. Tests are in the **tests** fold
 All other files/directories are just supporting npm/bundler, build, or documentation files.
 
     build - js client build target, symbolic link to vendor/assets/javascripts
-    includes - browser js dependencies
+    demo - demos
     lib - bundler
     src - source code
     tests - tests written for Mocha on node.js
-    vendor/assets/javascripts - Client library dependencies and js build target
+    vendor/assets/javascripts - js build target
     grunt.js - js build tool
     index.js - npm
     package.json - npm
@@ -51,7 +51,7 @@ All other files/directories are just supporting npm/bundler, build, or documenta
 
 ### Rails Bundler
 
-Popular javascript libraries are offically included as dependencies. Less popular libraries are included here in the includes folder and will be concatenated as part of the build process.
+Popular javascript libraries are offically included as dependencies. Less popular libraries will be concatenated with source as part of the build process.
 
 
 ### Version numbers
@@ -62,3 +62,10 @@ Until we write a script, version numbers will have to be updated in the followin
 - grunt.js
 - package.json
 - all package.json's in demo folder
+
+
+### Tests
+
+We use the mocha testing framework. To run:
+
+    make test
