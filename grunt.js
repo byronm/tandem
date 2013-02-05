@@ -20,7 +20,7 @@ module.exports = function(grunt) {
       }
     },
     concat: {
-      'vendor/assets/javascripts/tandem/tandem.js': [
+      'vendor/assets/javascripts/tandem/tandem.all.js': [
         '<banner:meta.banner>', 
         'node_modules/async/lib/async.js',
         'node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js',
