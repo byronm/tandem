@@ -27,6 +27,32 @@ var server = require('http').Server();
 new Tandem.Server(server);
 ```
 
+Installation
+---
+    
+### NPM (Server)
+
+Add to package.json
+
+    "dependencies"  : {
+        "tandem": "git+ssh://git@github.com:stypi/tandem.git#v0.3.2"
+    }
+
+### Rails Bundler (Client)
+
+Popular javascript libraries are offically included as dependencies. Less popular libraries will be concatenated with source as part of the build process. To install, just add to Gemfile:
+
+    gem 'tandem-rails', :git => 'git@github.com:stypi/tandem.git', :branch => 'v0.3.2'
+
+    
+### Javascript (Client)
+
+To build, run:
+
+    grunt
+
+Copy and use the appropriate file in the build folder.
+
 
 Project Organization
 ---
@@ -47,12 +73,7 @@ All other files/directories are just supporting npm/bundler, build, or documenta
     index.js - npm
     package.json - npm
     tandem.gemspec - bundler
-
-
-### Rails Bundler
-
-Popular javascript libraries are offically included as dependencies. Less popular libraries will be concatenated with source as part of the build process.
-
+    
 
 ### Version numbers
 
