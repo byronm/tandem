@@ -5,13 +5,13 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     meta: {
-      version: '0.3.3',
+      version: '0.3.4',
       banner: 
         '/*! Tandem Realtime Coauthoring Engine - v<%= meta.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n' +
-        ' * https://www.stypi.com/\n' +
-        ' * Copyright (c) <%= grunt.template.today("yyyy") %>\n' +
-        ' * Byron Milligan, Salesforce.com\n' + 
-        ' * Jason Chen, Salesforce.com\n' +
+        ' *  https://www.stypi.com/\n' +
+        ' *  Copyright (c) <%= grunt.template.today("yyyy") %>\n' +
+        ' *  Jason Chen, Salesforce.com\n' +
+        ' *  Byron Milligan, Salesforce.com\n' + 
         ' */'
     },
     '//': "Browserify configs must be in the form dest.ext: { entries: 'entries.ext' }. Documentation that says otherwise is lying.",

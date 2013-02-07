@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.3.3 - 2013-02-06
+/*! Tandem Realtime Coauthoring Engine - v0.3.4 - 2013-02-06
  * https://www.stypi.com/
  * Copyright (c) 2013
  * Byron Milligan, Salesforce.com
@@ -4633,12 +4633,14 @@ require.define("/src/client/tandem-core.coffee",function(require,module,exports,
 
   TandemRetainOp = require('../core/retain');
 
-  window.Tandem = {
-    Delta: TandemDelta,
-    Op: TandemOp,
-    InsertOp: TandemInsertOp,
-    RetainOp: TandemRetainOp
-  };
+  if (window.Tandem == null) {
+    window.Tandem = {
+      Delta: TandemDelta,
+      Op: TandemOp,
+      InsertOp: TandemInsertOp,
+      RetainOp: TandemRetainOp
+    };
+  }
 
 }).call(this);
 
