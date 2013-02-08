@@ -1,4 +1,4 @@
-/*! Stypi Editor - v0.0.2 - 2013-02-06
+/*! Stypi Editor - v0.0.2 - 2013-02-07
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -4245,11 +4245,11 @@ LinkedList.Node = function(data) {
   this.data = data;
 };
 
-/*! Tandem Realtime Coauthoring Engine - v0.3.4 - 2013-02-06
- * https://www.stypi.com/
- * Copyright (c) 2013
- * Byron Milligan, Salesforce.com
- * Jason Chen, Salesforce.com
+/*! Tandem Realtime Coauthoring Engine - v0.3.4 - 2013-02-07
+ *  https://www.stypi.com/
+ *  Copyright (c) 2013
+ *  Jason Chen, Salesforce.com
+ *  Byron Milligan, Salesforce.com
  */
 
 (function(){
@@ -4729,8 +4729,8 @@ require.define("/src/core/delta.coffee",function(require,module,exports,__dirnam
       this.startLength = startLength;
       this.endLength = endLength;
       this.ops = ops;
-      if (ops == null) {
-        ops = this.endLength;
+      if (this.ops == null) {
+        this.ops = this.endLength;
         this.endLength = null;
       }
       this.compact();
@@ -9871,7 +9871,6 @@ require("/src/client/tandem-core.coffee");
 
     ScribeEditor.prototype.disable = function() {
       var _this = this;
-      console.trace();
       return this.doSilently(function() {
         return _this.root.setAttribute('contenteditable', false);
       });
@@ -9899,8 +9898,6 @@ require("/src/client/tandem-core.coffee");
       };
       onSubtreeModified = function() {
         var toCall;
-        console.log('modified!');
-        console.trace();
         if (_this.ignoreDomChanges) {
           return;
         }
@@ -9924,15 +9921,15 @@ require("/src/client/tandem-core.coffee");
       if (external == null) {
         external = true;
       }
+      if (delta.startLength === 0 && this.doc.length === 1 && this.doc.trailingNewline) {
+        return this.setDelta(delta);
+      }
       if (delta.isIdentity()) {
         return;
       }
       return this.doSilently(function() {
         return _this.selection.preserve(function() {
           var addNewlineDelta, index, offset, oldDelta, retainDelta, retains;
-          if (delta.startLength === 0 && _this.doc.length === 1 && _this.doc.trailingNewline) {
-            return _this.setDelta(delta);
-          }
           console.assert(delta.startLength === _this.doc.length, "Trying to apply delta to incorrect doc length", delta, _this.doc, _this.root);
           index = 0;
           offset = 0;
@@ -10045,7 +10042,6 @@ require("/src/client/tandem-core.coffee");
 
     ScribeEditor.prototype.setDelta = function(delta) {
       var oldLength;
-      this.reset();
       oldLength = delta.startLength;
       delta.startLength = this.doc.length;
       this.applyDelta(delta);
