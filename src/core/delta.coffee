@@ -46,8 +46,8 @@ class Delta
     return new Delta(obj.startLength, obj.endLength, obj.ops)
 
   constructor: (@startLength, @endLength, @ops) ->
-    unless ops?
-      ops = @endLength
+    unless @ops?
+      @ops = @endLength
       @endLength = null
     this.compact()
     length = _.reduce(@ops, (count, op) ->
