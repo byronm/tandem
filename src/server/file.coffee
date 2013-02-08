@@ -1,5 +1,5 @@
 _            = require('underscore')._
-Tandem       = require('../core')
+Tandem       = require('../core/tandem')
 TandemEngine = require('./engine')
 
 initClientListeners = (client, metadata) ->

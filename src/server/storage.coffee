@@ -1,6 +1,6 @@
 _           = require('underscore')._
 request     = require('request')
-Tandem      = require('../core')
+Tandem      = require('../core/tandem')
 TandemFile  = require('./file')
 
 
