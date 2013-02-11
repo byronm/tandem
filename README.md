@@ -65,6 +65,7 @@ All other files/directories are just supporting npm/bundler, build, or documenta
 
     build - js client build target, symbolic link to vendor/assets/javascripts/tandem
     demo - demos
+    doc - additional documentation
     lib - bundler
     src - source code
     tests - tests written for Mocha on node.js
