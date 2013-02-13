@@ -1544,66 +1544,72 @@ formatAt(delta, 0, 3, ["bold"], reference)
 expected = new Delta(3, 6, [new InsertOp("abc"), new RetainOp(0, 3)])
 assert(delta.isEqual(expected), "Expected #{expected} but got #{delta}")
 
-##############################
-# Fuzz decompose
-##############################
-console.info ">>>>>>>>>> Fuzzing decompose <<<<<<<<<<"
-for i in [1...1000]
-  console.info(i) if i % 100 == 0
-  numInsertions = getRandInt(1, 40)
-  insertions = getRandStr(numInsertions)
-  deltaA = new Delta(0, insertions.length, [new InsertOp(insertions)])
-  for j in [0...10]
-    indexToFormat = getRandInt(0, deltaA.endLength - 1)
-    numToFormat = getRandInt(0, deltaA.endLength - indexToFormat - 1)
-    # Pick a random number of random attributes
-    attributes.sort(-> return 0.5 - Math.random())
-    numAttrs = Math.floor(Math.random() * (attributes.length + 1))
-    attrs = attributes.slice(0, numAttrs)
-    numToFormat = Math.floor(Math.random() * (deltaA.endLength - indexToFormat))
-    formatAt(deltaA, indexToFormat, numToFormat, attrs, new Delta(0, 0, []))
 
-  deltaC = Delta.copy(deltaA)
-  numChanges = Math.floor(Math.random() * 11)
-  for j in [0...numChanges]
-    addRandomChange(deltaC, deltaA)
-  deltaC.compact()
-  decomposed = deltaC.decompose(deltaA)
-  composed = deltaA.compose(decomposed)
-  assert(deltaC.isEqual(composed),
-    "Decompose failed. DeltaA: #{deltaA.toString()} DeltaC: #{deltaC.toString()}.")
+describe('Fuzzers', ->
+  ##############################
+  # Fuzz lots of changes being made to the doc (compose, follows, applyDeltaToText
+  # all get fuzzed here)
+  ##############################
+  it('should pass all standard fuzzing', ->
+    # x represents the consistent state of the document with deltas applied.
+    x = "cat"
+    xDelta = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
+    pass = _.all([1..1000], (i) ->
+      deltaA = createDelta(x, xDelta)
+      deltaB = createDelta(x, xDelta)
+      # 50/50 as to which client gets priority
+      isRemote = if Math.random() > 0.5 then true else false
+      deltaBPrime = deltaB.follows(deltaA, isRemote)
+      deltaAPrime = deltaA.follows(deltaB, !isRemote)
+      deltaAFinal = deltaA.compose(deltaBPrime)
+      deltaBFinal = deltaB.compose(deltaAPrime)
+      xA = deltaAFinal.applyToText(x)
+      xB = deltaBFinal.applyToText(x)
+      # After each client applies their own change, and the other client's
+      # transformed change (follow), the documents should be consistent
+      x = xA
+      xDelta = xDelta.compose(deltaAFinal)
 
+      if (xA != xB)
+        console.info "DeltaA:", deltaA
+        console.info "DeltaB:", deltaB
+        console.info "deltaAPrime:", deltaAPrime
+        console.info "deltaBPrime:", deltaBPrime
+        console.info "deltaAFinal:", deltaAFinal
+        console.info "deltaBFinal:", deltaBFinal
+      return xA == xB
+    )
+    assert(pass == true)
+  )
 
-##############################
-# Fuzz lots of changes being made to the doc (compose, follows, applyDeltaToText
-# all get fuzzed here)
-##############################
-console.info ">>>>>>>>>> Fuzzing <<<<<<<<<<<<<<<<<"
-# x represents the consistent state of the document with deltas applied.
-x = "cat"
-xDelta = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
-for i in [0..1000]
-  console.info(i) if i % 100 == 0
-  deltaA = createDelta(x, xDelta)
-  deltaB = createDelta(x, xDelta)
-  # 50/50 as to which client gets priority
-  isRemote = if Math.random() > 0.5 then true else false
-  deltaBPrime = deltaB.follows(deltaA, isRemote)
-  deltaAPrime = deltaA.follows(deltaB, !isRemote)
-  deltaAFinal = deltaA.compose(deltaBPrime)
-  deltaBFinal = deltaB.compose(deltaAPrime)
-  xA = deltaAFinal.applyToText(x)
-  xB = deltaBFinal.applyToText(x)
-  # After each client applies their own change, and the other client's
-  # transformed change (follow), the documents should be consistent
-  if (xA != xB)
-    console.info "DeltaA:", deltaA
-    console.info "DeltaB:", deltaB
-    console.info "deltaAPrime:", deltaAPrime
-    console.info "deltaBPrime:", deltaBPrime
-    console.info "deltaAFinal:", deltaAFinal
-    console.info "deltaBFinal:", deltaBFinal
-    assert(false, "Documents diverged. xA is: " + xA + "xB is: " + xB)
-  x = xA
-  xDelta = xDelta.compose(deltaAFinal)
-console.info "All passed, ending with a document string of: #{x}!"
+  ##############################
+  # Fuzz decompose
+  ##############################
+  it('should pass all decompse fuzzing', ->
+    pass = _.all([1..1000], (i) ->
+      numInsertions = getRandInt(1, 40)
+      insertions = getRandStr(numInsertions)
+      deltaA = new Delta(0, insertions.length, [new InsertOp(insertions)])
+      for j in [0...10]
+        indexToFormat = getRandInt(0, deltaA.endLength - 1)
+        numToFormat = getRandInt(0, deltaA.endLength - indexToFormat - 1)
+        # Pick a random number of random attributes
+        attributes.sort(-> return 0.5 - Math.random())
+        numAttrs = Math.floor(Math.random() * (attributes.length + 1))
+        attrs = attributes.slice(0, numAttrs)
+        numToFormat = Math.floor(Math.random() * (deltaA.endLength - indexToFormat))
+        formatAt(deltaA, indexToFormat, numToFormat, attrs, new Delta(0, 0, []))
+
+      deltaC = Delta.copy(deltaA)
+      numChanges = Math.floor(Math.random() * 11)
+      for j in [0...numChanges]
+        addRandomChange(deltaC, deltaA)
+      deltaC.compact()
+      decomposed = deltaC.decompose(deltaA)
+      composed = deltaA.compose(decomposed)
+      return deltaC.isEqual(composed)
+    )
+    assert(pass == true)
+  )
+)
+
