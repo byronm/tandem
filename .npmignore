@@ -6,3 +6,4 @@ tests
 vendor
 grunt.js
 tandem-rails.gemspec
+coverage.html

@@ -1,6 +1,6 @@
 expect = require('chai').expect
 
-Tandem    = require('../src/core/tandem')
+Tandem    = require('../index')
 Delta     = Tandem.Delta
 InsertOp  = Tandem.InsertOp
 RetainOp  = Tandem.RetainOp

@@ -91,3 +91,9 @@ Until we write a script, version numbers will have to be updated in the followin
 We use the mocha testing framework. To run:
 
     make test
+
+To run code coverage tests, install https://github.com/visionmedia/node-jscoverage and run
+
+    make coverage
+
+Visit coverage.html in your browser to see the output.

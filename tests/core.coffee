@@ -1,7 +1,7 @@
 # Unit tests for the synchronization library, sync.coffee
 assert     = require('chai').assert
 _          = require('underscore')._
-Tandem     = require('../src/core/tandem')
+Tandem     = require('../index')
 Delta      = Tandem.Delta
 InsertOp   = Tandem.InsertOp
 RetainOp   = Tandem.RetainOp
@@ -1362,7 +1362,6 @@ createDelta = (doc, docDelta) ->
 ########################################
 # Test fuzzer helpers before fuzzing
 ########################################
-console.info "Testing fuzzer helpers"
 delta = new Delta(0, 6, [new RetainOp(0, 6)])
 deleteAt(delta, 3, 1)
 assert(delta.isEqual(new Delta(0, 5, [new RetainOp(0, 3), new RetainOp(4, 6)])))
@@ -1447,7 +1446,7 @@ delta = new Delta(0, 6, [new InsertOp("012345")])
 insertAt(delta, 6, "abcdefg")
 assert(delta.isEqual(new Delta(0, 13, [new InsertOp("012345abcdefg")])))
 
-console.info ">>>>>>>>>> Testing formatAt <<<<<<<<<<<<<<<<<"
+
 reference = new Delta(0, 3, [new InsertOp("cat", {bold: true})])
 delta = new Delta(3, 6, [new InsertOp("abc", {bold: true}), new RetainOp(0, 3)])
 formatAt(delta, 0, 1, ["bold"], reference)
@@ -1569,14 +1568,6 @@ describe('Fuzzers', ->
       # transformed change (follow), the documents should be consistent
       x = xA
       xDelta = xDelta.compose(deltaAFinal)
-
-      if (xA != xB)
-        console.info "DeltaA:", deltaA
-        console.info "DeltaB:", deltaB
-        console.info "deltaAPrime:", deltaAPrime
-        console.info "deltaBPrime:", deltaBPrime
-        console.info "deltaAFinal:", deltaAFinal
-        console.info "deltaBFinal:", deltaBFinal
       return xA == xB
     )
     assert(pass == true)
