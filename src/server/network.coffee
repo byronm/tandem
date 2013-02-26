@@ -8,7 +8,11 @@ authenticate = (client, packet, callback) ->
   # Need to leave room
   if packet.fileId?
     @storage.checkAccess(packet.fileId, packet, (err, success) =>
-      if !err? and success
+      if err?
+        callback({error: ["Error accessing document"]})
+      else if !success
+        callback({ error: ["Access denied"] })
+      else
         metadata = 
           fileId : packet.fileId
           user   : packet.user
@@ -17,8 +21,6 @@ authenticate = (client, packet, callback) ->
           callback({ error: [] })
         )
         this.emit(TandemNetwork.events.CONNECT, client, metadata)
-      else
-        callback({ error: ["Access denied"] })
     )
   else
     callback({ error: ["Missing fileId"] })
