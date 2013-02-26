@@ -1,7 +1,8 @@
 _             = require('underscore')._
+redis         = require('socket.io/node_modules/redis')
 socketio      = require('socket.io')
 EventEmitter  = require('events').EventEmitter
-
+RedisStore    = require('socket.io/lib/stores/redis')
 
 authenticate = (client, packet, callback) ->
   # Need to leave room
@@ -43,6 +44,7 @@ initNetwork = (server) ->
 class TandemNetwork extends EventEmitter
   @DEFAULTS:
     'log level': 1
+    'store': 'memory'
     'transports': ['websocket', 'xhr-polling']
 
   @events:
@@ -51,6 +53,15 @@ class TandemNetwork extends EventEmitter
   constructor: (server, @storage, options = {}) ->
     options = _.pick(options, _.keys(TandemNetwork.DEFAULTS))
     @settings = _.extend({}, TandemNetwork.DEFAULTS, options)
+    switch @settings['store']
+      when 'memory'
+        delete @settings['store']
+      when 'redis'
+        @settings['store'] = new RedisStore({
+          redisPub    : redis.createClient()
+          redisSub    : redis.createClient()
+          redisClient : redis.createClient()
+        })
     initNetwork.call(this, server)
 
 

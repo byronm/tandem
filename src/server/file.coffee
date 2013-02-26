@@ -54,7 +54,7 @@ update = (client, metadata, packet, callback) ->
       fileId: @id
       version: version
     )
-  )  
+  )
 
 
 class TandemFile
