@@ -1,5 +1,6 @@
 _            = require('underscore')._
 EventEmitter = require('events').EventEmitter
+Tandem       = require('../core/tandem')
 
 
 class TandemServerEngine extends EventEmitter
@@ -19,6 +20,9 @@ class TandemServerEngine extends EventEmitter
     version -= @versionLoaded
     @store.range('history', version, (err, range) =>
       return callback("No version in history") if range.length == 0
+      range = _.map(range, (delta) ->
+        return Tandem.Delta.makeDelta(JSON.parse(delta))
+      )
       firstHist = range.shift(range)
       delta = _.reduce(range, (delta, hist) ->
         return delta.follows(hist, true)
@@ -31,6 +35,9 @@ class TandemServerEngine extends EventEmitter
     return "No version in history" if version < 0
     delta = this.indexesToDelta(delta) if _.isArray(delta)
     @store.range('history', version, (err, range) =>
+      range = _.map(range, (delta) ->
+        return Tandem.Delta.makeDelta(JSON.parse(delta))
+      )
       delta = _.reduce(range, (delta, hist) ->
         return delta.follows(hist, true)
       , delta)
@@ -42,7 +49,7 @@ class TandemServerEngine extends EventEmitter
       return callback(err) if err?
       if @head.canCompose(delta)
         @head = @head.compose(delta)
-        @store.push('history', delta, (err, length) =>
+        @store.push('history', JSON.stringify(delta), (err, length) =>
           @version += 1
           callback(null, delta, @version)
         )

@@ -51,9 +51,8 @@ class TandemNetwork extends EventEmitter
   @events:
     CONNECT: 'network-connect'
 
-  constructor: (server, @storage, options = {}) ->
-    options = _.pick(options, _.keys(TandemNetwork.DEFAULTS))
-    @settings = _.extend({}, TandemNetwork.DEFAULTS, options)
+  constructor: (server, @storage, options = {}) ->    
+    @settings = _.extend({}, TandemNetwork.DEFAULTS, _.pick(options, _.keys(TandemNetwork.DEFAULTS)))
     switch @settings['store']
       when 'memory'
         delete @settings['store']

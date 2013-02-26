@@ -33,7 +33,7 @@ removeClient = (client, callback = ->) ->
 
 class TandemServer
   constructor: (server, options = {}) ->
-    @storage = new TandemStorage(options.endpoint)
+    @storage = new TandemStorage(options.endpoint, options)
     @network = new TandemNetwork(server, @storage, options)
     @network.on(TandemNetwork.events.CONNECT, (client, metadata) ->
       # By this point, client will be authenticated

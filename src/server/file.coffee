@@ -2,6 +2,8 @@ _                 = require('underscore')._
 Tandem            = require('../core/tandem')
 TandemEngine      = require('./engine')
 TandemMemoryStore = require('./stores/memory')
+TandemRedisStore  = require('./stores/redis')
+
 
 initClientListeners = (client, metadata) ->
   _.each(TandemFile.routes, (route, name) ->
@@ -67,10 +69,15 @@ class TandemFile
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@id, initial, version, callback) ->
+  @DEFAULTS:
+    'store': 'memory'
+
+  constructor: (@id, initial, version, options, callback) ->   
+    @settings = _.extend({}, TandemFile.DEFAULTS, _.pick(options, _.keys(TandemFile.DEFAULTS)))
     @versionSaved = version
     @users = {}
-    store = new TandemMemoryStore(@id)
+    Store = if @settings['store'] == 'redis' then TandemRedisStore else TandemMemoryStore
+    store = new Store(@id)
     @engine = new TandemEngine(initial, version, store, (err, engine) =>
       callback(err, this)
     )
