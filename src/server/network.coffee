@@ -43,6 +43,7 @@ initNetwork = (server) ->
 
 class TandemNetwork extends EventEmitter
   @DEFAULTS:
+    'browser client': false
     'log level': 1
     'store': 'memory'
     'transports': ['websocket', 'xhr-polling']

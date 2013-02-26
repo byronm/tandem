@@ -1,6 +1,7 @@
-_            = require('underscore')._
-Tandem       = require('../core/tandem')
-TandemEngine = require('./engine')
+_                 = require('underscore')._
+Tandem            = require('../core/tandem')
+TandemEngine      = require('./engine')
+TandemMemoryStore = require('./stores/memory')
 
 initClientListeners = (client, metadata) ->
   _.each(TandemFile.routes, (route, name) ->
@@ -66,10 +67,13 @@ class TandemFile
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@id, initial, version) ->
+  constructor: (@id, initial, version, callback) ->
     @versionSaved = version
-    @engine = new TandemEngine(initial, version)
     @users = {}
+    store = new TandemMemoryStore(@id)
+    @engine = new TandemEngine(initial, version, store, (err, engine) =>
+      callback(err, this)
+    )
 
   addClient: (client, metadata, callback = ->) ->
     client.set('metadata', metadata, (err) =>

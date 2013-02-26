@@ -25,7 +25,7 @@ save = (file, callback = ->) ->
 
 class TandemStorage
   @DEFAULTS:
-    'save interval': 1000
+    'save interval': 10000
 
   constructor: (@endpointUrl, options = {}) ->
     options = _.pick(options, _.keys(TandemStorage.DEFAULTS))
@@ -57,8 +57,7 @@ class TandemStorage
       else
         callback(null, @files[id])
     else if !@endpointUrl?
-      @files[id] = new TandemFile(id, Tandem.Delta.getInitial('\n'), 1)
-      callback(null, @files[id])
+      @files[id] = new TandemFile(id, Tandem.Delta.getInitial('\n'), 1, callback)
     else
       @files[id] = [callback]
       request.get({
@@ -71,10 +70,12 @@ class TandemStorage
         unless err?
           head = Tandem.Delta.makeDelta(body.head)
           version = parseInt(body.version)
-          @files[id] = new TandemFile(id, head, version)
-        _.each(callbacks, (callback) =>
-          callback(err, @files[id])
-        )
+          new TandemFile(id, head, version, (err, file) =>
+            @files[id] = file unless err?
+            _.each(callbacks, (callback) =>
+              callback(err, file)
+            )
+          )
       )
 
 

@@ -1,22 +1,35 @@
 _           = require('underscore')
 TandemStore = require('./store')
 
+storage = {}
+
 class TandemMemoryStore extends TandemStore
-  constructor: ->
-    @storage = {}
+  constructor: (@id) ->
+    super
 
-  get: (key, callback) ->
-    callback(null, @storage[key])
-
-  set: (key, value, callback) ->
-    @storage[key] = value
+  del: (key, callback) ->
+    delete storage[key]
     callback(null)
 
+  get: (key, callback) ->
+    callback(null, storage[key])
+
   push: (key, value, callback) ->
-    if !@storage[key]? or !_.isArray(@storage[key])
-      @storage[key] = []
-    @storage[key].push(value)
-    callback(null, @storage.length)
+    unless _.isArray(storage[key])
+      storage[key] = []
+    storage[key].push(value)
+    callback(null, storage[key].length)
+
+  range: (key, start, end, callback) ->
+    if _.isFunction(end)
+      callback = end
+      end = undefined
+    ret = if _.isArray(storage[key]) then storage[key].slice(start, end) else []
+    callback(null, ret)
+
+  set: (key, value, callback) ->
+    storage[key] = value
+    callback(null)
 
 
-module.export = TandemMemoryStore
+module.exports = TandemMemoryStore
