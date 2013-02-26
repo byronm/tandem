@@ -1,31 +1,53 @@
 _            = require('underscore')._
+async        = require('async')
 EventEmitter = require('events').EventEmitter
 Tandem       = require('../core/tandem')
 
+atomic = (fn) ->
+  async.until( =>
+    @locked == false
+  , (callback) ->
+    setTimeout(callback, 100)
+  , =>
+    @locked = true
+    fn( =>
+      @locked = false
+    )
+  )
 
 class TandemServerEngine extends EventEmitter
   @events:
     UPDATE: 'update'
 
   constructor: (@head, @version, @store, callback) ->
-    @store.get('versionLoaded', (err, versionLoaded) =>
-      return callback(err) if err?
-      if versionLoaded?
-        @versionLoaded = versionLoaded
-        @store.range('history', @version - versionLoaded, (err, range) =>
-          return callback(err) if err?
-          _.each(range, (delta) =>
-            delta = Tandem.Delta.makeDelta(JSON.parse(delta))
-            @head = @head.compose(delta)
-            @version += 1
+    @id = _.uniqueId('engine-')
+    @locked = false
+    atomic.call(this, (done) =>
+      @store.get('versionLoaded', (err, versionLoaded) =>
+        if err?
+          callback(err)
+          return done()
+        if versionLoaded?
+          @versionLoaded = versionLoaded
+          @store.range('history', @version - versionLoaded, (err, range) =>
+            if err?
+              callback(err)
+              return done()
+            _.each(range, (delta) =>
+              delta = Tandem.Delta.makeDelta(JSON.parse(delta))
+              @head = @head.compose(delta)
+              @version += 1
+            )
+            callback(null, this)
+            done()
           )
-          callback(null, this)
-        )
-      else
-        @versionLoaded = @version
-        @store.set('versionLoaded', @version, (err) =>
-          callback(err, this)
-        )
+        else
+          @versionLoaded = @version
+          @store.set('versionLoaded', @version, (err) =>
+            callback(err, this)
+            done()
+          )
+      )
     )
 
   getDeltaSince: (version, callback) ->
@@ -62,16 +84,22 @@ class TandemServerEngine extends EventEmitter
     )
     
   update: (delta, version, callback) ->
-    this.transform(delta, version, (err, delta, version) =>
-      return callback(err) if err?
-      if @head.canCompose(delta)
-        @head = @head.compose(delta)
-        @store.push('history', JSON.stringify(delta), (err, length) =>
-          @version += 1
-          callback(null, delta, @version)
-        )
-      else
-        callback("Cannot compose deltas")
+    atomic.call(this, (done) =>
+      this.transform(delta, version, (err, delta, version) =>
+        if err?
+          callback(err)
+          return done()
+        if @head.canCompose(delta)
+          @head = @head.compose(delta)
+          @store.push('history', JSON.stringify(delta), (err, length) =>
+            @version += 1
+            callback(null, delta, @version)
+            done()
+          )
+        else
+          callback("Cannot compose deltas")
+          done()
+      )
     )
 
 

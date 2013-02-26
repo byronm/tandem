@@ -46,6 +46,7 @@ update = (client, metadata, packet, callback) ->
   delta = Tandem.Delta.makeDelta(packet.delta)
   version = parseInt(packet.version)
   @engine.update(delta, version, (err, delta, version) =>
+    console.log err if err?
     return resync.call(this, callback) if err?
     broadcastPacket =
       delta: delta

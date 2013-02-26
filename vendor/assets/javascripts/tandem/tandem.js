@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.4.0 - 2013-02-25
+/*! Tandem Realtime Coauthoring Engine - v0.4.0 - 2013-02-26
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -4640,14 +4640,10 @@ require.define("/src/client/engine.coffee",function(require,module,exports,__dir
   };
 
   sendIfReady = function() {
-    console.log('sendIfReady');
     if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
-      console.log('sending');
       this.inFlight = this.inLine;
       this.inLine = Delta.getIdentity(this.inFlight.endLength);
       return send.call(this);
-    } else {
-      return console.log('nothing to send...', this.inFlight.isIdentity(), this.inLine.isIdentity(), this.inFlight, this.inLine);
     }
   };
 

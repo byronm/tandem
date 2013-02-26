@@ -15,7 +15,6 @@ class TandemRedisStore extends TandemStore
     redisClient.get(key, callback)
 
   push: (key, value, callback) ->
-    console.log 'push', key, value
     redisClient.rpush(key, value, callback)
 
   range: (key, start, end, callback) ->
@@ -24,10 +23,7 @@ class TandemRedisStore extends TandemStore
       end = -1
     else
       end -= 1    # Since end is inclusive in redis lrange
-    redisClient.lrange(key, start, end, (err, range) ->
-      console.log key, start, end, range
-      callback(err, range)
-    )
+    redisClient.lrange(key, start, end, callback)
 
   set: (key, value, callback) ->
     redisClient.set(key, value, callback)
