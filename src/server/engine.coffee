@@ -8,10 +8,25 @@ class TandemServerEngine extends EventEmitter
     UPDATE: 'update'
 
   constructor: (@head, @version, @store, callback) ->
-    @versionLoaded = @version
-    callback(null, this)
-
-  indexesToDelta: (indexes) ->
+    @store.get('versionLoaded', (err, versionLoaded) =>
+      return callback(err) if err?
+      if versionLoaded?
+        @versionLoaded = versionLoaded
+        @store.range('history', @version - versionLoaded, (err, range) =>
+          return callback(err) if err?
+          _.each(range, (delta) =>
+            delta = Tandem.Delta.makeDelta(JSON.parse(delta))
+            @head = @head.compose(delta)
+            @version += 1
+          )
+          callback(null, this)
+        )
+      else
+        @versionLoaded = @version
+        @store.set('versionLoaded', @version, (err) =>
+          callback(err, this)
+        )
+    )
 
   getDeltaSince: (version, callback) ->
     return callback("Negative version") if version < 0
@@ -29,6 +44,8 @@ class TandemServerEngine extends EventEmitter
       , firstHist)
       return callback(null, delta, @version)
     )
+
+  indexesToDelta: (indexes) ->
 
   transform: (delta, version, callback) ->
     version -= @versionLoaded
