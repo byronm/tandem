@@ -73,12 +73,12 @@ initListeners = ->
   initEngineListeners.call(this)
   initHealthListeners.call(this)
 
-resync = ->
+resync = (callback) ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)
   this.send(TandemFile.routes.RESYNC, {}, (response) =>
-    delta = Delta.makeDelta(response.head)
-    @engine.resync(delta, response.version)
+    @engine.resync(Delta.makeDelta(response.head), response.version)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
+    callback() if callback?
   )
 
 sendUpdate = (delta, version, callback) ->
@@ -93,18 +93,24 @@ sendUpdate = (delta, version, callback) ->
       callback.call(this, response)
   )
 
+setReady = ->
+  this.emit(TandemFile.events.READY)
+  @engine.resendUpdate()
+
 sync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
   this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
     @users = response.users
     if response.resync
       console.warn "Sync requesting resync"
-      resync.call(this)
+      @engine.resync(Delta.makeDelta(response.head), response.version)
     else
       unless @engine.remoteUpdate(response.delta, response.version)
         console.warn "Remote update failed on sync, requesting resync"
-        resync.call(this)
-    this.emit(TandemFile.events.READY)
+        return resync.call(this, =>
+          setReady.call(this)
+        )
+    setReady.call(this)
   , true)
 
 

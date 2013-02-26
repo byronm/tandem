@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.3.4 - 2013-02-12
+/*! Tandem Realtime Coauthoring Engine - v0.4.0 - 2013-02-25
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -4623,23 +4623,31 @@ require.define("/src/core/retain.coffee",function(require,module,exports,__dirna
 });
 
 require.define("/src/client/engine.coffee",function(require,module,exports,__dirname,__filename,process,global){(function() {
-  var ClientEngine, Delta, sendIfReady,
+  var ClientEngine, Delta, send, sendIfReady,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   Delta = require('../core/delta');
 
-  sendIfReady = function() {
+  send = function() {
     var _this = this;
+    return this.sendFn(this.inFlight, this.version, function(response) {
+      _this.version = response.version;
+      _this.arrived = _this.arrived.compose(_this.inFlight);
+      _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
+      return sendIfReady.call(_this);
+    });
+  };
+
+  sendIfReady = function() {
+    console.log('sendIfReady');
     if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
+      console.log('sending');
       this.inFlight = this.inLine;
       this.inLine = Delta.getIdentity(this.inFlight.endLength);
-      return this.sendFn(this.inFlight, this.version, function(response) {
-        _this.version = response.version;
-        _this.arrived = _this.arrived.compose(_this.inFlight);
-        _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
-        return sendIfReady.call(_this);
-      });
+      return send.call(this);
+    } else {
+      return console.log('nothing to send...', this.inFlight.isIdentity(), this.inLine.isIdentity(), this.inFlight, this.inLine);
     }
   };
 
@@ -4687,6 +4695,12 @@ require.define("/src/client/engine.coffee",function(require,module,exports,__dir
       }
     };
 
+    ClientEngine.prototype.resendUpdate = function() {
+      if (!this.inFlight.isIdentity()) {
+        return send.call(this);
+      }
+    };
+
     ClientEngine.prototype.resync = function(delta, version) {
       var decomposed;
       decomposed = delta.decompose(this.arrived);
@@ -4706,7 +4720,7 @@ require.define("/src/client/engine.coffee",function(require,module,exports,__dir
 });
 
 require.define("/src/client/file.coffee",function(require,module,exports,__dirname,__filename,process,global){(function() {
-  var Delta, TandemEngine, TandemFile, TandemNetworkAdapter, checkAdapterError, initAdapterListeners, initEngine, initEngineListeners, initHealthListeners, initListeners, resync, sendUpdate, sync,
+  var Delta, TandemEngine, TandemFile, TandemNetworkAdapter, checkAdapterError, initAdapterListeners, initEngine, initEngineListeners, initHealthListeners, initListeners, resync, sendUpdate, setReady, sync,
     __slice = [].slice,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = {}.hasOwnProperty,
@@ -4813,14 +4827,15 @@ require.define("/src/client/file.coffee",function(require,module,exports,__dirna
     return initHealthListeners.call(this);
   };
 
-  resync = function() {
+  resync = function(callback) {
     var _this = this;
     this.emit(TandemFile.events.HEALTH, this.health, TandemFile.health.WARNING);
     return this.send(TandemFile.routes.RESYNC, {}, function(response) {
-      var delta;
-      delta = Delta.makeDelta(response.head);
-      _this.engine.resync(delta, response.version);
-      return _this.emit(TandemFile.events.HEALTH, _this.health, TandemFile.health.HEALTHY);
+      _this.engine.resync(Delta.makeDelta(response.head), response.version);
+      _this.emit(TandemFile.events.HEALTH, _this.health, TandemFile.health.HEALTHY);
+      if (callback != null) {
+        return callback();
+      }
     });
   };
 
@@ -4843,6 +4858,11 @@ require.define("/src/client/file.coffee",function(require,module,exports,__dirna
     });
   };
 
+  setReady = function() {
+    this.emit(TandemFile.events.READY);
+    return this.engine.resendUpdate();
+  };
+
   sync = function() {
     var _this = this;
     this.emit(TandemFile.events.HEALTH, this.health, TandemFile.health.HEALTHY);
@@ -4852,14 +4872,16 @@ require.define("/src/client/file.coffee",function(require,module,exports,__dirna
       _this.users = response.users;
       if (response.resync) {
         console.warn("Sync requesting resync");
-        resync.call(_this);
+        _this.engine.resync(Delta.makeDelta(response.head), response.version);
       } else {
         if (!_this.engine.remoteUpdate(response.delta, response.version)) {
           console.warn("Remote update failed on sync, requesting resync");
-          resync.call(_this);
+          return resync.call(_this, function() {
+            return setReady.call(_this);
+          });
         }
       }
-      return _this.emit(TandemFile.events.READY);
+      return setReady.call(_this);
     }, true);
   };
 

@@ -1,16 +1,19 @@
 Delta = require('../core/delta')
 
 
+send = ->
+  @sendFn(@inFlight, @version, (response) =>
+    @version = response.version
+    @arrived = @arrived.compose(@inFlight)
+    @inFlight = Delta.getIdentity(@arrived.endLength)
+    sendIfReady.call(this)
+  )
+
 sendIfReady = ->
   if @inFlight.isIdentity() and !@inLine.isIdentity()
     @inFlight = @inLine
     @inLine = Delta.getIdentity(@inFlight.endLength)
-    @sendFn(@inFlight, @version, (response) =>
-      @version = response.version
-      @arrived = @arrived.compose(@inFlight)
-      @inFlight = Delta.getIdentity(@arrived.endLength)
-      sendIfReady.call(this)
-    )
+    send.call(this)
 
 
 class ClientEngine extends EventEmitter2
@@ -43,6 +46,9 @@ class ClientEngine extends EventEmitter2
       return true
     else
       return false
+
+  resendUpdate: ->
+    send.call(this) unless @inFlight.isIdentity()
 
   resync: (delta, version) ->
     decomposed = delta.decompose(@arrived)

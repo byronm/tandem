@@ -60,9 +60,9 @@ class TandemNetwork extends EventEmitter
         delete @settings['store']
       when 'redis'
         @settings['store'] = new RedisStore({
+          redisClient : redis.createClient()
           redisPub    : redis.createClient()
           redisSub    : redis.createClient()
-          redisClient : redis.createClient()
         })
     initNetwork.call(this, server)
 
