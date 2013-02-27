@@ -1,5 +1,6 @@
 demo
 lib
+build
 node_modules
 src/client
 tests
