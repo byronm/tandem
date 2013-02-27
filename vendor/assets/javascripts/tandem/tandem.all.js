@@ -5804,21 +5804,31 @@ if (typeof define === "function" && define.amd) {
   var defaultMaxListeners = 10;
 
   function init() {
-    this._events = new Object;
+    this._events = {};
+    if (this._conf) {
+      configure.call(this, this._conf);
+    }
   }
 
   function configure(conf) {
     if (conf) {
+      
+      this._conf = conf;
+      
       conf.delimiter && (this.delimiter = conf.delimiter);
+      conf.maxListeners && (this._events.maxListeners = conf.maxListeners);
       conf.wildcard && (this.wildcard = conf.wildcard);
+      conf.newListener && (this.newListener = conf.newListener);
+
       if (this.wildcard) {
-        this.listenerTree = new Object;
+        this.listenerTree = {};
       }
     }
   }
 
   function EventEmitter(conf) {
-    this._events = new Object;
+    this._events = {};
+    this.newListener = false;
     configure.call(this, conf);
   }
 
@@ -5952,7 +5962,7 @@ if (typeof define === "function" && define.amd) {
     while (name) {
 
       if (!tree[name]) {
-        tree[name] = new Object;
+        tree[name] = {};
       }
 
       tree = tree[name];
@@ -6007,6 +6017,8 @@ if (typeof define === "function" && define.amd) {
   EventEmitter.prototype.setMaxListeners = function(n) {
     this._events || init.call(this);
     this._events.maxListeners = n;
+    if (!this._conf) this._conf = {};
+    this._conf.maxListeners = n;
   };
 
   EventEmitter.prototype.event = '';
@@ -6038,11 +6050,12 @@ if (typeof define === "function" && define.amd) {
   };
 
   EventEmitter.prototype.emit = function() {
+    
     this._events || init.call(this);
 
     var type = arguments[0];
 
-    if (type === 'newListener') {
+    if (type === 'newListener' && !this.newListener) {
       if (!this._events.newListener) { return false; }
     }
 
@@ -11346,7 +11359,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
           return setReady.call(_this);
         }
       } else {
-        return _this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document " + _this.fileId);
+        return _this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document " + _this.fileId, response.error);
       }
     });
   };
@@ -11438,7 +11451,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
       options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS));
       this.settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, options);
       this.id = _.uniqueId('adapter-');
-      this.socketListeners = [];
+      this.socketListeners = {};
       this.sendQueue = [];
       this.ready = false;
       this.stats = {
@@ -11491,7 +11504,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
 
     TandemNetworkAdapter.prototype.removeAllListeners = function() {
       this.socket.removeAllListeners();
-      return this.socketListeners = [];
+      return this.socketListeners = {};
     };
 
     TandemNetworkAdapter.prototype.send = function(route, packet, callback, priority) {

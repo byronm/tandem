@@ -9,7 +9,7 @@ authenticate = ->
       console.info "Connected!", response
       setReady.call(this) if @ready == false
     else
-      this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document #{@fileId}")
+      this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document #{@fileId}", response.error)
   )
 
 doSend = (route, packet, callback) ->
@@ -73,7 +73,7 @@ class TandemNetworkAdapter extends EventEmitter2
     options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS))
     @settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, options)
     @id = _.uniqueId('adapter-')
-    @socketListeners = []
+    @socketListeners = {}
     @sendQueue = []
     @ready = false
     @stats =
@@ -109,7 +109,7 @@ class TandemNetworkAdapter extends EventEmitter2
 
   removeAllListeners: ->
     @socket.removeAllListeners()
-    @socketListeners = []
+    @socketListeners = {}
 
   send: (route, packet, callback, priority = false) ->
     if @ready

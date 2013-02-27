@@ -5001,7 +5001,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
           return setReady.call(_this);
         }
       } else {
-        return _this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document " + _this.fileId);
+        return _this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document " + _this.fileId, response.error);
       }
     });
   };
@@ -5093,7 +5093,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
       options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS));
       this.settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, options);
       this.id = _.uniqueId('adapter-');
-      this.socketListeners = [];
+      this.socketListeners = {};
       this.sendQueue = [];
       this.ready = false;
       this.stats = {
@@ -5146,7 +5146,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
 
     TandemNetworkAdapter.prototype.removeAllListeners = function() {
       this.socket.removeAllListeners();
-      return this.socketListeners = [];
+      return this.socketListeners = {};
     };
 
     TandemNetworkAdapter.prototype.send = function(route, packet, callback, priority) {

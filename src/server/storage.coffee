@@ -43,7 +43,7 @@ class TandemStorage
       json: { auth_obj: authObj }
     }, (err, response, body) ->
       err = "Response error: #{response.statusCode}" unless response.statusCode == 200
-      callback(err, body.access)
+      callback(body.error, body.access)
     )
 
   clear: ->
