@@ -47,7 +47,11 @@ Popular javascript libraries are offically included as dependencies. Less popula
     
 ### Javascript (Client)
 
-To build, run:
+To build, install dependencies:
+
+    npm install
+    
+And build:
 
     grunt
 
