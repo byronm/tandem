@@ -11213,8 +11213,8 @@ require.define("/src/client/file.coffee",function(require,module,exports,__dirna
   };
 
   setReady = function() {
-    this.emit(TandemFile.events.READY);
-    return this.engine.resendUpdate();
+    this.engine.resendUpdate();
+    return this.emit(TandemFile.events.READY);
   };
 
   sync = function() {

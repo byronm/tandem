@@ -94,8 +94,10 @@ sendUpdate = (delta, version, callback) ->
   )
 
 setReady = ->
-  this.emit(TandemFile.events.READY)
+  # Need to resend before emitting ready
+  # Otherwise listeners on ready might immediate send an update and thus resendUpdate will duplicate packet
   @engine.resendUpdate()
+  this.emit(TandemFile.events.READY)
 
 sync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
