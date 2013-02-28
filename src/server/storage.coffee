@@ -17,7 +17,7 @@ save = (file, callback = ->) ->
         version: version
       uri: "#{@endpointUrl}/#{file.id}"
     }, (err, response) =>
-      err = "Response error: #{response.statusCode}" unless response.statusCode == 200
+      err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
       file.versionSaved = version unless err?
       callback(err)
     )
@@ -42,8 +42,8 @@ class TandemStorage
       uri: "#{@endpointUrl}/#{fileId}/check_access"
       json: { auth_obj: authObj }
     }, (err, response, body) ->
-      err = "Response error: #{response.statusCode}" unless response.statusCode == 200
-      callback(body.error, body.access)
+      err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
+      callback(err or body.error, body.access)
     )
 
   clear: ->
@@ -63,7 +63,7 @@ class TandemStorage
         uri: "#{@endpointUrl}/#{id}"
         json: true
       }, (err, response, body) =>
-        err = "Response error: #{response.statusCode}" unless response.statusCode == 200
+        err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
         callbacks = @files[id]
         @files[id] = undefined
         unless err?
@@ -74,6 +74,10 @@ class TandemStorage
             _.each(callbacks, (callback) =>
               callback(err, file)
             )
+          )
+        else
+          _.each(callbacks, (callback) =>
+            callback(err)
           )
       )
 
