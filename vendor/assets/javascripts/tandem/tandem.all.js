@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.4.0 - 2013-02-26
+/*! Tandem Realtime Coauthoring Engine - v0.4.2 - 2013-02-27
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -6356,7 +6356,7 @@ if (typeof define === "function" && define.amd) {
   }
 
 }(typeof process !== 'undefined' && typeof process.title !== 'undefined' && typeof exports !== 'undefined' ? exports : window);
-/*! Tandem Realtime Coauthoring Engine - v0.4.0 - 2013-02-26
+/*! Tandem Realtime Coauthoring Engine - v0.4.2 - 2013-02-27
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -11432,7 +11432,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
     TandemNetworkAdapter.DEFAULTS = {
       'force new connection': false,
       'max reconnection attempts': Infinity,
-      'port': 443,
+      'port': 80,
       'reconnection limit': 30000,
       'sync disconnect on unload': false
     };
@@ -11465,6 +11465,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
       protocol = a.protocol === 'http:' || a.protocol === 'https:' ? a.protocol : 'http:';
       if (protocol === 'https:') {
         socketOptions['secure'] = true;
+        socketOptions['port'] = 443;
       }
       if (a.port) {
         socketOptions['port'] = a.port;
