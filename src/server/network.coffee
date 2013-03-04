@@ -4,6 +4,7 @@ socketio      = require('socket.io')
 EventEmitter  = require('events').EventEmitter
 RedisStore    = require('socket.io/lib/stores/redis')
 
+
 authenticate = (client, packet, callback) ->
   # Need to leave room
   if packet.fileId?

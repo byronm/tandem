@@ -66,8 +66,7 @@ class Delta
     retains = []
     _.each(@ops, (op) =>
       if Delta.isInsert(op)
-        insertFn.call(context, index + offset, op.value)
-        retains.push(new RetainOp(index + offset, index + offset + op.getLength(), op.attributes))
+        insertFn.call(context, index + offset, op.value, op.attributes)
         offset += op.getLength()
       else if Delta.isRetain(op)
         if op.start > index

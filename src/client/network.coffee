@@ -60,7 +60,7 @@ class TandemNetworkAdapter extends EventEmitter2
   @SEND     : 'send'
 
   @DEFAULTS :
-    'force new connection'      : false
+    'force new connection'      : true
     'max reconnection attempts' : Infinity
     'port'                      : 80
     'reconnection limit'        : 30000
@@ -88,6 +88,7 @@ class TandemNetworkAdapter extends EventEmitter2
       socketOptions['secure'] = true
       socketOptions['port'] = 443
     socketOptions['port'] = a.port if a.port
+    socketOptions['query'] = "fileId=#{@fileId}"
     @socket = io.connect("#{protocol}//#{a.host}", socketOptions)
     @socket.on('reconnecting', =>
       @ready = false

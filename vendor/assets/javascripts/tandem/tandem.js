@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.4.2 - 2013-02-27
+/*! Tandem Realtime Coauthoring Engine - v0.4.3 - 2013-03-04
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -511,8 +511,7 @@ require.define("/src/core/delta.coffee",function(require,module,exports,__dirnam
       retains = [];
       _.each(this.ops, function(op) {
         if (Delta.isInsert(op)) {
-          insertFn.call(context, index + offset, op.value);
-          retains.push(new RetainOp(index + offset, index + offset + op.getLength(), op.attributes));
+          insertFn.call(context, index + offset, op.value, op.attributes);
           return offset += op.getLength();
         } else if (Delta.isRetain(op)) {
           if (op.start > index) {
@@ -5072,7 +5071,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
     TandemNetworkAdapter.SEND = 'send';
 
     TandemNetworkAdapter.DEFAULTS = {
-      'force new connection': false,
+      'force new connection': true,
       'max reconnection attempts': Infinity,
       'port': 80,
       'reconnection limit': 30000,
@@ -5112,6 +5111,7 @@ require.define("/src/client/network.coffee",function(require,module,exports,__di
       if (a.port) {
         socketOptions['port'] = a.port;
       }
+      socketOptions['query'] = "fileId=" + this.fileId;
       this.socket = io.connect("" + protocol + "//" + a.host, socketOptions);
       this.socket.on('reconnecting', function() {
         return _this.ready = false;
