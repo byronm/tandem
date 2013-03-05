@@ -2,7 +2,6 @@ _                 = require('underscore')._
 Tandem            = require('../core/tandem')
 TandemEngine      = require('./engine')
 TandemMemoryStore = require('./stores/memory')
-TandemRedisStore  = require('./stores/redis')
 
 
 initClientListeners = (client, metadata) ->
@@ -70,14 +69,13 @@ class TandemFile
     UPDATE    : 'ot/update'
 
   @DEFAULTS:
-    'store': 'memory'
+    'store': TandemMemoryStore
 
   constructor: (@id, initial, version, options, callback) ->   
     @settings = _.extend({}, TandemFile.DEFAULTS, _.pick(options, _.keys(TandemFile.DEFAULTS)))
     @versionSaved = version
     @users = {}
-    Store = if @settings['store'] == 'redis' then TandemRedisStore else TandemMemoryStore
-    store = new Store(@id)
+    store = new @settings['store'](@id)
     @engine = new TandemEngine(initial, version, store, (err, engine) =>
       callback(err, this)
     )
