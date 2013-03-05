@@ -4,8 +4,9 @@ TandemStore = require('./store')
 storage = {}
 
 class TandemMemoryStore extends TandemStore
-  constructor: (@id) ->
+  constructor: (@id, callback) ->
     super
+    callback(this)
 
   del: (key, callback) ->
     delete storage[key]

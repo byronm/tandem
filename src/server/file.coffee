@@ -75,9 +75,10 @@ class TandemFile
     @settings = _.extend({}, TandemFile.DEFAULTS, _.pick(options, _.keys(TandemFile.DEFAULTS)))
     @versionSaved = version
     @users = {}
-    store = new @settings['store'](@id)
-    @engine = new TandemEngine(initial, version, store, (err, engine) =>
-      callback(err, this)
+    store = new @settings['store'](@id, (store) =>
+      @engine = new TandemEngine(initial, version, store, (err, engine) =>
+        callback(err, this)
+      )
     )
 
   addClient: (client, metadata, callback = ->) ->
