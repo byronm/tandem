@@ -1,4 +1,3 @@
-# Unit tests for the synchronization library, sync.coffee
 assert     = require('chai').assert
 _          = require('underscore')._
 Tandem     = require('../index')
