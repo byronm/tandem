@@ -1229,7 +1229,7 @@ deleteAt = (delta, deletionPoint, numToDelete) ->
   charIndex = 0
   ops = []
   for elem in delta.ops
-    if numToDelete > 0 && (charIndex == deletionPoint or charIndex + elem.getLength() > deletionPoint)
+    if numToDelete > 0 && (charIndex == deletionPoint or deletionPoint < charIndex + elem.getLength())
       curDelete = Math.min(numToDelete, elem.getLength() - (deletionPoint - charIndex))
       numToDelete -= curDelete
       if Delta.isInsert(elem)
