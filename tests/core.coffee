@@ -1211,18 +1211,11 @@ getRandStr = (numInsertions) ->
   return str
 
 insertAt = (delta, insertionPoint, insertions) ->
-  charIndex = 0
-  elemIndex = 0
+  charIndex = elemIndex = 0
   for elem in delta.ops
     break if charIndex == insertionPoint
     if insertionPoint < charIndex + elem.getLength()
-      # Split the node at insertionPoint
-      if Delta.isInsert(elem)
-        head = new InsertOp(elem.value.substring(0, insertionPoint - charIndex), _.clone(elem.attributes))
-        tail = new InsertOp(elem.value.substring(insertionPoint - charIndex), _.clone(elem.attributes))
-      else
-        head = new RetainOp(elem.start, elem.start + insertionPoint - charIndex, _.clone(elem.attributes))
-        tail = new RetainOp(elem.start + insertionPoint - charIndex, elem.end, _.clone(elem.attributes))
+      [head, tail] = elem.split(insertionPoint - charIndex)
       delta.ops.splice(elemIndex, 1, head, tail)
       elemIndex++
       break
