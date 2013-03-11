@@ -1196,9 +1196,6 @@ describe('invert', ->
 # characters inserted at a random index. If it is a delete, a random index will
 # be deleted.
 ##############################
-getRandInt = (min, max) ->
-  return Math.floor(Math.random() * (max - min + 1)) + min
-
 attributes = ["bold", "italics", "fontsize"]
 
 getRandStr = (numInsertions) ->
@@ -1320,20 +1317,20 @@ formatAt = (delta, formatPoint, numToFormat, attrs, reference) ->
 addRandomChange = (delta, docDelta) ->
   chance = Math.random()
   if (chance < 0.3)
-    insertionPoint = getRandInt(0, delta.endLength - 1)
-    numInsertions = getRandInt(1, 20)
+    insertionPoint = _.random(0, delta.endLength - 1)
+    numInsertions = _.random(1, 20)
     insertions = getRandStr(numInsertions)
     insertAt(delta, insertionPoint, insertions)
   else if (chance >= 0.3 and chance < 0.6)
-    indexToDelete = getRandInt(0, delta.endLength - 1)
-    numToDelete = getRandInt(0, delta.endLength - indexToDelete - 1)
+    indexToDelete = _.random(0, delta.endLength - 1)
+    numToDelete = _.random(0, delta.endLength - indexToDelete - 1)
     deleteAt(delta, indexToDelete, numToDelete)
   else
-    indexToFormat = getRandInt(0, delta.endLength - 1)
-    numToFormat = getRandInt(0, delta.endLength - indexToFormat - 1)
+    indexToFormat = _.random(0, delta.endLength - 1)
+    numToFormat = _.random(0, delta.endLength - indexToFormat - 1)
     # Pick a random number of random attributes
     attributes.sort(-> return 0.5 - Math.random())
-    numAttrs = getRandInt(0, attributes.length)
+    numAttrs = _.random(0, attributes.length)
     attrs = attributes.slice(0, numAttrs)
     formatAt(delta, indexToFormat, 1, attrs, docDelta)
   return delta
@@ -1570,12 +1567,12 @@ describe('Fuzzers', ->
   ##############################
   it('should pass all decompse fuzzing', ->
     pass = _.all([1..1000], (i) ->
-      numInsertions = getRandInt(1, 40)
+      numInsertions = _.random(1, 40)
       insertions = getRandStr(numInsertions)
       deltaA = new Delta(0, insertions.length, [new InsertOp(insertions)])
       for j in [0...10]
-        indexToFormat = getRandInt(0, deltaA.endLength - 1)
-        numToFormat = getRandInt(0, deltaA.endLength - indexToFormat - 1)
+        indexToFormat = _.random(0, deltaA.endLength - 1)
+        numToFormat = _.random(0, deltaA.endLength - indexToFormat - 1)
         # Pick a random number of random attributes
         attributes.sort(-> return 0.5 - Math.random())
         numAttrs = Math.floor(Math.random() * (attributes.length + 1))
