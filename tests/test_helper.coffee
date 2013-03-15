@@ -24,7 +24,7 @@ class DeltaGenerator
       insertAt(newDelta, opIndex, opLength)
     else if rand < 0.75
       opLength = _.random(1, finalIndex - index)
-      delteAt(newDelta, opIndex, opLength)
+      deleteAt(newDelta, opIndex, opLength)
     else
       opLength = _.random(1, finalIndex - index)
       formatAt(newDelta, opIndex, opLength)
