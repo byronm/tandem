@@ -1,4 +1,22 @@
 class DeltaGenerator
+  getRandomString = (alphabet, length) ->
+    return _.map([0..(length - 1)], ->
+      return alphabet[_.random(0, alphabet.length - 1)]
+    ).join('')
+
+  getRandomLength = ->
+    rand = Math.random()
+    if rand < 0.1
+      return 1
+    else if rand < 0.6
+      return _.random(0, 2)
+    else if rand < 0.8
+      return _.random(3, 4)
+    else if rand < 0.9
+      return _.random(5, 9)
+    else
+      return _.random(10, 50)
+
   insertAt = (delta, insertionPoint, insertions) ->
     charIndex = elemIndex = 0
     for elem in delta.ops
