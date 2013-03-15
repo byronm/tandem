@@ -38,8 +38,8 @@ class DeltaGenerator
     opIndex = _.random(0, finalIndex)
     rand = Math.random()
     if rand < 0.5
-      opLength = Scribe.Debug.Test.getRandomLength() + 1
-      insertAt(newDelta, opIndex, opLength)
+      opLength = getRandomLength() + 1
+      insertAt(newDelta, opIndex, getRandomString(alphabet, opLength))
     else if rand < 0.75
       opLength = _.random(1, finalIndex - index)
       deleteAt(newDelta, opIndex, opLength)
