@@ -6,10 +6,8 @@ class DeltaGenerator
 
   getRandomLength = ->
     rand = Math.random()
-    if rand < 0.1
-      return 1
-    else if rand < 0.6
-      return _.random(0, 2)
+    if rand < 0.6
+      return _.random(1, 2)
     else if rand < 0.8
       return _.random(3, 4)
     else if rand < 0.9
@@ -62,7 +60,7 @@ class DeltaGenerator
     opIndex = _.random(0, finalIndex)
     rand = Math.random()
     if rand < 0.5
-      opLength = getRandomLength() + 1
+      opLength = getRandomLength()
       insertAt(newDelta, opIndex, getRandomString(alphabet, opLength))
     else if rand < 0.75
       opLength = _.random(1, finalIndex - index)

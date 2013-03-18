@@ -1592,4 +1592,3 @@ describe('Fuzzers', ->
     assert(pass == true)
   )
 )
-
