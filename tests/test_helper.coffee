@@ -55,6 +55,75 @@ class DeltaGenerator
       return length + op.getLength()
     , 0)
 
+
+  formatAt = (delta, formatPoint, numToFormat, attrs, reference) ->
+    charIndex = 0
+    ops = []
+    for elem in delta.ops
+      if numToFormat > 0 && (charIndex == formatPoint || charIndex + elem.getLength() > formatPoint)
+        curFormat = Math.min(numToFormat, elem.getLength() - (formatPoint - charIndex))
+        numToFormat -= curFormat
+        # Split the elem s.t. our formatting change applies to the proper "subelement"
+        if Delta.isInsert(elem)
+          headStr = elem.value.substring(0, formatPoint - charIndex)
+          head = new InsertOp(headStr, _.clone(elem.attributes))
+          curStr = elem.value.substring(formatPoint - charIndex, formatPoint - charIndex + curFormat)
+          cur = new InsertOp(curStr, _.clone(elem.attributes))
+          tailStr = elem.value.substring(formatPoint - charIndex + curFormat)
+          tail = new InsertOp(tailStr, _.clone(elem.attributes))
+        else
+          console.assert(Delta.isRetain(elem), "Expected retain but got #{elem}")
+          head = new RetainOp(elem.start, elem.start + formatPoint - charIndex, _.clone(elem.attributes))
+          cur = new RetainOp(head.end, head.end + curFormat, _.clone(elem.attributes))
+          tail = new RetainOp(cur.end, elem.end, _.clone(elem.attributes))
+        ops.push(head) if head.getLength() > 0
+        ops.push(cur)
+        ops.push(tail) if tail.getLength() > 0
+        for attr in attrs
+          switch attr
+            when 'bold', 'italics'
+              if Delta.isInsert(cur)
+                if cur.attributes[attr]?
+                  delete cur.attributes[attr]
+                else
+                  cur.attributes[attr] = true
+              else
+                console.assert Delta.isRetain(cur), "Expected retain but got #{cur}"
+                if cur.attributes[attr]?
+                  delete cur.attributes[attr]
+                else
+                  referenceElem = reference.getOpsAt(cur.start, cur.end - cur.start)
+                  if referenceElem[0].attributes[attr]?
+                    console.assert referenceElem[0].attributes[attr], "Boolean attribute on reference delta should only be true!"
+                    cur.attributes[attr] = null
+                  else
+                    cur.attributes[attr] = true
+            when 'fontsize'
+              getRandFontSize = -> Math.floor(Math.random() * 24)
+              if Delta.isInsert(cur)
+                cur.attributes[attr] = getRandFontSize()
+              else
+                console.assert(Delta.isRetain(cur),
+                  "Expected retain but got #{cur}")
+                if cur.attributes[attr]?
+                  if Math.random() < 0.5
+                    delete cur.attributes[attr]
+                  else
+                    cur.attributes[attr] = getRandFontSize()
+                else
+                  cur.attributes[attr] = getRandFontSize()
+            else
+              console.assert false, "Received unknown attribute: #{attr}"
+        formatPoint += curFormat
+      else
+        ops.push(elem)
+      charIndex += elem.getLength()
+    delta.endLength = _.reduce(ops, (length, delta) ->
+      return length + delta.getLength()
+    , 0)
+    delta.ops = ops
+    delta.compact()
+
   addRandomOp = (newDelta, startDelta) ->
     finalIndex = startDelta.endLength - 1
     opIndex = _.random(0, finalIndex)
@@ -66,8 +135,13 @@ class DeltaGenerator
       opLength = _.random(1, finalIndex - index)
       deleteAt(newDelta, opIndex, opLength)
     else
+      attributes = ["bold", "italics", "fontsize"]
+      # Pick a random number of random attributes
+      attributes.sort(-> return 0.5 - Math.random())
+      numAttrs = _.random(0, attributes.length)
+      attrs = attributes.slice(0, numAttrs)
       opLength = _.random(1, finalIndex - index)
-      formatAt(newDelta, opIndex, opLength)
+      formatAt(newDelta, opIndex, opLength, attrs, startDelta)
     return newDelta
 
   @getRandomDelta: (startDelta, alphabet, format) ->
