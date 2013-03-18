@@ -16,17 +16,17 @@ class DeltaGenerator
       return _.random(10, 50)
 
   insertAt = (delta, insertionPoint, insertions) ->
-    charIndex = elemIndex = 0
-    for elem in delta.ops
+    charIndex = opIndex = 0
+    for op in delta.ops
       break if charIndex == insertionPoint
-      if insertionPoint < charIndex + elem.getLength()
-        [head, tail] = elem.split(insertionPoint - charIndex)
-        delta.ops.splice(elemIndex, 1, head, tail)
-        elemIndex++
+      if insertionPoint < charIndex + op.getLength()
+        [head, tail] = op.split(insertionPoint - charIndex)
+        delta.ops.splice(opIndex, 1, head, tail)
+        opIndex++
         break
-      charIndex += elem.getLength()
-      elemIndex++
-    delta.ops.splice(elemIndex, 0, new InsertOp(insertions))
+      charIndex += op.getLength()
+      opIndex++
+    delta.ops.splice(opIndex, 0, new InsertOp(insertions))
     delta.endLength += insertions.length
     delta.compact()
 
