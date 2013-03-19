@@ -1,5 +1,12 @@
+assert     = require('chai').assert
+_          = require('underscore')._
+Tandem     = require('../index')
+Delta      = Tandem.Delta
+InsertOp   = Tandem.InsertOp
+RetainOp   = Tandem.RetainOp
+
 class DeltaGenerator
-  getRandomString = (alphabet, length) ->
+  @getRandomString = (alphabet, length) ->
     return _.map([0..(length - 1)], ->
       return alphabet[_.random(0, alphabet.length - 1)]
     ).join('')
@@ -15,7 +22,7 @@ class DeltaGenerator
     else
       return _.random(10, 50)
 
-  insertAt = (delta, insertionPoint, insertions) ->
+  @insertAt: (delta, insertionPoint, insertions) ->
     charIndex = opIndex = 0
     for op in delta.ops
       break if charIndex == insertionPoint
@@ -30,7 +37,7 @@ class DeltaGenerator
     delta.endLength += insertions.length
     delta.compact()
 
-  deleteAt = (delta, deletionPoint, numToDelete) ->
+  @deleteAt: (delta, deletionPoint, numToDelete) ->
     charIndex = 0
     ops = []
     for op in delta.ops
@@ -56,7 +63,7 @@ class DeltaGenerator
     , 0)
 
 
-  formatAt = (delta, formatPoint, numToFormat, attrs, reference) ->
+  @formatAt: (delta, formatPoint, numToFormat, attrs, reference) ->
     charIndex = 0
     ops = []
     for elem in delta.ops
@@ -124,32 +131,34 @@ class DeltaGenerator
     delta.ops = ops
     delta.compact()
 
-  addRandomOp = (newDelta, startDelta) ->
+  @addRandomOp: (newDelta, startDelta, alphabet) ->
     finalIndex = startDelta.endLength - 1
     opIndex = _.random(0, finalIndex)
     rand = Math.random()
     if rand < 0.5
       opLength = getRandomLength()
-      insertAt(newDelta, opIndex, getRandomString(alphabet, opLength))
+      DeltaGenerator.insertAt(newDelta, opIndex, DeltaGenerator.getRandomString(alphabet, opLength))
     else if rand < 0.75
-      opLength = _.random(1, finalIndex - index)
-      deleteAt(newDelta, opIndex, opLength)
+      opLength = _.random(1, finalIndex - opIndex)
+      DeltaGenerator.deleteAt(newDelta, opIndex, opLength)
     else
       attributes = ["bold", "italics", "fontsize"]
       # Pick a random number of random attributes
       attributes.sort(-> return 0.5 - Math.random())
       numAttrs = _.random(0, attributes.length)
       attrs = attributes.slice(0, numAttrs)
-      opLength = _.random(1, finalIndex - index)
-      formatAt(newDelta, opIndex, opLength, attrs, startDelta)
+      opLength = _.random(1, finalIndex - opIndex)
+      DeltaGenerator.formatAt(newDelta, opIndex, opLength, attrs, startDelta)
     return newDelta
 
-  @getRandomDelta: (startDelta, alphabet, format) ->
-    newDelta = new Delta(startDelta.startLength,
+  @getRandomDelta: (startDelta, alphabet) ->
+    newDelta = new Delta(startDelta.endLength,
                          startDelta.endLength,
-                         [new RetainOp(startDelta.endLength,
-                                       startelta.endLength)])
+                         [new RetainOp(0,
+                                       startDelta.endLength)])
     numChanges = _.random(1, 10)
     for i in [0...numChanges]
-      addRandomOp(newDelta, startDelta)
+      DeltaGenerator.addRandomOp(newDelta, startDelta, alphabet)
     return newDelta
+
+module.exports = DeltaGenerator

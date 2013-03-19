@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.4.5 - 2013-03-05
+/*! Tandem Realtime Coauthoring Engine - v0.4.5 - 2013-03-18
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -971,9 +971,9 @@ require.define("/src/core/delta.coffee",function(require,module,exports,__dirnam
 require.define("/node_modules/underscore/package.json",function(require,module,exports,__dirname,__filename,process,global){module.exports = {"main":"underscore.js"}
 });
 
-require.define("/node_modules/underscore/underscore.js",function(require,module,exports,__dirname,__filename,process,global){//     Underscore.js 1.4.4
+require.define("/node_modules/underscore/underscore.js",function(require,module,exports,__dirname,__filename,process,global){//     Underscore.js 1.4.3
 //     http://underscorejs.org
-//     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud Inc.
+//     (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
 //     Underscore may be freely distributed under the MIT license.
 
 (function() {
@@ -1037,7 +1037,7 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
   }
 
   // Current version.
-  _.VERSION = '1.4.4';
+  _.VERSION = '1.4.3';
 
   // Collection Functions
   // --------------------
@@ -1197,9 +1197,8 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
   // Invoke a method (with arguments) on every item in a collection.
   _.invoke = function(obj, method) {
     var args = slice.call(arguments, 2);
-    var isFunc = _.isFunction(method);
     return _.map(obj, function(value) {
-      return (isFunc ? method : value[method]).apply(value, args);
+      return (_.isFunction(method) ? method : value[method]).apply(value, args);
     });
   };
 
@@ -1209,21 +1208,15 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
   };
 
   // Convenience version of a common use case of `filter`: selecting only objects
-  // containing specific `key:value` pairs.
-  _.where = function(obj, attrs, first) {
-    if (_.isEmpty(attrs)) return first ? null : [];
-    return _[first ? 'find' : 'filter'](obj, function(value) {
+  // with specific `key:value` pairs.
+  _.where = function(obj, attrs) {
+    if (_.isEmpty(attrs)) return [];
+    return _.filter(obj, function(value) {
       for (var key in attrs) {
         if (attrs[key] !== value[key]) return false;
       }
       return true;
     });
-  };
-
-  // Convenience version of a common use case of `find`: getting the first object
-  // containing specific `key:value` pairs.
-  _.findWhere = function(obj, attrs) {
-    return _.where(obj, attrs, true);
   };
 
   // Return the maximum element or (element-based computation).
@@ -1547,23 +1540,26 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
   // Function (ahem) Functions
   // ------------------
 
-  // Create a function bound to a given object (assigning `this`, and arguments,
-  // optionally). Delegates to **ECMAScript 5**'s native `Function.bind` if
-  // available.
-  _.bind = function(func, context) {
-    if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
-    var args = slice.call(arguments, 2);
-    return function() {
-      return func.apply(context, args.concat(slice.call(arguments)));
-    };
-  };
+  // Reusable constructor function for prototype setting.
+  var ctor = function(){};
 
-  // Partially apply a function by creating a version that has had some of its
-  // arguments pre-filled, without changing its dynamic `this` context.
-  _.partial = function(func) {
-    var args = slice.call(arguments, 1);
-    return function() {
-      return func.apply(this, args.concat(slice.call(arguments)));
+  // Create a function bound to a given object (assigning `this`, and arguments,
+  // optionally). Binding with arguments is also known as `curry`.
+  // Delegates to **ECMAScript 5**'s native `Function.bind` if available.
+  // We check for `func.bind` first, to fail fast when `func` is undefined.
+  _.bind = function(func, context) {
+    var args, bound;
+    if (func.bind === nativeBind && nativeBind) return nativeBind.apply(func, slice.call(arguments, 1));
+    if (!_.isFunction(func)) throw new TypeError;
+    args = slice.call(arguments, 2);
+    return bound = function() {
+      if (!(this instanceof bound)) return func.apply(context, args.concat(slice.call(arguments)));
+      ctor.prototype = func.prototype;
+      var self = new ctor;
+      ctor.prototype = null;
+      var result = func.apply(self, args.concat(slice.call(arguments)));
+      if (Object(result) === result) return result;
+      return self;
     };
   };
 
@@ -1571,7 +1567,7 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
   // all callbacks defined on an object belong to it.
   _.bindAll = function(obj) {
     var funcs = slice.call(arguments, 1);
-    if (funcs.length === 0) funcs = _.functions(obj);
+    if (funcs.length == 0) funcs = _.functions(obj);
     each(funcs, function(f) { obj[f] = _.bind(obj[f], obj); });
     return obj;
   };
@@ -1996,7 +1992,7 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
       max = min;
       min = 0;
     }
-    return min + Math.floor(Math.random() * (max - min + 1));
+    return min + (0 | Math.random() * (max - min + 1));
   };
 
   // List of HTML entities for escaping.
@@ -2052,7 +2048,7 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
   // Useful for temporary DOM ids.
   var idCounter = 0;
   _.uniqueId = function(prefix) {
-    var id = ++idCounter + '';
+    var id = '' + ++idCounter;
     return prefix ? prefix + id : id;
   };
 
@@ -2087,7 +2083,6 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
   // Underscore templating handles arbitrary delimiters, preserves whitespace,
   // and correctly escapes quotes within interpolated code.
   _.template = function(text, data, settings) {
-    var render;
     settings = _.defaults({}, settings, _.templateSettings);
 
     // Combine delimiters into one regular expression via alternation.
@@ -2126,7 +2121,7 @@ require.define("/node_modules/underscore/underscore.js",function(require,module,
       source + "return __p;\n";
 
     try {
-      render = new Function(settings.variable || 'obj', '_', source);
+      var render = new Function(settings.variable || 'obj', '_', source);
     } catch (e) {
       e.source = source;
       throw e;
