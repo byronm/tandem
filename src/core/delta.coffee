@@ -36,11 +36,11 @@ class Delta
       return true
     return false
 
-  @isInsert: (change) ->
-    return InsertOp.isInsert(change)
+  @isInsert: (op) ->
+    return InsertOp.isInsert(op)
 
-  @isRetain: (change) ->
-    return RetainOp.isRetain(change) || typeof(change) == "number"
+  @isRetain: (op) ->
+    return RetainOp.isRetain(op) || typeof(op) == "number"
 
   @makeDelta: (obj) ->
     return new Delta(obj.startLength, obj.endLength, obj.ops)
@@ -175,8 +175,8 @@ class Delta
     deltaC = this
     console.assert(Delta.isDelta(deltaA), "Decompose called when deltaA is not a Delta, type: " + typeof deltaA)
     console.assert(deltaA.startLength == @startLength, "startLength #{deltaA.startLength} / startLength #{@startLength} mismatch")
-    console.assert(_.all(deltaA.ops, ((op) -> return op.value?)), "DeltaA has retain in decompose")
-    console.assert(_.all(deltaC.ops, ((op) -> return op.value?)), "DeltaC has retain in decompose")
+    console.assert(_.all(deltaA.ops, ((op) -> return Delta.isInsert(op))), "DeltaA has retain in decompose")
+    console.assert(_.all(deltaC.ops, ((op) -> return Delta.isInsert(op))), "DeltaC has retain in decompose")
 
     decomposeAttributes = (attrA, attrC) ->
       decomposedAttributes = {}
@@ -424,9 +424,9 @@ class Delta
         when 'string' then return new InsertOp(op)
         when 'number' then return new RetainOp(op, op + 1)
         when 'object'
-          if op.value?
+          if Delta.isInsert(op)
             return new InsertOp(op.value, op.attributes)
-          else if op.start? && op.end?
+          else if Delta.isRetain(op)
             return new RetainOp(op.start, op.end, op.attributes)
         else
           return null
