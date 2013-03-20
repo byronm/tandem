@@ -11,7 +11,7 @@ class DeltaGenerator
       return alphabet[_.random(0, alphabet.length - 1)]
     ).join('')
 
-  getRandomLength = ->
+  @getRandomLength = ->
     rand = Math.random()
     if rand < 0.6
       return _.random(1, 2)
