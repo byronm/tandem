@@ -1414,7 +1414,7 @@ describe('Fuzzers', ->
   ##############################
   # Fuzz decompose
   ##############################
-  it('should pass all decompse fuzzing', ->
+  it('should pass all decompose fuzzing', ->
     alphabet = "abcdefghijklmnop".split('')
     pass = _.all([1..1000], (i) ->
       numInsertions = _.random(1, 40)
