@@ -137,10 +137,10 @@ class DeltaGenerator
     rand = Math.random()
     if rand < 0.5
       opLength = getRandomLength()
-      DeltaGenerator.insertAt(newDelta, opIndex, DeltaGenerator.getRandomString(alphabet, opLength))
+      this.insertAt(newDelta, opIndex, this.getRandomString(alphabet, opLength))
     else if rand < 0.75
       opLength = _.random(1, finalIndex - opIndex)
-      DeltaGenerator.deleteAt(newDelta, opIndex, opLength)
+      this.deleteAt(newDelta, opIndex, opLength)
     else
       attributes = ["bold", "italics", "fontsize"]
       # Pick a random number of random attributes
@@ -148,7 +148,7 @@ class DeltaGenerator
       numAttrs = _.random(0, attributes.length)
       attrs = attributes.slice(0, numAttrs)
       opLength = _.random(1, finalIndex - opIndex)
-      DeltaGenerator.formatAt(newDelta, opIndex, opLength, attrs, startDelta)
+      this.formatAt(newDelta, opIndex, opLength, attrs, startDelta)
     return newDelta
 
   @getRandomDelta: (startDelta, alphabet) ->
@@ -158,7 +158,7 @@ class DeltaGenerator
                                        startDelta.endLength)])
     numChanges = _.random(1, 10)
     for i in [0...numChanges]
-      DeltaGenerator.addRandomOp(newDelta, startDelta, alphabet)
+      @addRandomOp(newDelta, startDelta, alphabet)
     return newDelta
 
 module.exports = DeltaGenerator
