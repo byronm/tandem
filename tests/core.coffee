@@ -5,7 +5,6 @@ Delta      = Tandem.Delta
 InsertOp   = Tandem.InsertOp
 RetainOp   = Tandem.RetainOp
 DeltaGen   = require('./test_helper')
-testNumber = 0
 
 ##############################
 # Test decompose

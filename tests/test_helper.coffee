@@ -62,7 +62,6 @@ class DeltaGenerator
       return length + op.getLength()
     , 0)
 
-
   @formatAt: (delta, formatPoint, numToFormat, attrs, reference) ->
     charIndex = 0
     ops = []
