@@ -307,7 +307,6 @@ describe('compose', ->
   )
 
   it('should pass a specific fuzzer test we once failed', ->
-    # Test a specific fuzzer test we once failed
     deltaA = new Delta(43, 43, [new RetainOp(0, 43)])
     deltaB = new Delta(43, 77, [
       new RetainOp(0, 2), new InsertOp("fbnuethzmh"),
