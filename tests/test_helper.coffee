@@ -151,12 +151,12 @@ class DeltaGenerator
       this.formatAt(newDelta, opIndex, opLength, attrs, startDelta)
     return newDelta
 
-  @getRandomDelta: (startDelta, alphabet) ->
+  @getRandomDelta: (startDelta, alphabet, numChanges) ->
     newDelta = new Delta(startDelta.endLength,
                          startDelta.endLength,
                          [new RetainOp(0,
                                        startDelta.endLength)])
-    numChanges = _.random(1, 10)
+    numChanges or= _.random(1, 10)
     for i in [0...numChanges]
       @addRandomOp(newDelta, startDelta, alphabet)
     return newDelta
