@@ -1,8 +1,4 @@
-TandemDelta     = require('../core/delta')
-TandemOp        = require('../core/op')
-TandemInsertOp  = require('../core/insert')
-TandemRetainOp  = require('../core/retain')
-
+Tandem          = require('tandem-core')
 TandemEngine    = require('./engine')
 TandemFile      = require('./file')
 TandemNetwork   = require('./network')
@@ -50,10 +46,10 @@ class TandemServer
 
 
 module.exports =
-  Delta     : TandemDelta
-  Op        : TandemOp
-  InsertOp  : TandemInsertOp
-  RetainOp  : TandemRetainOp
+  Delta     : Tandem.Delta
+  Op        : Tandem.Op
+  InsertOp  : Tandem.InsertOp
+  RetainOp  : Tandem.RetainOp
 
   Engine    : TandemEngine
   File      : TandemFile

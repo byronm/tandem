@@ -1,7 +1,7 @@
 _            = require('underscore')._
 async        = require('async')
 EventEmitter = require('events').EventEmitter
-Tandem       = require('../core/tandem')
+Tandem       = require('tandem-core')
 
 atomic = (fn) ->
   async.until( =>

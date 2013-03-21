@@ -1,5 +1,5 @@
 _                 = require('underscore')._
-Tandem            = require('../core/tandem')
+Tandem            = require('tandem-core')
 TandemEngine      = require('./engine')
 TandemMemoryStore = require('./stores/memory')
 
