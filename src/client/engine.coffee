@@ -1,4 +1,4 @@
-Delta = require('../core/delta')
+Delta = require('tandem-core/delta')
 
 
 send = ->
