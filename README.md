@@ -54,11 +54,13 @@ The tandem source code is in the **src** folder. Tests are in the **tests** fold
 
 All other files/directories are just supporting npm/bundler, build, or documentation files.
 
+    build - build output
     demo - demos
     doc - additional documentation
     lib - bundler
     src - source code
     vendor/assets/javascripts/tandem - symlinks to src with .module added before extension
+    browser.js - npm
     index.js - npm
     package.json - npm
     tandem-rails.gemspec - bundler
