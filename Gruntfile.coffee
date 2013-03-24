@@ -2,6 +2,7 @@ module.exports = (grunt) ->
 
   grunt.loadNpmTasks('grunt-coffeeify')
   grunt.loadNpmTasks('grunt-contrib-concat')
+  grunt.loadNpmTasks('grunt-contrib-watch')
 
   grunt.initConfig(
     meta:
@@ -9,7 +10,6 @@ module.exports = (grunt) ->
 
     coffeeify: 
       options:
-        verbose: true
         requires: ['tandem-core/delta.js']
       files:
         { dest: 'build/tandem.js', src: ['browser.js'] }
@@ -31,6 +31,10 @@ module.exports = (grunt) ->
         'vendor/assets/javascripts/eventemitter2.js'
         'build/tandem.js'
       ]
+
+    watch:
+      files: ['src/client/*.coffee', 'node_modules/tandem-core/src/*']
+      tasks: ['default']
   )
 
   grunt.registerTask('default', ['coffeeify', 'concat'])

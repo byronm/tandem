@@ -6,14 +6,15 @@
     "redis"       : "0.8.x",
     "request"     : "2.12.x",
     "socket.io"   : "0.9.x",
-    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.1.1",
+    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.1.2",
     "underscore"  : "1.4.x"
   },
   "devDependencies": {
     "coffee-script"        : "1.6.x",
     "grunt"                : "0.4.x",
     "grunt-coffeeify"      : "0.1.x",
-    "grunt-contrib-concat" : "0.1.x"
+    "grunt-contrib-concat" : "0.1.x",
+    "grunt-contrib-watch"  : "0.3.x"
   },
   "browser": "browser",
   "main": "index",
