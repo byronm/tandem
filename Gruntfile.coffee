@@ -6,7 +6,7 @@ module.exports = (grunt) ->
 
   grunt.initConfig(
     meta:
-      version: '0.5.2'
+      version: '0.6.0'
 
     coffeeify: 
       options:
