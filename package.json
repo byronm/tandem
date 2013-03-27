@@ -1,12 +1,12 @@
 {
   "name": "tandem",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "dependencies": {
     "async"       : "0.1.x",
     "redis"       : "0.8.x",
     "request"     : "2.12.x",
     "socket.io"   : "0.9.x",
-    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.1.2",
+    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.2.0",
     "underscore"  : "1.4.x"
   },
   "devDependencies": {
