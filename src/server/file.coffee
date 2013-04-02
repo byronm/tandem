@@ -15,7 +15,7 @@ initClientListeners = (client, metadata) ->
   ).on(TandemFile.routes.UPDATE, (packet, callback) =>
     update.call(this, client, metadata, packet, callback)
   ).on(TandemFile.routes.BROADCAST, (packet, callback) =>
-    packet['userId'] = metadata.user.id if metadata.user?.id?
+    packet['userId'] = metadata.userId if metadata.userId
     client.broadcast.to(@id).emit(TandemFile.routes.BROADCAST, packet)
     callback({}) if callback?
   ).on('disconnect', =>
@@ -50,7 +50,7 @@ update = (client, metadata, packet, callback) ->
       delta: delta
       fileId: @id
       version: version
-    broadcastPacket['userId'] = metadata.user.id if metadata.user?.id?
+    broadcastPacket['userId'] = metadata.userId
     client.broadcast.to(@id).emit(TandemFile.routes.UPDATE, broadcastPacket)
     callback(
       fileId: @id
@@ -84,12 +84,10 @@ class TandemFile
   addClient: (client, metadata, callback = ->) ->
     client.set('metadata', metadata, (err) =>
       client.join(metadata.fileId)
-      if metadata.user?.id?
-        client.broadcast.to(@id).emit(TandemFile.routes.JOIN, metadata.user)
-        unless @users[metadata.user.id]?
-          @users[metadata.user.id] = _.clone(metadata.user)
-          @users[metadata.user.id].online = 0
-        @users[metadata.user.id].online += 1
+      if metadata.userId?
+        client.broadcast.to(@id).emit(TandemFile.routes.JOIN, metadata.userId)
+        @users[metadata.userId] = 0 unless @users[metadata.userId]?
+        @users[metadata.userId] += 1
       initClientListeners.call(this, client, metadata)
       callback()
     )
@@ -97,11 +95,11 @@ class TandemFile
   removeClient: (client, callback = ->) ->
     client.get('metadata', (err, metadata) =>
       if !err and metadata?
-        client.broadcast.to(@id).emit(TandemFile.routes.LEAVE, metadata.user) if metadata.user?
+        client.broadcast.to(@id).emit(TandemFile.routes.LEAVE, metadata.userId) if metadata.userId?
         client.leave(metadata.fileId)
-        if metadata.user?.id? and @users[metadata.user.id]?
-          @users[metadata.user.id].online -= 1
-          @users[metadata.user.id] = undefined if @users[metadata.user.id].online == 0
+        if metadata.userId? and @users[metadata.userId]?
+          @users[metadata.userId] -= 1
+          delete @users[metadata.userId] if @users[metadata.userId] == 0
       callback()
     )
 

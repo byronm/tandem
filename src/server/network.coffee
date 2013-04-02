@@ -12,7 +12,7 @@ authenticate = (client, packet, callback) ->
       if errors.length == 0
         metadata = 
           fileId : packet.fileId
-          user   : packet.user
+          userId : packet.userId
         # Emit might be heard after callback is sent and client sends editor/sync
         client.once('newListener', =>
           callback({ error: [] })

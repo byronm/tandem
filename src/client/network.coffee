@@ -2,7 +2,7 @@ authenticate = ->
   authPacket =
     auth: @authObj
     fileId: @fileId
-    user: @user
+    userId: @userId
   console.info "Attempting auth to", @fileId
   @socket.emit('auth', authPacket, (response) =>
     if !response.error? || response.error.length == 0
@@ -34,7 +34,7 @@ setReady = ->
     [route, packet, sendCallback] = elem
     console.info "Sending from queue:", route, packet
     doSend.call(this, route, packet, (args...) =>
-      sendCallback.apply(this, args)
+      sendCallback.apply(this, args) if sendCallback?
       callback()
     )
   , (err) =>
@@ -69,7 +69,7 @@ class TandemNetworkAdapter extends EventEmitter2
   @latency: 0
 
 
-  constructor: (endpointUrl, @fileId, @user, @authObj, options = {}) ->
+  constructor: (endpointUrl, @fileId, @userId, @authObj, options = {}) ->
     options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS))
     @settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, options)
     @id = _.uniqueId('adapter-')

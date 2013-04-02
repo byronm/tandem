@@ -21,19 +21,16 @@ initAdapterListeners = ->
     type = packet.type
     packet = _.omit(packet, 'type')
     this.emit(type, packet)
-  ).on(TandemFile.routes.JOIN, (packet) =>
-    if @users[packet.id]?
-      @users[packet.id].online += 1
-    else
-      @users[packet.id] = packet
-      @users[packet.id].online = 1
-      this.emit(TandemFile.events.JOIN, packet)
-  ).on(TandemFile.routes.LEAVE, (packet) =>
-    if @users[packet.id]?
-      @users[packet.id].online -= 1
-      if @users[packet.id].online == 0
-        this.emit(TandemFile.events.LEAVE, packet)
-        @users[packet.id] = undefined
+  ).on(TandemFile.routes.JOIN, (userId) =>
+    @users[userId] = 0 unless @users[userId]?
+    @users[userId] += 1
+    this.emit(TandemFile.events.JOIN, userId, @users[userId]) if @users[userId] == 1
+  ).on(TandemFile.routes.LEAVE, (userId) =>
+    return unless @users[userId]?
+    @users[userId] -= 1
+    if @users[userId] == 0
+      this.emit(TandemFile.events.LEAVE, @users[userId])
+      delete @users[userId]
   )
 
 initEngine = (initial, version) ->
@@ -93,16 +90,18 @@ sendUpdate = (delta, version, callback) ->
       callback.call(this, response)
   )
 
-setReady = ->
+setReady = (delta, version, users) ->
   # Need to resend before emitting ready
   # Otherwise listeners on ready might immediate send an update and thus resendUpdate will duplicate packet
   @engine.resendUpdate()
-  this.emit(TandemFile.events.READY)
+  this.emit(TandemFile.events.READY, delta, version, users)
 
 sync = ->
   this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
   this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
-    @users = response.users
+    @users = _.map(response.users, (user) ->
+      return { online: user }
+    )
     if response.resync
       console.warn "Sync requesting resync"
       @engine.resync(Delta.makeDelta(response.head), response.version)
@@ -110,9 +109,9 @@ sync = ->
       unless @engine.remoteUpdate(response.delta, response.version)
         console.warn "Remote update failed on sync, requesting resync"
         return resync.call(this, =>
-          setReady.call(this)
+          setReady.call(this, response.delta, response.version, response.users)
         )
-    setReady.call(this)
+    setReady.call(this, response.delta, response.version, response.users)
   , true)
 
 
@@ -154,9 +153,6 @@ class TandemFile extends EventEmitter2
   close: ->
     @adapter.removeAllListeners()
     @engine.removeAllListeners()
-
-  getUsers: ->
-    return @users
 
   isDirty: ->
     return !@engine.inFlight.isIdentity() or !@engine.inLine.isIdentity()
