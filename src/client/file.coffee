@@ -80,7 +80,13 @@ resync = (callback) ->
 
 sendUpdate = (delta, version, callback) ->
   packet = { delta: delta, version: version }
+  updateTimeout = setTimeout( =>
+    console.warn 'Update taking over 10s to respond'
+    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)
+  , 10000)
   this.send(TandemFile.routes.UPDATE, packet, (response) =>
+    clearTimeout(updateTimeout)
+    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY) unless @health == TandemFile.health.HEALTHY
     if response.resync
       console.warn "Update requesting resync", @id, packet, response
       delta = Delta.makeDelta(response.head)
