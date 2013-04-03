@@ -29,7 +29,7 @@ initAdapterListeners = ->
     return unless @users[userId]?
     @users[userId] -= 1
     if @users[userId] == 0
-      this.emit(TandemFile.events.LEAVE, @users[userId])
+      this.emit(TandemFile.events.LEAVE, userId)
       delete @users[userId]
   )
 
