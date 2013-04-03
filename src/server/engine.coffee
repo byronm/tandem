@@ -95,6 +95,7 @@ class TandemServerEngine extends EventEmitter
           @store.push('history', JSON.stringify(delta), (err, length) =>
             @version += 1
             callback(null, delta, @version)
+            this.emit(TandemServerEngine.events.UPDATE, delta, version)
             done()
           )
         else
