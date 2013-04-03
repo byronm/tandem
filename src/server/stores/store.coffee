@@ -6,9 +6,7 @@ class TandemStore
   constructor: (@id, callback) ->
     _.each(TandemStore.OPERATIONS, (fnName) =>
       this[fnName] = _.wrap(this[fnName], (fn, key, args...) =>
-        key = "#{@id}-#{key}"
-        args.unshift(key)
-        fn.apply(this, args)
+        fn.call(this, "#{@id}-#{key}", args...)
       )
     )
 

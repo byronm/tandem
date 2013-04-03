@@ -28,8 +28,8 @@ class TandemServerEngine extends EventEmitter
           callback(err)
           return done()
         if versionLoaded?
-          @versionLoaded = versionLoaded
-          @store.range('history', @version - versionLoaded, (err, range) =>
+          @versionLoaded = parseInt(versionLoaded)
+          @store.range('history', @version - @versionLoaded, (err, range) =>
             if err?
               callback(err)
               return done()
@@ -56,7 +56,8 @@ class TandemServerEngine extends EventEmitter
     return callback(null, Tandem.Delta.getIdentity(@head.endLength), @version) if version == @version
     version -= @versionLoaded
     @store.range('history', version, (err, range) =>
-      return callback("No version in history") if range.length == 0
+      return callback(err) if err?
+      return callback("No version #{version + @versionLoaded} in history of [#{@versionLoaded} - #{@version}]") if range.length == 0
       range = _.map(range, (delta) ->
         return Tandem.Delta.makeDelta(JSON.parse(delta))
       )

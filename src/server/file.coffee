@@ -33,7 +33,9 @@ resync = (callback) ->
 sync = (packet, callback) ->
   version = parseInt(packet.version)
   @engine.getDeltaSince(version, (err, delta, version, next) =>
-    return resync.call(this, callback) if err?
+    if err?
+      console.error(err)
+      return resync.call(this, callback)
     callback(
       delta: delta
       users: @users
