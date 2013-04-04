@@ -28,7 +28,6 @@ Text Operations
 ### Insert
 
     insertOp = {
-      index: 1
       text: 'Hello'
       attributes: {
         bold: true
