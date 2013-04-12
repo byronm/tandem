@@ -63,7 +63,7 @@ class TandemServerEngine extends EventEmitter
       )
       firstHist = range.shift(range)
       delta = _.reduce(range, (delta, hist) ->
-        return delta.follows(hist, true)
+        return delta.compose(hist)
       , firstHist)
       return callback(null, delta, @version)
     )
