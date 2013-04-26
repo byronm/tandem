@@ -78,7 +78,8 @@ class TandemFile
     @versionSaved = version
     @users = {}
     store = new @settings['store'](@id, (store) =>
-      @engine = new TandemEngine(initial, version, store, (err, engine) =>
+      new TandemEngine(initial, version, store, (err, engine) =>
+        @engine = engine
         callback(err, this)
       )
     )

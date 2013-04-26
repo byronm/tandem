@@ -50,36 +50,37 @@ class TandemStorage
     @files = {}
 
   find: (id, callback) ->
+    newFileCallback = (err, file) =>
+      callbacks = @files[id]
+      @files[id] = file unless err?
+      _.each(callbacks, (callback) =>
+        callback(err, file)
+      )
+      delete @files[id]
+
     if @files[id]?
       if _.isArray(@files[id])
         @files[id].push(callback)
       else
         callback(null, @files[id])
-    else if !@endpointUrl?
-      @files[id] = new TandemFile(id, Tandem.Delta.getInitial('\n'), 1, @options, callback)
     else
       @files[id] = [callback]
-      request.get({
-        uri: "#{@endpointUrl}/#{id}"
-        json: true
-      }, (err, response, body) =>
-        err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
-        callbacks = @files[id]
-        @files[id] = undefined
-        unless err?
-          head = Tandem.Delta.makeDelta(body.head)
-          version = parseInt(body.version)
-          new TandemFile(id, head, version, @options, (err, file) =>
-            @files[id] = file unless err?
-            _.each(callbacks, (callback) =>
-              callback(err, file)
-            )
-          )
-        else
-          _.each(callbacks, (callback) =>
-            callback(err)
-          )
-      )
+      if @endpointUrl?
+        request.get({
+          uri: "#{@endpointUrl}/#{id}"
+          json: true
+        }, (err, response, body) =>
+          err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
+          unless err?
+            head = Tandem.Delta.makeDelta(body.head)
+            version = parseInt(body.version)
+            new TandemFile(id, head, version, @options, newFileCallback)
+          else
+            _.each(callbacks, (callback) => callback(err))
+        )
+      else
+        new TandemFile(id, Tandem.Delta.getInitial('\n'), 1, @options, newFileCallback)
+      
 
 
 module.exports = TandemStorage
