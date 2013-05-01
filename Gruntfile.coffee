@@ -1,12 +1,20 @@
 module.exports = (grunt) ->
 
   grunt.loadNpmTasks('grunt-coffeeify')
+  grunt.loadNpmTasks 'grunt-contrib-coffee'
   grunt.loadNpmTasks('grunt-contrib-concat')
   grunt.loadNpmTasks('grunt-contrib-watch')
 
   grunt.initConfig(
     meta:
       version: '0.7.4'
+
+    coffee:
+      tests:
+        expand: true
+        dest: 'build/'
+        src: ['tests/client/*.coffee']
+        ext: '.js'
 
     coffeeify: 
       options:
@@ -37,4 +45,4 @@ module.exports = (grunt) ->
       tasks: ['default']
   )
 
-  grunt.registerTask('default', ['coffeeify', 'concat'])
+  grunt.registerTask('default', ['coffee', 'coffeeify', 'concat'])
