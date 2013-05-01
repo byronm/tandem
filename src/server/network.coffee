@@ -51,7 +51,7 @@ class TandemNetwork extends EventEmitter
   @events:
     CONNECT: 'network-connect'
 
-  constructor: (server, @storage, options = {}) ->    
+  constructor: (server, @storage, options = {}) ->
     @settings = _.extend({}, TandemNetwork.DEFAULTS, _.pick(options, _.keys(TandemNetwork.DEFAULTS)))
     initNetwork.call(this, server)
 

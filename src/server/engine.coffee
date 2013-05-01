@@ -68,8 +68,6 @@ class TandemServerEngine extends EventEmitter
       return callback(null, delta, @version)
     )
 
-  indexesToDelta: (indexes) ->
-
   transform: (delta, version, callback) ->
     version -= @versionLoaded
     return "No version in history" if version < 0

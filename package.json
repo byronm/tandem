@@ -10,11 +10,14 @@
     "underscore"  : "1.4.x"
   },
   "devDependencies": {
+    "chai"                 : "1.6.x",
     "coffee-script"        : "1.6.x",
     "grunt"                : "0.4.x",
     "grunt-coffeeify"      : "0.1.x",
     "grunt-contrib-concat" : "0.1.x",
-    "grunt-contrib-watch"  : "0.3.x"
+    "grunt-contrib-watch"  : "0.3.x",
+    "mocha"                : "1.9.x",
+    "socket.io-client"     : "0.9.x"
   },
   "browser": "browser",
   "main": "index",
