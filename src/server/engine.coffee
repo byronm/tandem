@@ -6,7 +6,7 @@ Tandem       = require('tandem-core')
 atomic = (fn) ->
   async.until( =>
     @locked == false
-  , (callback) ->
+  , (callback) =>
     setTimeout(callback, 100)
   , =>
     @locked = true
@@ -97,7 +97,7 @@ class TandemServerEngine extends EventEmitter
             done()
           )
         else
-          callback("Cannot compose deltas")
+          callback({ message: "Cannot compose deltas", head: @head, delta: delta })
           done()
       )
     )

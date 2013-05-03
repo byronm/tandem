@@ -52,11 +52,10 @@ class TandemStorage
   find: (id, callback) ->
     newFileCallback = (err, file) =>
       callbacks = @files[id]
-      @files[id] = file unless err?
+      @files[id] = if err? then undefined else file
       _.each(callbacks, (callback) =>
         callback(err, file)
       )
-      delete @files[id]
 
     if @files[id]?
       if _.isArray(@files[id])
@@ -76,7 +75,7 @@ class TandemStorage
             version = parseInt(body.version)
             new TandemFile(id, head, version, @options, newFileCallback)
           else
-            _.each(callbacks, (callback) => callback(err))
+            newFileCallback(err)
         )
       else
         new TandemFile(id, Tandem.Delta.getInitial('\n'), 1, @options, newFileCallback)

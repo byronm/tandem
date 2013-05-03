@@ -1,6 +1,6 @@
 {
   "name": "tandem",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "dependencies": {
     "async"       : "0.1.x",
     "redis"       : "0.8.x",
