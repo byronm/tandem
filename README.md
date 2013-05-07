@@ -27,6 +27,7 @@ var server = require('http').Server();
 new Tandem.Server(server);
 ```
 
+
 Installation
 ---
     
@@ -45,6 +46,18 @@ Popular javascript libraries are offically included as dependencies. Less popula
     gem 'tandem-rails', :git => 'git@github.com:stypi/tandem.git', :branch => 'v0.3.2'
 
 
+Testing
+---
+
+We use mocha as our testing framework. To run the unit tests, simply:
+    
+    make test
+
+To run our coverage tool, install [node-jscoverage](https://github.com/visionmedia/node-jscoverage) and run
+
+    make coverage
+
+
 Project Organization
 ---
 
@@ -58,13 +71,17 @@ All other files/directories are just supporting npm/bundler, build, or documenta
     demo - demos
     doc - additional documentation
     lib - bundler
+    scripts - test coverage script
     src - source code
+    tests - unit tests
     vendor/assets/javascripts/tandem - symlinks to src with .module added before extension
     browser.js - npm
+    client.js - enable node.js to require src/client, used by unit tests
+    Gruntfile.coffee - grunt configs
     index.js - npm
+    Makefile - define make commands
     package.json - npm
     tandem-rails.gemspec - bundler
-    
 
 ### Version numbers
 
