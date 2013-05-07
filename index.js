@@ -1,3 +1,1 @@
-Tandem = require('./src/server/tandem')
-
-module.exports = Tandem
+module.exports = require('./src/server/tandem');

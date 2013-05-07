@@ -1,5 +1,5 @@
 REPORTER = list
 
 test:
-	@./node_modules/.bin/mocha tests/server/*.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
+	@./node_modules/.bin/mocha tests/*.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
 	

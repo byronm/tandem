@@ -68,6 +68,13 @@ class TandemNetworkAdapter extends EventEmitter2
 
   @latency: 0
 
+  @parseUrl: (url) ->
+    a = document.createElement('a')
+    a.href = url
+    protocol = if a.protocol == 'http:' or a.protocol == 'https:' then a.protocol else 'http:'
+    ret = { hostname: a.hostname, protocol: protocol }
+    ret['port'] = a.port if a.port
+
 
   constructor: (endpointUrl, @fileId, @userId, @authObj, options = {}) ->
     options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS))
@@ -81,15 +88,13 @@ class TandemNetworkAdapter extends EventEmitter2
       recieve  : {}
       callback : {}
     socketOptions = _.clone(@settings)
-    a = document.createElement('a')
-    a.href = endpointUrl
-    protocol = if a.protocol == 'http:' or a.protocol == 'https:' then a.protocol else 'http:'
-    if protocol == 'https:'
+    url = TandemNetworkAdapter.parseUrl(endpointUrl)
+    if url.protocol == 'https:'
       socketOptions['secure'] = true
       socketOptions['port'] = 443
-    socketOptions['port'] = a.port if a.port
+    socketOptions['port'] = url.port if url.port
     socketOptions['query'] = "fileId=#{@fileId}"
-    @socket = io.connect("#{protocol}//#{a.host}", socketOptions)
+    @socket = io.connect("#{url.protocol}//#{url.host}", socketOptions)
     @socket.on('reconnecting', =>
       @ready = false
     ).on('reconnect', =>
