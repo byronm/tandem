@@ -6,7 +6,7 @@ EventEmitter  = require('events').EventEmitter
 authenticate = (client, packet, callback) ->
   # Need to leave room
   if packet.fileId?
-    @storage.authorize(packet.fileId, packet, (err, success) =>
+    @storage.authorize(packet, (err, success) =>
       errors = if _.isArray(err) then err else []
       errors.push("Access denied") unless success
       if errors.length == 0

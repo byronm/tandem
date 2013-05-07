@@ -3,7 +3,7 @@ authenticate = ->
     auth: @authObj
     fileId: @fileId
     userId: @userId
-  console.info "Attempting auth to", @fileId if @settings.debug
+  console.info "Attempting auth to", @fileId, authPacket if @settings.debug
   @socket.emit('auth', authPacket, (response) =>
     if !response.error? || response.error.length == 0
       console.info "Connected!", response if @settings.debug

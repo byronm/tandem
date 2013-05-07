@@ -30,7 +30,7 @@ class TandemStorage
       )
     , @settings['save interval'])
 
-  authorize: (fileId, authObj, callback) ->
+  authorize: (authPacket, callback) ->
     return callback(null, true) unless @storage?
     @storage.authorize(fileId, authObj, callback)
 
