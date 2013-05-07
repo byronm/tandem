@@ -31,8 +31,8 @@ class TandemStorage
     , @settings['save interval'])
 
   authorize: (authPacket, callback) ->
-    return callback(null, true) unless @storage?
-    @storage.authorize(fileId, authObj, callback)
+    return callback(null) unless @storage?
+    @storage.authorize(authPacket, callback)
 
   clear: ->
     @files = {}
@@ -54,6 +54,7 @@ class TandemStorage
       @files[id] = [callback]
       if @storage?
         @storage.find(id, (err, head, version) =>
+          return newFileCallback(err) if err?
           new TandemFile(id, head, version, @options, newFileCallback)
         )
       else

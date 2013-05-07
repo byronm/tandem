@@ -5,28 +5,25 @@ TandemNetwork   = require('./network')
 TandemStorage   = require('./storage')
 
 
-addClient = (client, metadata, callback = ->) ->
+addClient = (client, metadata, callback) ->
   @storage.find(metadata.fileId, (err, file) =>
-    if !err? and file?
-      file.addClient(client, metadata, callback)
-      file.engine.on(TandemEngine.events.UPDATE, (args...) =>
-        this.emit(TandemServer.events.UPDATE, file.id, args...)
-      )
-    else
-      callback()
+    return callback(err) if err?
+    file.engine.on(TandemEngine.events.UPDATE, (args...) =>
+      this.emit(TandemServer.events.UPDATE, file.id, args...)
+    )
+    file.addClient(client, metadata, callback)
   )
 
-removeClient = (client, callback = ->) ->
+removeClient = (client, callback) ->
   client.get('metadata', (err, metadata) =>
-    if !err? and metadata?
+    return callback(err) if err?
+    if metadata?.fileId?
       @storage.find(metadata.fileId, (err, file) =>
-        if !err? and file?
-          file.removeClient(client, callback)
-        else
-          callback()
+        callback(err) if err?
+        file.removeClient(client, callback)
       )
     else
-      callback()
+      callback(null)
   )
 
 
@@ -40,10 +37,12 @@ class TandemServer
   constructor: (server, options = {}) ->
     @storage = new TandemStorage(options.storage, options)
     @network = new TandemNetwork(server, @storage, options)
-    @network.on(TandemNetwork.events.CONNECT, (client, metadata) ->
+    @network.on(TandemNetwork.events.CONNECT, (client, metadata, callback) ->
       # By this point, client will be authenticated
       removeClient.call(this, client, =>
-        addClient.call(this, client, metadata, =>
+        addClient.call(this, client, metadata, (err) =>
+          error = if err? then [err] else []
+          callback({ error: error })
           client.on('debug/clear', (packet, callback) =>
             return callback("Cannot be called on production") if process.env.NODE_ENV == 'production'
             @storage.clear()

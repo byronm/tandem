@@ -5,12 +5,8 @@ By default there is no persistent storage. However it can be added by defining a
 
 ```javascript
 Storage = {
-  // authObj is an object the that at minimum has fileId defined
-  // If userId is defined, it will be the identifier for a user entity and will be added
-  //   to messages where it makes sense to have a user or author, ex. broadcast messages.
-  //   Two connections with the same userId will be treated as separate sessions.
-  // All other fields are optional and can contain whatever else necessary for authentication
-  authorize: function (authObj, callback) {
+  // See authentication for more info on the format of authPacket
+  authorize: function (authPacket, callback) {
     callback(err, hasAccess);
   }
 

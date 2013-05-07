@@ -4,25 +4,13 @@ EventEmitter  = require('events').EventEmitter
 
 
 authenticate = (client, packet, callback) ->
-  # Need to leave room
-  if packet.fileId?
-    @storage.authorize(packet, (err, success) =>
-      errors = if _.isArray(err) then err else []
-      errors.push("Access denied") unless success
-      if errors.length == 0
-        metadata = 
-          fileId : packet.fileId
-          userId : packet.userId
-        # Emit might be heard after callback is sent and client sends editor/sync
-        client.once('newListener', =>
-          callback({ error: [] })
-        )
-        this.emit(TandemNetwork.events.CONNECT, client, metadata)
-      else
-        callback({error: errors})
-    )
-  else
-    callback({ error: ["Missing fileId"] })
+  @storage.authorize(packet, (err) =>
+    return callback({ error: [err] }) if err?
+    metadata = 
+      fileId : packet.fileId
+      userId : packet.userId
+    this.emit(TandemNetwork.events.CONNECT, client, metadata, callback)
+  )
 
 initNetwork = (server) ->
   @io = socketio.listen(server)

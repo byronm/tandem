@@ -5,7 +5,7 @@ authenticate = ->
     userId: @userId
   console.info "Attempting auth to", @fileId, authPacket if @settings.debug
   @socket.emit('auth', authPacket, (response) =>
-    if !response.error? || response.error.length == 0
+    if !response.error? or response.error.length == 0
       console.info "Connected!", response if @settings.debug
       setReady.call(this) if @ready == false
     else
