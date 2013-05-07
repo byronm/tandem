@@ -1,9 +1,9 @@
 _           = require('underscore')
-TandemStore = require('./store')
+TandemCache = require('./cache')
 
 storage = {}
 
-class TandemMemoryStore extends TandemStore
+class TandemMemoryCache extends TandemCache
   constructor: (@id, callback) ->
     super
     callback(this)
@@ -33,4 +33,4 @@ class TandemMemoryStore extends TandemStore
     callback(null)
 
 
-module.exports = TandemMemoryStore
+module.exports = TandemMemoryCache

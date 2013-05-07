@@ -1,10 +1,10 @@
 _ = require('underscore')._
 
-class TandemStore
+class TandemCache
   @OPERATIONS: ['del', 'get', 'push', 'range', 'set']
 
   constructor: (@id, callback) ->
-    _.each(TandemStore.OPERATIONS, (fnName) =>
+    _.each(TandemCache.OPERATIONS, (fnName) =>
       this[fnName] = _.wrap(this[fnName], (fn, key, args...) =>
         fn.call(this, "#{@id}-#{key}", args...)
       )
@@ -27,4 +27,4 @@ class TandemStore
     console.warn "Should be overwritten by descendant"
     
 
-module.exports = TandemStore
+module.exports = TandemCache

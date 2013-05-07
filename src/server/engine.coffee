@@ -19,17 +19,17 @@ class TandemServerEngine extends EventEmitter
   @events:
     UPDATE: 'update'
 
-  constructor: (@head, @version, @store, callback) ->
+  constructor: (@head, @version, @cache, callback) ->
     @id = _.uniqueId('engine-')
     @locked = false
     atomic.call(this, (done) =>
-      @store.get('versionLoaded', (err, versionLoaded) =>
+      @cache.get('versionLoaded', (err, versionLoaded) =>
         if err?
           callback(err)
           return done()
         if versionLoaded?
           @versionLoaded = parseInt(versionLoaded)
-          @store.range('history', @version - @versionLoaded, (err, range) =>
+          @cache.range('history', @version - @versionLoaded, (err, range) =>
             if err?
               callback(err)
               return done()
@@ -43,7 +43,7 @@ class TandemServerEngine extends EventEmitter
           )
         else
           @versionLoaded = @version
-          @store.set('versionLoaded', @version, (err) =>
+          @cache.set('versionLoaded', @version, (err) =>
             callback(err, this)
             done()
           )
@@ -55,7 +55,7 @@ class TandemServerEngine extends EventEmitter
     return callback(null, @head, @version) if version == 0
     return callback(null, Tandem.Delta.getIdentity(@head.endLength), @version) if version == @version
     version -= @versionLoaded
-    @store.range('history', version, (err, range) =>
+    @cache.range('history', version, (err, range) =>
       return callback(err) if err?
       return callback("No version #{version + @versionLoaded} in history of [#{@versionLoaded} - #{@version}]") if range.length == 0
       range = _.map(range, (delta) ->
@@ -72,7 +72,7 @@ class TandemServerEngine extends EventEmitter
     version -= @versionLoaded
     return "No version in history" if version < 0
     delta = this.indexesToDelta(delta) if _.isArray(delta)
-    @store.range('history', version, (err, range) =>
+    @cache.range('history', version, (err, range) =>
       range = _.map(range, (delta) ->
         return Tandem.Delta.makeDelta(JSON.parse(delta))
       )
@@ -90,7 +90,7 @@ class TandemServerEngine extends EventEmitter
           return done()
         if @head.canCompose(delta)
           @head = @head.compose(delta)
-          @store.push('history', JSON.stringify(delta), (err, length) =>
+          @cache.push('history', JSON.stringify(delta), (err, length) =>
             @version += 1
             callback(null, delta, @version)
             this.emit(TandemServerEngine.events.UPDATE, delta, version)
