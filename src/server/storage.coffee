@@ -6,28 +6,22 @@ TandemFile  = require('./file')
 
 save = (file, callback = ->) ->
   return callback(null) if !file.isDirty()
-  unless @endpointUrl?
-    file.versionSaved = version unless err?
-    callback(null)
-  else
-    version = file.getVersion()
-    request.put({
-      json: 
-        head: file.getHead()
-        version: version
-      uri: "#{@endpointUrl}/#{file.id}"
-    }, (err, response) =>
-      err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
+  version = file.getVersion()
+  if @storage?
+    @storage.update(file.id, file.getHead(), version, (err) ->
       file.versionSaved = version unless err?
       callback(err)
     )
+  else
+    file.versionSaved = version unless err?
+    callback(null)
 
 
 class TandemStorage
   @DEFAULTS:
     'save interval': 10000
 
-  constructor: (@endpointUrl, @options = {}) ->
+  constructor: (@storage, @options = {}) ->
     @settings = _.extend({}, TandemStorage.DEFAULTS, _.pick(@options, _.keys(TandemStorage.DEFAULTS)))
     @files = {}
     setInterval( =>
@@ -36,15 +30,9 @@ class TandemStorage
       )
     , @settings['save interval'])
 
-  checkAccess: (fileId, authObj, callback) ->
-    return callback(null, true) unless @endpointUrl?
-    request.get({
-      uri: "#{@endpointUrl}/#{fileId}/check_access"
-      json: { auth_obj: authObj }
-    }, (err, response, body) ->
-      err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
-      callback(err or body.error, body.access)
-    )
+  authorize: (fileId, authObj, callback) ->
+    return callback(null, true) unless @storage?
+    @storage.authorize(fileId, authObj, callback)
 
   clear: ->
     @files = {}
@@ -64,18 +52,9 @@ class TandemStorage
         callback(null, @files[id])
     else
       @files[id] = [callback]
-      if @endpointUrl?
-        request.get({
-          uri: "#{@endpointUrl}/#{id}"
-          json: true
-        }, (err, response, body) =>
-          err = "Response error: #{response.statusCode}" unless err? or response.statusCode == 200
-          unless err?
-            head = Tandem.Delta.makeDelta(body.head)
-            version = parseInt(body.version)
-            new TandemFile(id, head, version, @options, newFileCallback)
-          else
-            newFileCallback(err)
+      if @storage?
+        @storage.find(id, (err, head, version) =>
+          new TandemFile(id, head, version, @options, newFileCallback)
         )
       else
         new TandemFile(id, Tandem.Delta.getInitial('\n'), 1, @options, newFileCallback)
