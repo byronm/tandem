@@ -49,19 +49,19 @@ initEngineListeners = ->
 
 initHealthListeners = ->
   @adapter.on(TandemNetworkAdapter.events.READY, =>
-    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     sync.call(this)
   ).on(TandemNetworkAdapter.events.RECONNECT, (transport, attempts) =>
     sync.call(this)
   ).on(TandemNetworkAdapter.events.RECONNECTING, (timeout, attempts) =>
-    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR) if attempts == 1
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health) if attempts == 1
   ).on(TandemNetworkAdapter.events.DISCONNECT, =>
-    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health)
   ).on(TandemNetworkAdapter.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, args...)
     this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
   )
-  this.on(TandemFile.events.HEALTH, (oldHealth, newHealth) =>
+  this.on(TandemFile.events.HEALTH, (newHealth, oldHealth) =>
     @health = newHealth
   )
 
@@ -71,10 +71,10 @@ initListeners = ->
   initHealthListeners.call(this)
 
 resync = (callback) ->
-  this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)
+  this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
   this.send(TandemFile.routes.RESYNC, {}, (response) =>
     @engine.resync(Delta.makeDelta(response.head), response.version)
-    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     callback() if callback?
   )
 
@@ -82,11 +82,11 @@ sendUpdate = (delta, version, callback) ->
   packet = { delta: delta, version: version }
   updateTimeout = setTimeout( =>
     console.warn 'Update taking over 10s to respond'
-    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.WARNING)
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
   , 10000)
   this.send(TandemFile.routes.UPDATE, packet, (response) =>
     clearTimeout(updateTimeout)
-    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY) unless @health == TandemFile.health.HEALTHY
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health) unless @health == TandemFile.health.HEALTHY
     if response.resync
       console.warn "Update requesting resync", @id, packet, response
       delta = Delta.makeDelta(response.head)
@@ -103,7 +103,7 @@ setReady = (delta, version, users) ->
   this.emit(TandemFile.events.READY, delta, version, users)
 
 sync = ->
-  this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.HEALTHY)
+  this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
   this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
     @users = _.map(response.users, (user) ->
       return { online: user }
@@ -143,12 +143,12 @@ class TandemFile extends EventEmitter2
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@fileId, @adapter, initial, version = 0) ->
+  constructor: (@fileId, @adapter, initial = null) ->
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
     @users = {}
-    initial or= Delta.getInitial('')
-    initEngine.call(this, initial, version)
+    initial or= { head: Delta.getInitial(''), version: 0 }
+    initEngine.call(this, initial.head, initial.version)
     initListeners.call(this)
 
   broadcast: (route, packet, callback) =>

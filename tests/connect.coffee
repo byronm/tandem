@@ -19,7 +19,7 @@ describe('Connection', ->
   )
 
   it('should connect', (done) ->
-    file = client.open('connect-test-file')
+    file = client.open('connect-test')
     file.on(TandemClient.File.events.READY, ->
       expect(file.health).to.equal(TandemClient.File.health.HEALTHY)
       done()

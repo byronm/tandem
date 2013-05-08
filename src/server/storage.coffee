@@ -58,7 +58,7 @@ class TandemStorage
           new TandemFile(id, head, version, @options, newFileCallback)
         )
       else
-        new TandemFile(id, Tandem.Delta.getInitial('\n'), 1, @options, newFileCallback)
+        new TandemFile(id, Tandem.Delta.getInitial(''), 0, @options, newFileCallback)
       
 
 

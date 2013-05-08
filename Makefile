@@ -17,4 +17,12 @@ coverage:
 
 test:
 	@./node_modules/.bin/mocha tests/*.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
-	
+
+test-connect:
+	@./node_modules/.bin/mocha tests/connect.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
+
+test-message:
+	@./node_modules/.bin/mocha tests/message.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
+
+test-storage:
+	@./node_modules/.bin/mocha tests/storage.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
