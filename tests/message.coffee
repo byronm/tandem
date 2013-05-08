@@ -13,8 +13,10 @@ Storage =
         return callback(null, new TandemServer.Delta.getInitial('sync'), 5)
       when 'update-test'
         return callback(null, new TandemServer.Delta.getInitial('a'), 5)
+      when 'update-conflict-test'
+        return callback(null, new TandemServer.Delta.getInitial('go'), 5)
       when 'resync-test'
-        return callback(null, new TandemServer.Delta.getInitial('resync'), 10)
+        return callback(null, new TandemServer.Delta.getInitial('resync'), 5)
       else
         return callback(null, new TandemServer.Delta.getInitial(''), 0)
   update: (fileId, head, version, callback) ->
@@ -72,11 +74,36 @@ describe('Messaging', ->
     file2.on(TandemClient.File.events.READY, onReady)
     sync = true
     file2.on(TandemClient.File.events.UPDATE, (delta) ->
-      if sync == true
+      if sync
         sync = false
       else
         expect(delta).to.deep.equal(updateDelta)
         done()
+    )
+  )
+
+  it('should resolve update conflicts', (done) ->
+    Storage.find('update-conflict-test', (err, head, version) ->
+      initial = { head: head, version: version }
+      file1 = client1.open('update-conflict-test', null, initial)
+      file2 = client2.open('update-conflict-test', null, initial)
+      file1.update(new TandemClient.Delta(2, [
+        new TandemClient.RetainOp(0, 2)
+        new TandemClient.InsertOp('a')
+      ]))
+      file2.update(new TandemClient.Delta(2, [
+        new TandemClient.RetainOp(0, 2)
+        new TandemClient.InsertOp('t')
+      ]))
+      onUpdate = _.after(4, ->
+        _.defer( ->
+          expect(file1.engine.arrived.endLength).to.deep.equal(4)
+          expect(file2.engine.arrived).to.deep.equal(file1.engine.arrived)
+          done()
+        )
+      )
+      file1.on(TandemClient.File.events.UPDATE, onUpdate)
+      file2.on(TandemClient.File.events.UPDATE, onUpdate)
     )
   )
 

@@ -96,10 +96,10 @@ sendUpdate = (delta, version, callback) ->
       callback.call(this, response)
   )
 
-setReady = (delta, version, users) ->
+setReady = (delta, version, users, resend = false) ->
   # Need to resend before emitting ready
   # Otherwise listeners on ready might immediate send an update and thus resendUpdate will duplicate packet
-  @engine.resendUpdate()
+  @engine.resendUpdate() if resend
   this.emit(TandemFile.events.READY, delta, version, users)
 
 sync = ->
@@ -115,9 +115,9 @@ sync = ->
       unless @engine.remoteUpdate(response.delta, response.version)
         console.warn "Remote update failed on sync, requesting resync"
         return resync.call(this, =>
-          setReady.call(this, response.delta, response.version, response.users)
+          setReady.call(this, response.delta, response.version, response.users, true)
         )
-    setReady.call(this, response.delta, response.version, response.users)
+    setReady.call(this, response.delta, response.version, response.users, false)
   , true)
 
 
