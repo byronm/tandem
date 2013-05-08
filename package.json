@@ -2,7 +2,7 @@
   "name": "tandem",
   "version": "0.7.5",
   "dependencies": {
-    "async"       : "0.1.x",
+    "async"       : "0.2.x",
     "commander"   : "1.1.x",
     "redis"       : "0.8.x",
     "request"     : "2.12.x",

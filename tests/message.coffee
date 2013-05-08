@@ -1,4 +1,5 @@
 _       = require('underscore')._
+async   = require('async')
 expect  = require('chai').expect
 http    = require('http')
 TandemClient = require('../client')
@@ -42,6 +43,31 @@ describe('Messaging', ->
     file.on(TandemClient.File.events.UPDATE, (delta) ->
       Storage.find('sync-test', (err, head, version) ->
         expect(delta).to.deep.equal(head)
+        done()
+      )
+    )
+  )
+
+  it('should sync from old version', (done) ->
+    file1 = client1.open('sync-from-old-test')
+    # Make file have history of 5 'a' insertions
+    async.timesSeries(5, (n, next) ->
+      delta = new TandemClient.Delta(n, [
+        new TandemClient.RetainOp(0, n)
+        new TandemClient.InsertOp(String.fromCharCode('a'.charCodeAt(0) + n))
+      ])
+      file1.update(delta)
+      async.until( ->
+        return file1.engine.inFlight.isIdentity() and file1.engine.inLine.isIdentity()
+      , (callback) ->
+        setTimeout(callback, 100)
+      , next)
+    , (err) ->
+      head = TandemClient.Delta.getInitial('ab')
+      file2 = client2.open('sync-from-old-test', null, { head: head, version: 2 })
+      file2.on(TandemClient.File.events.UPDATE, (delta) ->
+        expected = file1.engine.arrived.decompose(head)
+        expect(delta).to.deep.equal(expected)
         done()
       )
     )
