@@ -76,6 +76,7 @@ class TandemNetworkAdapter extends EventEmitter2
     protocol = if a.protocol == 'http:' or a.protocol == 'https:' then a.protocol else 'http:'
     ret = { hostname: a.hostname, protocol: protocol }
     ret['port'] = a.port if a.port
+    return ret
 
 
   constructor: (endpointUrl, @fileId, @userId, @authObj, options = {}) ->
@@ -96,7 +97,7 @@ class TandemNetworkAdapter extends EventEmitter2
       socketOptions['port'] = 443
     socketOptions['port'] = url.port if url.port
     socketOptions['query'] = "fileId=#{@fileId}"
-    @socket = io.connect("#{url.protocol}//#{url.host}", socketOptions)
+    @socket = io.connect("#{url.protocol}//#{url.hostname}", socketOptions)
     @socket.on('reconnecting', =>
       @ready = false
     ).on('reconnect', =>
