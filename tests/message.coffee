@@ -117,25 +117,23 @@ describe('Messaging', ->
       initial = { head: head, version: version }
       file1 = client1.open('update-conflict-test', null, initial)
       file2 = client2.open('update-conflict-test', null, initial)
-      file1.update(new TandemClient.Delta(2, [
-        new TandemClient.RetainOp(0, 2)
-        new TandemClient.InsertOp('a')
-      ]))
-      file2.update(new TandemClient.Delta(2, [
-        new TandemClient.RetainOp(0, 2)
-        new TandemClient.InsertOp('t')
-      ]))
-      onUpdate = _.after(4, ->
-        _.defer( ->
-          expect(file1.engine.arrived.endLength).to.deep.equal(4)
-          expect(file2.engine.arrived).to.deep.equal(file1.engine.arrived)
-          done()
-        )
-      )
-      _.each([file1, file2], (file) ->
-        file.on(TandemClient.File.events.UPDATE, onUpdate).on(TandemClient.File.events.HEALTH, (newHealth) ->
+      _.each([file1, file2], (file, i) ->
+        file.on(TandemClient.File.events.HEALTH, (newHealth) ->
           expect(newHealth).to.equal(TandemClient.File.health.HEALTHY)
         )
+        file.update(new TandemClient.Delta(2, [
+          new TandemClient.RetainOp(0, 2)
+          new TandemClient.InsertOp(if i == 0 then 'a' else 't')
+        ]))
+      )
+      async.until(->
+        file1.engine.version == 7 and file2.engine.version == 7
+      , (callback) ->
+        setTimeout(callback, 100)
+      , ->
+        expect(file1.engine.arrived.endLength).to.deep.equal(4)
+        expect(file2.engine.arrived).to.deep.equal(file1.engine.arrived)
+        done()
       )
     )
   )

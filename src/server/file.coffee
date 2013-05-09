@@ -11,7 +11,7 @@ initClientListeners = (client, metadata) ->
   client.on(TandemFile.routes.RESYNC, (packet, callback) =>
     resync.call(this, callback)
   ).on(TandemFile.routes.SYNC, (packet, callback) =>
-    sync.call(this, packet, callback)
+    sync.call(this, client, packet, callback)
   ).on(TandemFile.routes.UPDATE, (packet, callback) =>
     update.call(this, client, metadata, packet, callback)
   ).on(TandemFile.routes.BROADCAST, (packet, callback) =>
@@ -30,16 +30,19 @@ resync = (callback) ->
     users: @users
   )
 
-sync = (packet, callback) ->
+sync = (client, packet, callback) ->
   version = parseInt(packet.version)
   @engine.getDeltaSince(version, (err, delta, version, next) =>
     if err?
       console.error(err)
       return resync.call(this, callback)
-    callback(
-      delta: delta
-      users: @users
-      version: version
+    client.get('metadata', (err, metadata) =>
+      client.join(metadata.fileId) unless err?
+      callback(
+        delta: delta
+        users: @users
+        version: version
+      )
     )
   )
 
@@ -88,7 +91,6 @@ class TandemFile
 
   addClient: (client, metadata, callback = ->) ->
     client.set('metadata', metadata, (err) =>
-      client.join(metadata.fileId)
       if metadata.userId?
         client.broadcast.to(@id).emit(TandemFile.routes.JOIN, metadata.userId)
         @users[metadata.userId] = 0 unless @users[metadata.userId]?
