@@ -70,7 +70,7 @@ class TandemServerEngine extends EventEmitter
 
   transform: (delta, version, callback) ->
     version -= @versionLoaded
-    return "No version in history" if version < 0
+    return callback("No version in history") if version < 0
     delta = this.indexesToDelta(delta) if _.isArray(delta)
     @cache.range('history', version, (err, range) =>
       range = _.map(range, (delta) ->

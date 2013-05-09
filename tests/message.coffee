@@ -18,6 +18,10 @@ Storage =
         return callback(null, new TandemServer.Delta.getInitial('go'), 5)
       when 'resync-test'
         return callback(null, new TandemServer.Delta.getInitial('resync'), 5)
+      when 'switch-test-1'
+        return callback(null, new TandemServer.Delta.getInitial('switch-test-1'), 5)
+      when 'switch-test-2'
+        return callback(null, new TandemServer.Delta.getInitial('switch-test-2'), 5)
       else
         return callback(null, new TandemServer.Delta.getInitial(''), 0)
   update: (fileId, head, version, callback) ->
@@ -128,8 +132,11 @@ describe('Messaging', ->
           done()
         )
       )
-      file1.on(TandemClient.File.events.UPDATE, onUpdate)
-      file2.on(TandemClient.File.events.UPDATE, onUpdate)
+      _.each([file1, file2], (file) ->
+        file.on(TandemClient.File.events.UPDATE, onUpdate).on(TandemClient.File.events.HEALTH, (newHealth) ->
+          expect(newHealth).to.equal(TandemClient.File.health.HEALTHY)
+        )
+      )
     )
   )
 
@@ -143,6 +150,22 @@ describe('Messaging', ->
         Storage.find('resync-test', (err, head, version) ->
           expect(file.engine.arrived).to.deep.equal(head)
           done()
+        )
+      )
+    )
+  )
+
+  it('should switch files', (done) ->
+    file1 = client1.open('switch-test-1')
+    Storage.find('switch-test-1', (err, head, version) ->
+      file1.once(TandemClient.File.events.UPDATE, (delta) ->
+        expect(delta).to.deep.equal(head)
+        file2 = client1.open('switch-test-2')
+        Storage.find('switch-test-2', (err, head, version) ->
+          file2.once(TandemClient.File.events.UPDATE, (delta) ->
+            expect(delta).to.deep.equal(head)
+            done()
+          )
         )
       )
     )
