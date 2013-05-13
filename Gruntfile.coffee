@@ -7,7 +7,7 @@ module.exports = (grunt) ->
 
   grunt.initConfig(
     meta:
-      version: '0.8.1'
+      version: '0.8.2'
 
     coffee:
       tests:
@@ -34,7 +34,7 @@ module.exports = (grunt) ->
       'build/tandem.js': ['build/tandem.js'],
       'build/tandem.all.js': [
         'node_modules/async/lib/async.js'
-        'node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.js'
+        'node_modules/socket.io-client/dist/socket.io.js'
         'node_modules/underscore/underscore.js'
         'vendor/assets/javascripts/eventemitter2.js'
         'build/tandem.js'
