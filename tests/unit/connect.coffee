@@ -1,8 +1,8 @@
 _       = require('underscore')._
 expect  = require('chai').expect
 http    = require('http')
-TandemClient = require('../client')
-TandemServer = require('../index')
+TandemClient = require('../../client')
+TandemServer = require('../../index')
 
 describe('Connection', ->
   httpServer = server = client = null

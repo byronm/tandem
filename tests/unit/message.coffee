@@ -2,8 +2,8 @@ _       = require('underscore')._
 async   = require('async')
 expect  = require('chai').expect
 http    = require('http')
-TandemClient = require('../client')
-TandemServer = require('../index')
+TandemClient = require('../../client')
+TandemServer = require('../../index')
 
 Storage =
   authorize: (authPacket, callback) ->
