@@ -89,11 +89,14 @@ class TandemServerEngine extends EventEmitter
           callback(err)
           return done()
         if @head.canCompose(delta)
-          @head = @head.compose(delta)
           @cache.push('history', JSON.stringify(delta), (err, length) =>
-            @version += 1
-            callback(null, delta, @version)
-            this.emit(TandemServerEngine.events.UPDATE, delta, version)
+            if err?
+              callback(err)
+            else
+              @head = @head.compose(delta)
+              @version += 1
+              callback(null, delta, @version)
+              this.emit(TandemServerEngine.events.UPDATE, delta, version)
             done()
           )
         else
