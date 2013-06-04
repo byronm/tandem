@@ -99,7 +99,7 @@ setReady = (delta, version, users, resend = false) ->
 sync = ->
   this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
-    @users = response.users
+    syncUsers.call(this, response.users)
     if response.resync
       console.warn "Sync requesting resync"
       @engine.resync(Delta.makeDelta(response.head), response.version)
@@ -111,6 +111,15 @@ sync = ->
         setReady.call(this, response.delta, response.version, response.users, true)
       )
   , true)
+
+syncUsers = (users) ->
+  _.each(_.difference(_.keys(users), _.keys(@users)), (userId) =>
+    this.emit(TandemFile.events.JOIN, userId, users[userId])
+  )
+  _.each(_.difference(_.keys(@users), _.keys(users)), (userId) =>
+    this.emit(TandemFile.events.LEAVE, userId)
+  )
+  @users = users
 
 
 class TandemFile extends EventEmitter2
