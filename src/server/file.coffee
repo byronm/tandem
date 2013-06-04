@@ -24,10 +24,10 @@ initClientListeners = (client, metadata) ->
 
 resync = (callback) ->
   callback(
-    resync: true
-    head: @engine.head
-    version: @engine.version
-    users: @users
+    resync  : true
+    head    : @engine.head
+    version : @engine.version
+    users   : @users
   )
 
 sync = (client, packet, callback) ->
@@ -53,14 +53,14 @@ update = (client, metadata, packet, callback) ->
       console.error(err)
       return resync.call(this, callback)
     broadcastPacket =
-      delta: delta
-      fileId: @id
-      version: version
+      delta   : delta
+      fileId  : @id
+      version : version
     broadcastPacket['userId'] = metadata.userId
     client.broadcast.to(@id).emit(TandemFile.routes.UPDATE, broadcastPacket)
     callback(
-      fileId: @id
-      version: version
+      fileId  : @id
+      version : version
     )
   )
 

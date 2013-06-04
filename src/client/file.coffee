@@ -3,12 +3,6 @@ TandemEngine = require('./engine')
 TandemNetworkAdapter = require('./network')
 
 
-checkAdapterError = (response, callback) ->
-  if !response.error? or response.error.length == 0
-    callback.call(this, response) if callback?
-  else
-    this.emit(TandemFile.events.ERROR, response.error)
-
 initAdapterListeners = ->
   @adapter.on(TandemFile.routes.UPDATE, (packet) =>
     if packet.fileId != @fileId
@@ -166,7 +160,10 @@ class TandemFile extends EventEmitter2
   send: (route, packet, callback = null, priority = false) ->
     if callback?
       @adapter.send(route, packet, (response) =>
-        checkAdapterError.call(this, response, callback)
+        unless response.error?
+          callback(response) if callback?
+        else
+          this.emit(TandemFile.events.ERROR, response.error)
       , priority)
     else
       @adapter.send(route, packet)

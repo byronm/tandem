@@ -41,16 +41,16 @@ describe('Storage', ->
 
   it('should fail basic auth', (done) ->
     file = client.open('basic-auth-file', { secret: 1000 })
-    file.on(TandemClient.File.events.ERROR, (message, errors) ->
-      expect(errors).to.include('Access Denied')
+    file.on(TandemClient.File.events.ERROR, (message) ->
+      expect(message).to.equal('Access Denied')
       done()
     )
   )
 
   it('should not find non-existent file', (done) ->
     file = client.open('basic-auth-file-none', { secret: 1337 })
-    file.on(TandemClient.File.events.ERROR, (message, errors) ->
-      expect(errors).to.include('File not found')
+    file.on(TandemClient.File.events.ERROR, (message) ->
+      expect(message).to.equal('File not found')
       done()
     )
   )

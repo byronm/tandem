@@ -5,7 +5,7 @@ EventEmitter  = require('events').EventEmitter
 
 authenticate = (client, packet, callback) ->
   @storage.authorize(packet, (err) =>
-    return callback({ error: [err] }) if err?
+    return callback({ error: err }) if err?
     metadata = 
       fileId : packet.fileId
       userId : packet.userId

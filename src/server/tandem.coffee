@@ -19,7 +19,7 @@ removeClient = (client, callback) ->
     return callback(err) if err?
     if metadata?.fileId?
       @storage.find(metadata.fileId, (err, file) =>
-        callback(err) if err?
+        return callback(err) if err?
         file.removeClient(client, callback)
       )
     else
@@ -41,8 +41,7 @@ class TandemServer
       # By this point, client will be authenticated
       removeClient.call(this, client, =>
         addClient.call(this, client, metadata, (err) =>
-          error = if err? then [err] else []
-          callback({ error: error })
+          callback({ error: err })
         )
       )
     )

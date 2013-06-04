@@ -5,11 +5,11 @@ authenticate = ->
     userId: @userId
   console.info "Attempting auth to", @fileId, authPacket if @settings.debug
   @socket.emit('auth', authPacket, (response) =>
-    if !response.error? or response.error.length == 0
+    unless response.error?
       console.info "Connected!", response if @settings.debug
       setReady.call(this) if @ready == false
     else
-      this.emit(TandemNetworkAdapter.events.ERROR, "Could not access document #{@fileId}", response.error)
+      this.emit(TandemNetworkAdapter.events.ERROR, response.error)
   )
 
 doSend = (route, packet, callback) ->
