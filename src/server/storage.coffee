@@ -34,9 +34,6 @@ class TandemStorage
     return callback(null) unless @storage?
     @storage.authorize(authPacket, callback)
 
-  clear: ->
-    @files = {}
-
   find: (id, callback) ->
     newFileCallback = (err, file) =>
       callbacks = @files[id]

@@ -43,11 +43,6 @@ class TandemServer
         addClient.call(this, client, metadata, (err) =>
           error = if err? then [err] else []
           callback({ error: error })
-          client.on('debug/clear', (packet, callback) =>
-            return callback("Cannot be called on production") if process.env.NODE_ENV == 'production'
-            @storage.clear()
-            callback({ error: [] })
-          )
         )
       )
     )
