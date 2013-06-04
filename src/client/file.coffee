@@ -97,21 +97,19 @@ setReady = (delta, version, users, resend = false) ->
   this.emit(TandemFile.events.READY, delta, version, users)
 
 sync = ->
-  this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
   this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
-    @users = _.map(response.users, (user) ->
-      return { online: user }
-    )
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
+    @users = response.users
     if response.resync
       console.warn "Sync requesting resync"
       @engine.resync(Delta.makeDelta(response.head), response.version)
+    else if @engine.remoteUpdate(response.delta, response.version)
+      setReady.call(this, response.delta, response.version, response.users, false)
     else
-      unless @engine.remoteUpdate(response.delta, response.version)
-        console.warn "Remote update failed on sync, requesting resync"
-        return resync.call(this, =>
-          setReady.call(this, response.delta, response.version, response.users, true)
-        )
-    setReady.call(this, response.delta, response.version, response.users, false)
+      console.warn "Remote update failed on sync, requesting resync"
+      resync.call(this, =>
+        setReady.call(this, response.delta, response.version, response.users, true)
+      )
   , true)
 
 
