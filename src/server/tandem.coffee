@@ -28,9 +28,6 @@ removeClient = (client, callback) ->
 
 
 class TandemServer
-  DEFAULT:
-    'storage': null
-
   @events:
     UPDATE: 'update'
 

@@ -1,7 +1,6 @@
 _                 = require('underscore')._
 Tandem            = require('tandem-core')
 TandemEngine      = require('./engine')
-TandemMemoryCache = require('./cache/memory')
 
 
 initClientListeners = (client, metadata) ->
@@ -74,18 +73,12 @@ class TandemFile
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  @DEFAULTS:
-    'cache': TandemMemoryCache
-
   constructor: (@id, initial, version, options, callback) ->   
-    @settings = _.extend({}, TandemFile.DEFAULTS, _.pick(options, _.keys(TandemFile.DEFAULTS)))
     @versionSaved = version
     @users = {}
-    cache = new @settings['cache'](@id, (cache) =>
-      new TandemEngine(initial, version, cache, (err, engine) =>
-        @engine = engine
-        callback(err, this)
-      )
+    @engine = new TandemEngine(initial, version, options, (err, engine) =>
+      @engine = engine
+      callback(err, this)
     )
 
   addClient: (client, metadata, callback = ->) ->

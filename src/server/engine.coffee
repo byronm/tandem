@@ -1,7 +1,8 @@
-_            = require('underscore')._
-async        = require('async')
-EventEmitter = require('events').EventEmitter
-Tandem       = require('tandem-core')
+_                 = require('underscore')._
+async             = require('async')
+EventEmitter      = require('events').EventEmitter
+Tandem            = require('tandem-core')
+TandemMemoryCache = require('./cache/memory')
 
 atomic = (fn) ->
   async.until( =>
@@ -16,39 +17,46 @@ atomic = (fn) ->
   )
 
 class TandemServerEngine extends EventEmitter
+  @DEFAULTS:
+    'cache': TandemMemoryCache
+
   @events:
     UPDATE: 'update'
 
-  constructor: (@head, @version, @cache, callback) ->
+  constructor: (@head, @version, options, callback) ->
+    @settings = _.defaults(_.pick(options, _.keys(TandemServerEngine.DEFAULTS)), TandemServerEngine.DEFAULTS)
     @id = _.uniqueId('engine-')
     @locked = false
-    atomic.call(this, (done) =>
-      @cache.get('versionLoaded', (err, versionLoaded) =>
-        if err?
-          callback(err)
-          return done()
-        if versionLoaded?
-          @versionLoaded = parseInt(versionLoaded)
-          @cache.range('history', @version - @versionLoaded, (err, range) =>
-            if err?
-              callback(err)
-              return done()
-            _.each(range, (delta) =>
-              delta = Tandem.Delta.makeDelta(JSON.parse(delta))
-              @head = @head.compose(delta)
-              @version += 1
+    @cache = new @settings['cache'](@id, (@cache) =>
+      atomic.call(this, (done) =>
+        @cache.get('versionLoaded', (err, versionLoaded) =>
+          if err?
+            callback(err)
+            return done()
+          if versionLoaded?
+            @versionLoaded = parseInt(versionLoaded)
+            @cache.range('history', @version - @versionLoaded, (err, range) =>
+              if err?
+                callback(err)
+                return done()
+              _.each(range, (delta) =>
+                delta = Tandem.Delta.makeDelta(JSON.parse(delta))
+                @head = @head.compose(delta)
+                @version += 1
+              )
+              callback(null, this)
+              done()
             )
-            callback(null, this)
-            done()
-          )
-        else
-          @versionLoaded = @version
-          @cache.set('versionLoaded', @version, (err) =>
-            callback(err, this)
-            done()
-          )
+          else
+            @versionLoaded = @version
+            @cache.set('versionLoaded', @version, (err) =>
+              callback(err, this)
+              done()
+            )
+        )
       )
     )
+    
 
   getDeltaSince: (version, callback) ->
     return callback("Negative version") if version < 0

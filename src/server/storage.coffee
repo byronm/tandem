@@ -22,7 +22,7 @@ class TandemStorage
     'save interval': 10000
 
   constructor: (@storage, @options = {}) ->
-    @settings = _.extend({}, TandemStorage.DEFAULTS, _.pick(@options, _.keys(TandemStorage.DEFAULTS)))
+    @settings = _.defaults(_.pick(options, _.keys(TandemStorage.DEFAULTS)), TandemStorage.DEFAULTS)
     @files = {}
     setInterval( =>
       _.each(@files, (file, id) =>
