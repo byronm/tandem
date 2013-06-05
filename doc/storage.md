@@ -7,7 +7,7 @@ By default there is no persistent storage. However it can be added by defining a
 Storage = {
   // See authentication for more info on the format of authPacket
   authorize: function (authPacket, callback) {
-    callback(err, hasAccess);
+    callback(err);
   }
 
   find: function (fileId, callback) {
