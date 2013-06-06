@@ -4,7 +4,7 @@ EventEmitter      = require('events').EventEmitter
 Tandem            = require('tandem-core')
 TandemMemoryCache = require('./cache/memory')
 
-atomic = (fn) ->
+_atomic = (fn) ->
   async.until( =>
     @locked == false
   , (callback) =>
@@ -15,6 +15,16 @@ atomic = (fn) ->
       @locked = false
     )
   )
+
+_getHistory = (version, callback) ->
+  @cache.range('history', version, (err, range) =>
+    return callback(err) if err?
+    deltas = _.map(range, (changeset) ->
+      return Tandem.Delta.makeDelta(JSON.parse(changeset).delta)
+    )
+    return callback(null, deltas)
+  )
+
 
 class TandemServerEngine extends EventEmitter
   @DEFAULTS:
@@ -27,50 +37,27 @@ class TandemServerEngine extends EventEmitter
     @settings = _.defaults(_.pick(options, _.keys(TandemServerEngine.DEFAULTS)), TandemServerEngine.DEFAULTS)
     @id = _.uniqueId('engine-')
     @locked = false
+    @versionLoaded = @version
     @cache = new @settings['cache'](@id, (@cache) =>
-      atomic.call(this, (done) =>
-        @cache.get('versionLoaded', (err, versionLoaded) =>
-          if err?
-            callback(err)
-            return done()
-          if versionLoaded?
-            @versionLoaded = parseInt(versionLoaded)
-            @cache.range('history', @version - @versionLoaded, (err, range) =>
-              if err?
-                callback(err)
-                return done()
-              _.each(range, (delta) =>
-                delta = Tandem.Delta.makeDelta(JSON.parse(delta))
-                @head = @head.compose(delta)
-                @version += 1
-              )
-              callback(null, this)
-              done()
-            )
-          else
-            @versionLoaded = @version
-            @cache.set('versionLoaded', @version, (err) =>
-              callback(err, this)
-              done()
-            )
-        )
+      _getHistory.call(this, 0, (err, deltas) =>
+        unless err?
+          _.each(deltas, (delta) =>
+            @head = @head.compose(delta)
+            @version += 1
+          )
+        callback(err, this)
       )
     )
-    
 
   getDeltaSince: (version, callback) ->
     return callback("Negative version") if version < 0
     return callback(null, @head, @version) if version == 0
     return callback(null, Tandem.Delta.getIdentity(@head.endLength), @version) if version == @version
-    version -= @versionLoaded
-    @cache.range('history', version, (err, range) =>
+    _getHistory.call(this, version - @versionLoaded, (err, deltas) =>
       return callback(err) if err?
-      return callback("No version #{version + @versionLoaded} in history of [#{@versionLoaded} - #{@version}]") if range.length == 0
-      range = _.map(range, (delta) ->
-        return Tandem.Delta.makeDelta(JSON.parse(delta))
-      )
-      firstHist = range.shift(range)
-      delta = _.reduce(range, (delta, hist) ->
+      return callback("No version #{version} in history of [#{@versionLoaded} - #{@version}]") if deltas.length == 0
+      firstHist = deltas.shift()
+      delta = _.reduce(deltas, (delta, hist) ->
         return delta.compose(hist)
       , firstHist)
       return callback(null, delta, @version)
@@ -79,37 +66,34 @@ class TandemServerEngine extends EventEmitter
   transform: (delta, version, callback) ->
     version -= @versionLoaded
     return callback("No version in history") if version < 0
-    delta = this.indexesToDelta(delta) if _.isArray(delta)
-    @cache.range('history', version, (err, range) =>
-      range = _.map(range, (delta) ->
-        return Tandem.Delta.makeDelta(JSON.parse(delta))
-      )
-      delta = _.reduce(range, (delta, hist) ->
+    _getHistory.call(this, version, (err, deltas) =>
+      return callback(err) if err?
+      delta = _.reduce(deltas, (delta, hist) ->
         return delta.follows(hist, true)
       , delta)
       return callback(null, delta, @version)
     )
     
   update: (delta, version, callback) ->
-    atomic.call(this, (done) =>
-      this.transform(delta, version, (err, delta, version) =>
-        if err?
-          callback(err)
-          return done()
-        if @head.canCompose(delta)
-          @cache.push('history', JSON.stringify(delta), (err, length) =>
-            if err?
-              callback(err)
-            else
-              @head = @head.compose(delta)
-              @version += 1
-              callback(null, delta, @version)
-              this.emit(TandemServerEngine.events.UPDATE, delta, version)
-            done()
-          )
-        else
-          callback({ message: "Cannot compose deltas", head: @head, delta: delta })
-          done()
+    changeset = {}
+    _atomic.call(this, (done) =>
+      async.waterfall([
+        (callback) =>
+          this.transform(delta, version, callback)
+        (delta, version, callback) =>
+          if @head.canCompose(delta)
+            changeset = { delta: delta, version: @version + 1 }
+            @cache.push('history', JSON.stringify(changeset), callback)
+          else
+            callback({ message: "Cannot compose deltas", head: @head, delta: delta })
+        (length, callback) =>
+          @head = @head.compose(changeset.delta)
+          @version += 1
+          callback(null)
+      ], (err, delta, version) =>
+        callback(err, changeset.delta, changeset.version)
+        this.emit(TandemServerEngine.events.UPDATE, changeset.delta, changeset.version)
+        done()
       )
     )
 
