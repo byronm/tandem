@@ -1,4 +1,5 @@
 _             = require('underscore')._
+async         = require('async')
 request       = require('request')
 EventEmitter  = require('events').EventEmitter
 Tandem        = require('tandem-core')
