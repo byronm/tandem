@@ -1,3 +1,4 @@
+EventEmitter    = require('events').EventEmitter
 Tandem          = require('tandem-core')
 TandemEngine    = require('./engine')
 TandemFile      = require('./file')
@@ -8,11 +9,10 @@ TandemStorage   = require('./storage')
 addClient = (client, metadata, callback) ->
   @storage.find(metadata.fileId, (err, file) =>
     return callback(err) if err?
-    file.engine.on(TandemEngine.events.UPDATE, (args...) =>
-      this.emit(TandemServer.events.UPDATE, file.id, args...)
+    file.engine.on(TandemEngine.events.UPDATE, (delta, version) =>
+      this.emit(TandemServer.events.UPDATE, file.id, delta, version)
     )
     file.on(TandemFile.events.ERROR, (err) =>
-      err.fileId = file.id
       this.emit(TandemServer.events.ERROR, err)
     )
     file.addClient(client, metadata, callback)
@@ -31,7 +31,7 @@ removeClient = (client, callback) ->
   )
 
 
-class TandemServer
+class TandemServer extends EventEmitter
   @events:
     ERROR  : 'error'
     UPDATE : 'update'

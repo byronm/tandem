@@ -80,7 +80,7 @@ class TandemFile extends EventEmitter
   constructor: (@id, initial, version, options, callback) ->   
     @versionSaved = version
     @users = {}
-    @engine = new TandemEngine(initial, version, options, (err, engine) =>
+    @engine = new TandemEngine(@id, initial, version, options, (err, engine) =>
       @engine = engine
       callback(err, this)
     )

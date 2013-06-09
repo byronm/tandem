@@ -4,6 +4,7 @@ EventEmitter      = require('events').EventEmitter
 Tandem            = require('tandem-core')
 TandemMemoryCache = require('./cache/memory')
 
+
 _atomic = (fn) ->
   async.until( =>
     @locked == false
@@ -25,9 +26,19 @@ _getHistory = (version, callback) ->
     return callback(null, deltas)
   )
 
+_getLoadedVersion = (callback) ->
+  @cache.range('history', 0, 0, (err, range) =>
+    return callback(err) if err?
+    if range.length > 0
+      callback(null, JSON.parse(range[0]).version)
+    else
+      callback(null, -1)
+  )
+
 
 class EngineError extends Error
   constructor: (@message, engine) ->
+    @fileId = engine.fileId
     @version = engine.version
     @versionLoaded = engine.versionLoaded
     @head =
@@ -43,15 +54,22 @@ class TandemServerEngine extends EventEmitter
   @events:
     UPDATE: 'update'
 
-  constructor: (@head, @version, options, callback) ->
+  constructor: (@fileId, @head, @version, options, callback) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemServerEngine.DEFAULTS)), TandemServerEngine.DEFAULTS)
     @id = _.uniqueId('engine-')
     @locked = false
     @versionLoaded = @version
-    @cache = new @settings['cache'](@id, (@cache) =>
-      _getHistory.call(this, 0, (err, deltas) =>
+    @cache = new @settings['cache'](@fileId, (@cache) =>
+      async.waterfall([
+        (callback) =>
+          _getLoadedVersion.call(this, callback)
+        (cacheVersion, callback) =>
+          return callback(null, []) if cacheVersion == -1
+          _getHistory.call(this, @version + 1 - cacheVersion, callback)
+      ], (err, deltas) =>
         unless err?
           _.each(deltas, (delta) =>
+            return if delta.version
             @head = @head.compose(delta)
             @version += 1
           )
@@ -102,6 +120,7 @@ class TandemServerEngine extends EventEmitter
           callback(null)
       ], (err, delta, version) =>
         callback(err, changeset.delta, changeset.version)
+        this.emit(TandemServerEngine.events.UPDATE, changeset.delta, changeset.version)
         done()
       )
     )
