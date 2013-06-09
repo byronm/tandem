@@ -26,6 +26,16 @@ _getHistory = (version, callback) ->
   )
 
 
+class EngineError extends Error
+  constructor: (@message, engine) ->
+    @version = engine.version
+    @versionLoaded = engine.versionLoaded
+    @head =
+      startLength : engine.head?.startLength
+      endLength   : engine.head?.endLength
+      opsLength   : engine.head?.ops?.length 
+
+
 class TandemServerEngine extends EventEmitter
   @DEFAULTS:
     'cache': TandemMemoryCache
@@ -50,12 +60,12 @@ class TandemServerEngine extends EventEmitter
     )
 
   getDeltaSince: (version, callback) ->
-    return callback("Negative version") if version < 0
+    return callback(new EngineError("Negative version", this)) if version < 0
     return callback(null, @head, @version) if version == 0
     return callback(null, Tandem.Delta.getIdentity(@head.endLength), @version) if version == @version
     _getHistory.call(this, version - @versionLoaded, (err, deltas) =>
       return callback(err) if err?
-      return callback("No version #{version} in history of [#{@versionLoaded} - #{@version}]") if deltas.length == 0
+      return callback(new EngineError("No version #{version} in history", this)) if deltas.length == 0
       firstHist = deltas.shift()
       delta = _.reduce(deltas, (delta, hist) ->
         return delta.compose(hist)
@@ -65,7 +75,7 @@ class TandemServerEngine extends EventEmitter
 
   transform: (delta, version, callback) ->
     version -= @versionLoaded
-    return callback("No version in history") if version < 0
+    return callback(new EngineError("No version in history", this)) if version < 0
     _getHistory.call(this, version, (err, deltas) =>
       return callback(err) if err?
       delta = _.reduce(deltas, (delta, hist) ->
@@ -85,14 +95,13 @@ class TandemServerEngine extends EventEmitter
             changeset = { delta: delta, version: @version + 1 }
             @cache.push('history', JSON.stringify(changeset), callback)
           else
-            callback({ message: "Cannot compose deltas", head: @head, delta: delta })
+            callback(new EngineError('Cannot compose deltas', this))
         (length, callback) =>
           @head = @head.compose(changeset.delta)
           @version += 1
           callback(null)
       ], (err, delta, version) =>
         callback(err, changeset.delta, changeset.version)
-        this.emit(TandemServerEngine.events.UPDATE, changeset.delta, changeset.version)
         done()
       )
     )

@@ -1,6 +1,7 @@
-_                 = require('underscore')._
-Tandem            = require('tandem-core')
-TandemEngine      = require('./engine')
+_             = require('underscore')._
+EventEmitter  = require('events').EventEmitter
+Tandem        = require('tandem-core')
+TandemEngine  = require('./engine')
 
 
 initClientListeners = (client, metadata) ->
@@ -32,7 +33,7 @@ resync = (callback) ->
 sync = (client, packet, callback) ->
   @engine.getDeltaSince(parseInt(packet.version), (err, delta, version, next) =>
     if err?
-      console.error(err)
+      this.emit(TandemFile.events.ERROR, err)
       return resync.call(this, callback)
     client.get('metadata', (err, metadata) =>
       client.join(metadata.fileId) unless err?
@@ -49,7 +50,7 @@ update = (client, metadata, packet, callback) ->
   version = parseInt(packet.version)
   @engine.update(delta, version, (err, delta, version) =>
     if err?
-      console.error(err)
+      this.emit(TandemFile.events.ERROR, err)
       return resync.call(this, callback)
     broadcastPacket =
       delta   : delta
@@ -64,7 +65,10 @@ update = (client, metadata, packet, callback) ->
   )
 
 
-class TandemFile
+class TandemFile extends EventEmitter
+  @events:
+    ERROR: 'file-error'
+
   @routes:
     BROADCAST : 'broadcast'
     JOIN      : 'user/join'

@@ -5,7 +5,9 @@ EventEmitter  = require('events').EventEmitter
 
 authenticate = (client, packet, callback) ->
   @storage.authorize(packet, (err) =>
-    return callback({ error: err }) if err?
+    if err?
+      this.emit(TandemNetwork.events.ERROR, err)
+      return callback({ error: err })
     metadata = 
       fileId : packet.fileId
       userId : packet.userId
@@ -37,7 +39,8 @@ class TandemNetwork extends EventEmitter
     'transports': ['websocket', 'xhr-polling']
 
   @events:
-    CONNECT: 'network-connect'
+    CONNECT : 'network-connect'
+    ERROR   : 'network-error'
 
   constructor: (server, @storage, options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemNetwork.DEFAULTS)), TandemNetwork.DEFAULTS)

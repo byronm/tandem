@@ -1,7 +1,8 @@
-_           = require('underscore')._
-request     = require('request')
-Tandem      = require('tandem-core')
-TandemFile  = require('./file')
+_             = require('underscore')._
+request       = require('request')
+EventEmitter  = require('events').EventEmitter
+Tandem        = require('tandem-core')
+TandemFile    = require('./file')
 
 
 save = (file, callback = ->) ->
@@ -35,13 +36,6 @@ class TandemStorage
     @storage.authorize(authPacket, callback)
 
   find: (id, callback) ->
-    newFileCallback = (err, file) =>
-      callbacks = @files[id]
-      @files[id] = if err? then undefined else file
-      _.each(callbacks, (callback) =>
-        callback(err, file)
-      )
-
     if @files[id]?
       if _.isArray(@files[id])
         @files[id].push(callback)
@@ -49,13 +43,21 @@ class TandemStorage
         callback(null, @files[id])
     else
       @files[id] = [callback]
-      if @storage?
-        @storage.find(id, (err, head, version) =>
-          return newFileCallback(err) if err?
-          new TandemFile(id, head, version, @options, newFileCallback)
+      async.waterfall([
+        (callback) =>
+          if @storage?
+            @storage.find(id, callback)
+          else
+            callback(null, Tandem.Delta.getInitial(''), 0)
+        (head, version, callback) =>
+          new TandemFile(id, head, version, @options, callback)
+      ], (err, file) =>
+        callbacks = @files[id]
+        @files[id] = if err? then undefined else file
+        _.each(callbacks, (callback) =>
+          callback(err, file)
         )
-      else
-        new TandemFile(id, Tandem.Delta.getInitial(''), 0, @options, newFileCallback)
+      )
       
 
 

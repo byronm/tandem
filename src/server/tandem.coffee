@@ -11,6 +11,10 @@ addClient = (client, metadata, callback) ->
     file.engine.on(TandemEngine.events.UPDATE, (args...) =>
       this.emit(TandemServer.events.UPDATE, file.id, args...)
     )
+    file.on(TandemFile.events.ERROR, (err) =>
+      err.fileId = file.id
+      this.emit(TandemServer.events.ERROR, err)
+    )
     file.addClient(client, metadata, callback)
   )
 
@@ -29,7 +33,8 @@ removeClient = (client, callback) ->
 
 class TandemServer
   @events:
-    UPDATE: 'update'
+    ERROR  : 'error'
+    UPDATE : 'update'
 
   constructor: (server, options = {}) ->
     @storage = new TandemStorage(options.storage, options)
