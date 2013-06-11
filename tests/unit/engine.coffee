@@ -25,12 +25,12 @@ describe('Engine', ->
 
   it('constructor', ->
     expect(engine.version).to.equal(3)
-    expect(engine.versionLoaded).to.equal(1)
+    expect(engine.versionLoaded).to.equal(0)
     expect(engine.head).to.deep.equal(TandemServer.Delta.getInitial('goa'))
   )
 
   it('getDeltaSince', (done) ->
-    engine.getDeltaSince(1, (err, delta, version) ->
+    engine.getDeltaSince(0, (err, delta, version) ->
       expect(version).to.equal(3)
       expected = (deltas[0].compose(deltas[1])).compose(deltas[2])
       expect(delta).to.deep.equal(expected)

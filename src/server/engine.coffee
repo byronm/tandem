@@ -27,10 +27,11 @@ _getHistory = (version, callback) ->
   )
 
 _getLoadedVersion = (callback) ->
-  @cache.range('history', 0, 0, (err, range) =>
+  @cache.range('history', 0, 1, (err, range) =>
     return callback(err) if err?
     if range.length > 0
-      callback(null, JSON.parse(range[0]).version)
+      # -1 since in case of 1 history at version v, we apply delta to get to v, so without it, our version is v - 1
+      callback(null, JSON.parse(range[0]).version - 1)
     else
       callback(null, -1)
   )
@@ -58,18 +59,20 @@ class TandemServerEngine extends EventEmitter
     @settings = _.defaults(_.pick(options, _.keys(TandemServerEngine.DEFAULTS)), TandemServerEngine.DEFAULTS)
     @id = _.uniqueId('engine-')
     @locked = false
-    @versionLoaded = @version
     @cache = new @settings['cache'](@fileId, (@cache) =>
       async.waterfall([
         (callback) =>
           _getLoadedVersion.call(this, callback)
         (cacheVersion, callback) =>
-          return callback(null, []) if cacheVersion == -1
-          _getHistory.call(this, @version + 1 - cacheVersion, callback)
+          if cacheVersion == -1
+            @versionLoaded = @version
+            callback(null, [])
+          else
+            @versionLoaded = cacheVersion
+            _getHistory.call(this, @version - @versionLoaded, callback)
       ], (err, deltas) =>
         unless err?
           _.each(deltas, (delta) =>
-            return if delta.version
             @head = @head.compose(delta)
             @version += 1
           )
@@ -92,9 +95,8 @@ class TandemServerEngine extends EventEmitter
     )
 
   transform: (delta, version, callback) ->
-    version -= @versionLoaded
-    return callback(new EngineError("No version in history", this)) if version < 0
-    _getHistory.call(this, version, (err, deltas) =>
+    return callback(new EngineError("No version in history", this)) if version < @versionLoaded
+    _getHistory.call(this, version - @versionLoaded, (err, deltas) =>
       return callback(err) if err?
       delta = _.reduce(deltas, (delta, hist) ->
         return delta.follows(hist, true)
@@ -110,6 +112,7 @@ class TandemServerEngine extends EventEmitter
           this.transform(delta, version, callback)
         (delta, version, callback) =>
           if @head.canCompose(delta)
+            # Version in changeset means when delta in changeset is applied you are on this version
             changeset = { delta: delta, version: @version + 1 }
             @cache.push('history', JSON.stringify(changeset), callback)
           else

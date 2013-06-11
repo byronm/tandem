@@ -24,6 +24,9 @@ test:
 test-connect:
 	@./node_modules/.bin/mocha tests/unit/connect.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
 
+test-engine:
+	@./node_modules/.bin/mocha tests/unit/engine.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
+
 test-message:
 	@./node_modules/.bin/mocha tests/unit/message.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
 
