@@ -1,9 +1,10 @@
 _           = require('underscore')
 TandemCache = require('./cache')
 
-storage = {}
 
 class TandemMemoryCache extends TandemCache
+  @storage: {}
+
   constructor: (@id, callback) ->
     super
     callback(this)
@@ -16,20 +17,20 @@ class TandemMemoryCache extends TandemCache
     callback(null, storage[key])
 
   push: (key, value, callback) ->
-    unless _.isArray(storage[key])
-      storage[key] = []
-    storage[key].push(value)
-    callback(null, storage[key].length)
+    unless _.isArray(TandemMemoryCache.storage[key])
+      TandemMemoryCache.storage[key] = []
+    TandemMemoryCache.storage[key].push(value)
+    callback(null, TandemMemoryCache.storage[key].length)
 
   range: (key, start, end, callback) ->
     if _.isFunction(end)
       callback = end
       end = undefined
-    ret = if _.isArray(storage[key]) then storage[key].slice(start, end) else []
+    ret = if _.isArray(TandemMemoryCache.storage[key]) then TandemMemoryCache.storage[key].slice(start, end) else []
     callback(null, ret)
 
   set: (key, value, callback) ->
-    storage[key] = value
+    TandemMemoryCache.storage[key] = value
     callback(null)
 
 
