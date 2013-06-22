@@ -49,11 +49,11 @@ track = (type, route, packet) ->
 
 class TandemNetworkAdapter extends EventEmitter2
   @events:
-    DISCONNECT   : 'disconnect'
+    DISCONNECT   : 'adapter-disconnect'
     ERROR        : 'adapter-error'
     READY        : 'adapter-ready'
-    RECONNECT    : 'reconnect'
-    RECONNECTING : 'reconnecting'
+    RECONNECT    : 'adapter-reconnect'
+    RECONNECTING : 'adapter-reconnecting'
 
   @CALLBACK : 'callback'
   @RECIEVE  : 'recieve'
@@ -99,9 +99,13 @@ class TandemNetworkAdapter extends EventEmitter2
     socketOptions['query'] = "fileId=#{@fileId}"
     @socket = io.connect("#{url.protocol}//#{url.hostname}", socketOptions)
     @socket.on('reconnecting', =>
+      this.emit(TandemNetworkAdapter.events.RECONNECTING)
       @ready = false
     ).on('reconnect', =>
+      this.emit(TandemNetworkAdapter.events.RECONNECT)
       authenticate.call(this) if @ready == false
+    ).on('disconnect', =>
+      this.emit(TandemNetworkAdapter.events.DISCONNECT)
     )
     authenticate.call(this)
 

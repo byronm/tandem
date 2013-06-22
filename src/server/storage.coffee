@@ -28,7 +28,10 @@ class TandemStorage
     @files = {}
     setInterval( =>
       _.each(@files, (file, id) =>
-        save.call(this, file) unless !file? or _.isArray(file)
+        return if !file? or _.isArray(file)
+        save.call(this, file, (err) =>
+          file.emit(TandemFile.events.ERROR, err) if err?
+        )
       )
     , @settings['save interval'])
 
