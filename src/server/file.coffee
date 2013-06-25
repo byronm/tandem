@@ -11,7 +11,7 @@ initClientListeners = (client, metadata) ->
   client.on(TandemFile.routes.RESYNC, (packet, callback) =>
     resync.call(this, callback)
   ).on(TandemFile.routes.SYNC, (packet, callback) =>
-    sync.call(this, client, packet, callback)
+    sync.call(this, client, metadata, packet, callback)
   ).on(TandemFile.routes.UPDATE, (packet, callback) =>
     update.call(this, client, metadata, packet, callback)
   ).on(TandemFile.routes.BROADCAST, (packet, callback) =>
@@ -30,9 +30,10 @@ resync = (callback) ->
     users   : @users
   )
 
-sync = (client, packet, callback) ->
+sync = (client, metadata, packet, callback) ->
   @engine.getDeltaSince(parseInt(packet.version), (err, delta, version, next) =>
     if err?
+      err.metadata = metadata
       this.emit(TandemFile.events.ERROR, err)
       return resync.call(this, callback)
     client.get('metadata', (err, metadata) =>
@@ -50,6 +51,7 @@ update = (client, metadata, packet, callback) ->
   version = parseInt(packet.version)
   @engine.update(delta, version, (err, delta, version) =>
     if err?
+      err.metadata = metadata
       this.emit(TandemFile.events.ERROR, err)
       return resync.call(this, callback)
     broadcastPacket =

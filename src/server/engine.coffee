@@ -39,7 +39,6 @@ _getLoadedVersion = (callback) ->
 
 class EngineError extends Error
   constructor: (@message, engine) ->
-    @fileId = engine.fileId
     @version = engine.version
     @versionLoaded = engine.versionLoaded
     @head =
@@ -55,11 +54,11 @@ class TandemServerEngine extends EventEmitter
   @events:
     UPDATE: 'update'
 
-  constructor: (@fileId, @head, @version, options, callback) ->
+  constructor: (fileId, @head, @version, options, callback) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemServerEngine.DEFAULTS)), TandemServerEngine.DEFAULTS)
     @id = _.uniqueId('engine-')
     @locked = false
-    @cache = new @settings['cache'](@fileId, (@cache) =>
+    @cache = new @settings['cache'](fileId, (@cache) =>
       async.waterfall([
         (callback) =>
           _getLoadedVersion.call(this, callback)
