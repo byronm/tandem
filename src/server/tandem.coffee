@@ -39,7 +39,7 @@ class TandemServer extends EventEmitter
   constructor: (server, options = {}) ->
     @storage = new TandemStorage(options.storage, options)
     @network = new TandemNetwork(server, @storage, options)
-    @network.on(TandemNetwork.events.CONNECT, (client, metadata, callback) ->
+    @network.on(TandemNetwork.events.CONNECT, (client, metadata, callback) =>
       # By this point, client will be authenticated
       removeClient.call(this, client, =>
         addClient.call(this, client, metadata, (err) =>
