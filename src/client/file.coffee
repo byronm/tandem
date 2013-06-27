@@ -53,7 +53,7 @@ initHealthListeners = ->
     this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health)
   ).on(TandemNetworkAdapter.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, args...)
-    this.emit(TandemFile.events.HEALTH, @health, TandemFile.health.ERROR)
+    this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health)
   )
   this.on(TandemFile.events.HEALTH, (newHealth, oldHealth) =>
     @health = newHealth
