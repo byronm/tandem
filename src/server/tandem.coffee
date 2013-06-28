@@ -33,8 +33,8 @@ removeClient = (client, callback) ->
 
 class TandemServer extends EventEmitter
   @events:
-    ERROR  : 'error'
-    UPDATE : 'update'
+    ERROR  : 'tandem-error'
+    UPDATE : 'tandme-update'
 
   constructor: (server, options = {}) ->
     @storage = new TandemStorage(options.storage, options)
