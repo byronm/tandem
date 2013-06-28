@@ -7,7 +7,7 @@ module.exports = (grunt) ->
 
   grunt.initConfig(
     meta:
-      version: '0.10.3'
+      version: '0.10.4'
 
     coffee:
       tests:
