@@ -13,7 +13,7 @@ save = (file, callback = ->) ->
   if @storage?
     file.getHistory(file.versionSaved, (err, deltas) =>
       return callback(err) if err?
-      @storage.update(file.id, version, head, deltas, (err) ->
+      @storage.update(file.id, head, version, deltas, (err) ->
         file.versionSaved = version unless err?
         callback(err)
       )

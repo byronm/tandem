@@ -19,7 +19,7 @@ describe('Storage', ->
             callback(null, TandemServer.Delta.getInitial('Hello World!'), 10)
           else
             callback('File not found')
-        update: (fileId, version, head, delta, callback) ->
+        update: (fileId, head, version, deltas, callback) ->
           callback(null)
     })
     client = new TandemClient.Client('http://localhost:9090')
