@@ -59,7 +59,7 @@ class TandemServerEngine extends EventEmitter
             callback(null, [])
           else
             @versionLoaded = cacheVersion
-            this.getHistory(@version - @versionLoaded, callback)
+            this.getHistory(@version, callback)
       ], (err, deltas) =>
         unless err?
           _.each(deltas, (delta) =>
@@ -74,7 +74,7 @@ class TandemServerEngine extends EventEmitter
     return callback(new EngineError("Negative version", this)) if version < 0
     return callback(null, @head, @version) if version == 0
     return callback(null, Tandem.Delta.getIdentity(@head.endLength), @version) if version == @version
-    this.getHistory(version - @versionLoaded, (err, deltas) =>
+    this.getHistory(version, (err, deltas) =>
       return callback(err) if err?
       return callback(new EngineError("No version #{version} in history", this)) if deltas.length == 0
       firstHist = deltas.shift()
@@ -85,7 +85,7 @@ class TandemServerEngine extends EventEmitter
     )
 
   getHistory: (version, callback) ->
-    @cache.range('history', version, (err, range) =>
+    @cache.range('history', version - @versionLoaded, (err, range) =>
       return callback(err) if err?
       deltas = _.map(range, (changeset) ->
         return Tandem.Delta.makeDelta(JSON.parse(changeset).delta)
@@ -95,7 +95,7 @@ class TandemServerEngine extends EventEmitter
 
   transform: (delta, version, callback) ->
     return callback(new EngineError("No version in history", this)) if version < @versionLoaded
-    this.getHistory(version - @versionLoaded, (err, deltas) =>
+    this.getHistory(version, (err, deltas) =>
       return callback(err) if err?
       delta = _.reduce(deltas, (delta, hist) ->
         return delta.follows(hist, true)

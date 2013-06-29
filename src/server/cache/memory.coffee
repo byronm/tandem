@@ -10,11 +10,11 @@ class TandemMemoryCache extends TandemCache
     callback(this)
 
   del: (key, callback) ->
-    delete storage[key]
+    delete TandemMemoryCache.storage[key]
     callback(null)
 
   get: (key, callback) ->
-    callback(null, storage[key])
+    callback(null, TandemMemoryCache.storage[key])
 
   push: (key, value, callback) ->
     unless _.isArray(TandemMemoryCache.storage[key])
