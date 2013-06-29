@@ -16,9 +16,7 @@ describe('Storage', ->
           callback(if authPacket.auth.secret == 1337 then null else "Access Denied")
         find: (fileId, callback) ->
           if fileId == 'basic-auth-file'
-            callback(null, new TandemServer.Delta(0, [
-              new TandemServer.InsertOp('Hello World!')
-            ]), 10)
+            callback(null, TandemServer.Delta.getInitial('Hello World!'), 10)
           else
             callback('File not found')
         update: (fileId, version, head, delta, callback) ->
@@ -43,6 +41,15 @@ describe('Storage', ->
     file = client.open('basic-auth-file', { secret: 1000 })
     file.on(TandemClient.File.events.ERROR, (message) ->
       expect(message).to.equal('Access Denied')
+      done()
+    )
+  )
+
+  it('should find file', (done) ->
+    file = client.open('basic-auth-file', { secret: 1337 })
+    file.on(TandemClient.File.events.UPDATE, (delta) ->
+      expect(file.engine.version).to.equal(10)
+      expect(delta).to.deep.equal(TandemServer.Delta.getInitial('Hello World!'))
       done()
     )
   )
