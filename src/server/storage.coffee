@@ -9,10 +9,14 @@ TandemFile    = require('./file')
 save = (file, callback = ->) ->
   return callback(null) if !file.isDirty()
   version = file.getVersion()
+  head = file.getHead()
   if @storage?
-    @storage.update(file.id, file.getHead(), version, (err) ->
-      file.versionSaved = version unless err?
-      callback(err)
+    file.getHistory(file.versionSaved, (err, deltas) =>
+      return callback(err) if err?
+      @storage.update(file.id, version, head, deltas, (err) ->
+        file.versionSaved = version unless err?
+        callback(err)
+      )
     )
   else
     file.versionSaved = version unless err?

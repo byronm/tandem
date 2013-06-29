@@ -24,7 +24,7 @@ Storage =
         return callback(null, new TandemServer.Delta.getInitial('switch-test-2'), 5)
       else
         return callback(null, new TandemServer.Delta.getInitial(''), 0)
-  update: (fileId, head, version, callback) ->
+  update: (fileId, version, head, delta, callback) ->
     return callback(null)
 
 describe('Messaging', ->

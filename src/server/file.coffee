@@ -111,6 +111,9 @@ class TandemFile extends EventEmitter
   getHead: ->
     return @engine.head
 
+  getHistory: (version, callback) ->
+    @engine.getHistory(version, callback)
+
   getVersion: ->
     return @engine.version
 

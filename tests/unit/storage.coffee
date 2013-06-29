@@ -21,7 +21,7 @@ describe('Storage', ->
             ]), 10)
           else
             callback('File not found')
-        update: (fileId, head, version, callback) ->
+        update: (fileId, version, head, delta, callback) ->
           callback(null)
     })
     client = new TandemClient.Client('http://localhost:9090')

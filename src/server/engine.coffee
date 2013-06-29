@@ -17,15 +17,6 @@ _atomic = (fn) ->
     )
   )
 
-_getHistory = (version, callback) ->
-  @cache.range('history', version, (err, range) =>
-    return callback(err) if err?
-    deltas = _.map(range, (changeset) ->
-      return Tandem.Delta.makeDelta(JSON.parse(changeset).delta)
-    )
-    return callback(null, deltas)
-  )
-
 _getLoadedVersion = (callback) ->
   @cache.range('history', 0, 1, (err, range) =>
     return callback(err) if err?
@@ -68,7 +59,7 @@ class TandemServerEngine extends EventEmitter
             callback(null, [])
           else
             @versionLoaded = cacheVersion
-            _getHistory.call(this, @version - @versionLoaded, callback)
+            this.getHistory(@version - @versionLoaded, callback)
       ], (err, deltas) =>
         unless err?
           _.each(deltas, (delta) =>
@@ -83,7 +74,7 @@ class TandemServerEngine extends EventEmitter
     return callback(new EngineError("Negative version", this)) if version < 0
     return callback(null, @head, @version) if version == 0
     return callback(null, Tandem.Delta.getIdentity(@head.endLength), @version) if version == @version
-    _getHistory.call(this, version - @versionLoaded, (err, deltas) =>
+    this.getHistory(version - @versionLoaded, (err, deltas) =>
       return callback(err) if err?
       return callback(new EngineError("No version #{version} in history", this)) if deltas.length == 0
       firstHist = deltas.shift()
@@ -93,9 +84,18 @@ class TandemServerEngine extends EventEmitter
       return callback(null, delta, @version)
     )
 
+  getHistory: (version, callback) ->
+    @cache.range('history', version, (err, range) =>
+      return callback(err) if err?
+      deltas = _.map(range, (changeset) ->
+        return Tandem.Delta.makeDelta(JSON.parse(changeset).delta)
+      )
+      return callback(null, deltas)
+    )
+
   transform: (delta, version, callback) ->
     return callback(new EngineError("No version in history", this)) if version < @versionLoaded
-    _getHistory.call(this, version - @versionLoaded, (err, deltas) =>
+    this.getHistory(version - @versionLoaded, (err, deltas) =>
       return callback(err) if err?
       delta = _.reduce(deltas, (delta, hist) ->
         return delta.follows(hist, true)
