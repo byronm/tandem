@@ -15,12 +15,7 @@ _authenticate = (client, packet, callback) ->
   )
 
 _initNetwork = (server) ->
-  @io = socketio.listen(server)
-  @io.configure( =>
-    _.each(@settings, (value, key) =>
-      @io.set(key, value)
-    )
-  )
+  @io = socketio.listen(server, @settings)
   @io.configure('production', =>
     @io.enable('browser client minification')
     @io.enable('browser client etag')
