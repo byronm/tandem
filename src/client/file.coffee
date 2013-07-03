@@ -158,7 +158,7 @@ class TandemFile extends EventEmitter2
     this.send(TandemFile.routes.BROADCAST, packet, callback)
 
   close: ->
-    @adapter.removeAllListeners()
+    @adapter.close()
     @engine.removeAllListeners()
 
   isDirty: ->

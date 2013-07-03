@@ -109,6 +109,11 @@ class TandemNetworkAdapter extends EventEmitter2
     )
     authenticate.call(this)
 
+  close: ->
+    this.removeAllListeners()
+    @socket.removeAllListeners()
+    @socketListeners = {}
+
   on: (route, callback) ->
     if _.indexOf(_.values(TandemNetworkAdapter.events), route) > -1
       super
@@ -121,10 +126,6 @@ class TandemNetworkAdapter extends EventEmitter2
       @socketListeners[route] = onSocketCallback
       @socket.addListener(route, onSocketCallback)
     return this
-
-  removeAllListeners: ->
-    @socket.removeAllListeners()
-    @socketListeners = {}
 
   send: (route, packet, callback, priority = false) ->
     if @ready
