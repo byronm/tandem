@@ -4,22 +4,23 @@ Tandem        = require('tandem-core')
 TandemEngine  = require('./engine')
 
 
-initClientListeners = (client, metadata) ->
+initSocketListeners = (socket, userId) ->
   _.each(TandemFile.routes, (route, name) ->
-    client.removeAllListeners(route)
+    socket.removeAllListeners(route)
   )
-  client.on(TandemFile.routes.RESYNC, (packet, callback) =>
+  socket.on(TandemFile.routes.RESYNC, (packet, callback) =>
     resync.call(this, callback)
   ).on(TandemFile.routes.SYNC, (packet, callback) =>
-    sync.call(this, client, metadata, packet, callback)
+    sync.call(this, socket, userId, packet, callback)
   ).on(TandemFile.routes.UPDATE, (packet, callback) =>
-    update.call(this, client, metadata, packet, callback)
+    update.call(this, socket, userId, packet, callback)
   ).on(TandemFile.routes.BROADCAST, (packet, callback) =>
-    packet['userId'] = metadata.userId if metadata.userId
-    client.broadcast.to(@id).emit(TandemFile.routes.BROADCAST, packet)
+    packet['userId'] = userId
+    socket.broadcast.to(@id).emit(TandemFile.routes.BROADCAST, packet)
     callback({}) if callback?
   ).on('disconnect', =>
-    this.removeClient(client)
+    console.log 'disconnect'
+    this.removeClient(socket)
   )
 
 resync = (callback) ->
@@ -30,36 +31,36 @@ resync = (callback) ->
     users   : @users
   )
 
-sync = (client, metadata, packet, callback) ->
+sync = (socket, userId, packet, callback) ->
   @engine.getDeltaSince(parseInt(packet.version), (err, delta, version, next) =>
     if err?
-      err.metadata = metadata
+      err.fileId = @id
+      err.userId = userId
       this.emit(TandemFile.events.ERROR, err)
       return resync.call(this, callback)
-    client.get('metadata', (err, metadata) =>
-      client.join(metadata.fileId) unless err?
-      callback(
-        delta: delta
-        users: @users
-        version: version
-      )
+    socket.join(@id)
+    callback(
+      delta: delta
+      users: @users
+      version: version
     )
   )
 
-update = (client, metadata, packet, callback) ->
+update = (socket, userId, packet, callback) ->
   delta = Tandem.Delta.makeDelta(packet.delta)
   version = parseInt(packet.version)
   @engine.update(delta, version, (err, delta, version) =>
     if err?
-      err.metadata = metadata
+      err.fileId = @id
+      err.userId = userId
       this.emit(TandemFile.events.ERROR, err)
       return resync.call(this, callback)
     broadcastPacket =
       delta   : delta
       fileId  : @id
       version : version
-    broadcastPacket['userId'] = metadata.userId
-    client.broadcast.to(@id).emit(TandemFile.routes.UPDATE, broadcastPacket)
+    broadcastPacket['userId'] = userId
+    socket.broadcast.to(@id).emit(TandemFile.routes.UPDATE, broadcastPacket)
     callback(
       fileId  : @id
       version : version
@@ -87,26 +88,18 @@ class TandemFile extends EventEmitter
       callback(err, this)
     )
 
-  addClient: (client, metadata, callback = ->) ->
-    client.set('metadata', metadata, (err) =>
-      if metadata.userId?
-        client.broadcast.to(@id).emit(TandemFile.routes.JOIN, metadata.userId)
-        @users[metadata.userId] = 0 unless @users[metadata.userId]?
-        @users[metadata.userId] += 1
-      initClientListeners.call(this, client, metadata)
-      callback()
-    )
+  addClient: (socket, userId) ->
+    socket.broadcast.to(@id).emit(TandemFile.routes.JOIN, userId)
+    @users[userId] ?= 0
+    @users[userId] += 1
+    initSocketListeners.call(this, socket, userId)
 
-  removeClient: (client, callback = ->) ->
-    client.get('metadata', (err, metadata) =>
-      if !err and metadata?
-        client.broadcast.to(@id).emit(TandemFile.routes.LEAVE, metadata.userId) if metadata.userId?
-        client.leave(metadata.fileId)
-        if metadata.userId? and @users[metadata.userId]?
-          @users[metadata.userId] -= 1
-          delete @users[metadata.userId] if @users[metadata.userId] == 0
-      callback()
-    )
+  removeClient: (socket, userId) ->
+    socket.broadcast.to(@id).emit(TandemFile.routes.LEAVE, userId) if userId?
+    socket.leave(@id)
+    if @users[userId]?
+      @users[userId] -= 1
+      delete @users[userId] if @users[userId] == 0
 
   getHead: ->
     return @engine.head

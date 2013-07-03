@@ -1,3 +1,4 @@
+async           = require('async')
 EventEmitter    = require('events').EventEmitter
 Tandem          = require('tandem-core')
 TandemEngine    = require('./engine')
@@ -6,45 +7,24 @@ TandemNetwork   = require('./network')
 TandemStorage   = require('./storage')
 
 
-addClient = (client, metadata, callback) ->
-  @storage.find(metadata.fileId, (err, file) =>
-    return callback(err) if err?
-    file.engine.on(TandemEngine.events.UPDATE, (delta, version) =>
-      this.emit(TandemServer.events.UPDATE, file.id, delta, version)
-    )
-    file.on(TandemFile.events.ERROR, (err) =>
-      this.emit(TandemServer.events.ERROR, err)
-    )
-    file.addClient(client, metadata, callback)
-  )
-
-removeClient = (client, callback) ->
-  client.get('metadata', (err, metadata) =>
-    return callback(err) if err?
-    if metadata?.fileId?
-      @storage.find(metadata.fileId, (err, file) =>
-        return callback(err) if err?
-        file.removeClient(client, callback)
-      )
-    else
-      callback(null)
-  )
-
-
 class TandemServer extends EventEmitter
   @events:
     ERROR  : 'tandem-error'
-    UPDATE : 'tandme-update'
 
   constructor: (server, options = {}) ->
     @storage = new TandemStorage(options.storage, options)
     @network = new TandemNetwork(server, @storage, options)
-    @network.on(TandemNetwork.events.CONNECT, (client, metadata, callback) =>
-      # By this point, client will be authenticated
-      removeClient.call(this, client, =>
-        addClient.call(this, client, metadata, (err) =>
-          callback({ error: err })
-        )
+    @network.on(TandemNetwork.events.CONNECT, (socket, fileId, userId, callback) =>
+      @storage.find(fileId, (err, file) =>
+        if err?
+          callback(new Error('Error retrieving document'))
+          this.emit(TandemServer.events.ERROR, err)
+        else
+          file.addClient(socket, userId)
+          file.on(TandemFile.events.ERROR, (err) =>
+            this.emit(TandemServer.events.ERROR, err)
+          )
+          callback(null)
       )
     )
 

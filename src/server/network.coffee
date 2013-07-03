@@ -3,18 +3,18 @@ socketio      = require('socket.io')
 EventEmitter  = require('events').EventEmitter
 
 
-authenticate = (client, packet, callback) ->
-  @storage.authorize(packet, (err) =>
-    if err?
-      this.emit(TandemNetwork.events.ERROR, err)
-      return callback({ error: err })
-    metadata = 
-      fileId : packet.fileId
-      userId : packet.userId
-    this.emit(TandemNetwork.events.CONNECT, client, metadata, callback)
+_authenticate = (client, packet, callback) ->
+  async.waterfall([
+    (callback) =>
+      @storage.authorize(packet, callback)
+    (callback) =>
+      this.emit(TandemNetwork.events.CONNECT, client, packet.fileId, packet.userId, callback)
+  ], (err) =>
+    err = err.message if err? and _.isObject(err)   # Filter error info passed to front end client
+    callback({ error: err })
   )
 
-initNetwork = (server) ->
+_initNetwork = (server) ->
   @io = socketio.listen(server)
   @io.configure( =>
     _.each(@settings, (value, key) =>
@@ -27,7 +27,7 @@ initNetwork = (server) ->
   )
   @io.sockets.on('connection', (client) =>
     client.on('auth', (packet, callback) =>
-      authenticate.call(this, client, packet, callback)
+      _authenticate.call(this, client, packet, callback)
     )
   )
 
@@ -44,7 +44,7 @@ class TandemNetwork extends EventEmitter
 
   constructor: (server, @storage, options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemNetwork.DEFAULTS)), TandemNetwork.DEFAULTS)
-    initNetwork.call(this, server)
+    _initNetwork.call(this, server)
 
 
 module.exports = TandemNetwork

@@ -64,8 +64,18 @@ describe('Storage', ->
 
   it('should not find non-existent file', (done) ->
     file = client.open('basic-auth-file-none', { secret: 1337 })
-    file.on(TandemClient.File.events.ERROR, (message) ->
-      expect(message).to.equal('File not found')
+    async.parallel({
+      client: (callback) =>
+        file.on(TandemClient.File.events.ERROR, (message) ->
+          expect(message).to.equal("Error retrieving document")
+          callback(null)
+        )
+      server: (callback) =>
+        server.on(TandemServer.Server.events.ERROR, (err) ->
+          expect(err).to.equal('File not found')
+          callback(null)
+        )
+    }, (err) =>
       file.close()
       done()
     )
