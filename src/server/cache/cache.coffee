@@ -3,7 +3,7 @@ _ = require('underscore')._
 class TandemCache
   @OPERATIONS: ['del', 'get', 'push', 'range', 'set']
 
-  constructor: (@id, callback) ->
+  constructor: (@id) ->
     _.each(TandemCache.OPERATIONS, (fnName) =>
       this[fnName] = _.wrap(this[fnName], (fn, key, args...) =>
         fn.call(this, "#{@id}-#{key}", args...)

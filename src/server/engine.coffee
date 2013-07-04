@@ -1,8 +1,7 @@
-_                 = require('underscore')._
-async             = require('async')
-EventEmitter      = require('events').EventEmitter
-Tandem            = require('tandem-core')
-TandemMemoryCache = require('./cache/memory')
+_             = require('underscore')._
+async         = require('async')
+EventEmitter  = require('events').EventEmitter
+Tandem        = require('tandem-core')
 
 
 _atomic = (fn) ->
@@ -39,35 +38,29 @@ class EngineError extends Error
 
 
 class TandemServerEngine extends EventEmitter
-  @DEFAULTS:
-    'cache': TandemMemoryCache
-
   @events:
     UPDATE: 'update'
 
-  constructor: (fileId, @head, @version, options, callback) ->
-    @settings = _.defaults(_.pick(options, _.keys(TandemServerEngine.DEFAULTS)), TandemServerEngine.DEFAULTS)
+  constructor: (@cache, @head, @version, callback) ->
     @id = _.uniqueId('engine-')
     @locked = false
-    @cache = new @settings['cache'](fileId, (@cache) =>
-      async.waterfall([
-        (callback) =>
-          _getLoadedVersion.call(this, callback)
-        (cacheVersion, callback) =>
-          if cacheVersion == -1
-            @versionLoaded = @version
-            callback(null, [])
-          else
-            @versionLoaded = cacheVersion
-            this.getHistory(@version, callback)
-      ], (err, deltas) =>
-        unless err?
-          _.each(deltas, (delta) =>
-            @head = @head.compose(delta)
-            @version += 1
-          )
-        callback(err, this)
-      )
+    async.waterfall([
+      (callback) =>
+        _getLoadedVersion.call(this, callback)
+      (cacheVersion, callback) =>
+        if cacheVersion == -1
+          @versionLoaded = @version
+          callback(null, [])
+        else
+          @versionLoaded = cacheVersion
+          this.getHistory(@version, callback)
+    ], (err, deltas) =>
+      unless err?
+        _.each(deltas, (delta) =>
+          @head = @head.compose(delta)
+          @version += 1
+        )
+      callback(err, this)
     )
 
   getDeltaSince: (version, callback) ->

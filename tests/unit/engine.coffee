@@ -18,9 +18,8 @@ describe('Engine', ->
   engine = null
 
   before((done) ->
-    engine = new TandemServer.Engine('engine-test', TandemServer.Delta.getInitial('go'), 2, {
-      cache: TandemMemoryCache
-    }, done)
+    cache = new TandemMemoryCache('engine-test')
+    engine = new TandemServer.Engine(cache, TandemServer.Delta.getInitial('go'), 2, done)
   )
 
   it('constructor', ->

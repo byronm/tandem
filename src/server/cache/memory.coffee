@@ -5,9 +5,8 @@ TandemCache = require('./cache')
 class TandemMemoryCache extends TandemCache
   @storage: {}
 
-  constructor: (@id, callback) ->
+  constructor: (@id) ->
     super
-    callback(this)
 
   del: (key, callback) ->
     delete TandemMemoryCache.storage[key]

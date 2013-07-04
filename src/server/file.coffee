@@ -1,7 +1,8 @@
-_             = require('underscore')._
-EventEmitter  = require('events').EventEmitter
-Tandem        = require('tandem-core')
-TandemEngine  = require('./engine')
+_                 = require('underscore')._
+EventEmitter      = require('events').EventEmitter
+Tandem            = require('tandem-core')
+TandemEngine      = require('./engine')
+TandemMemoryCache = require('./cache/memory')
 
 
 initSocketListeners = (socket, userId) ->
@@ -20,7 +21,7 @@ initSocketListeners = (socket, userId) ->
     callback({}) if callback?
   ).on('disconnect', =>
     console.log 'disconnect'
-    this.removeClient(socket)
+    this.removeClient(socket, userId)
   )
 
 resync = (callback) ->
@@ -61,6 +62,7 @@ update = (socket, userId, packet, callback) ->
       version : version
     broadcastPacket['userId'] = userId
     socket.broadcast.to(@id).emit(TandemFile.routes.UPDATE, broadcastPacket)
+    @lastUpdated = Date.now()
     callback(
       fileId  : @id
       version : version
@@ -69,6 +71,9 @@ update = (socket, userId, packet, callback) ->
 
 
 class TandemFile extends EventEmitter
+  @DEFAULTS:
+    'cache': TandemMemoryCache
+
   @events:
     ERROR: 'file-error'
 
@@ -80,13 +85,16 @@ class TandemFile extends EventEmitter
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@id, initial, version, options, callback) ->   
+  constructor: (@id, initial, version, options, callback) ->
+    @settings = _.defaults(_.pick(options, _.keys(TandemFile.DEFAULTS)), TandemFile.DEFAULTS)
     @versionSaved = version
     @users = {}
-    @engine = new TandemEngine(@id, initial, version, options, (err, engine) =>
+    @cache = new @settings['cache'](@id)
+    @engine = new TandemEngine(@cache, initial, version, (err, engine) =>
       @engine = engine
       callback(err, this)
     )
+    @lastUpdated = Date.now()
 
   addClient: (socket, userId) ->
     socket.broadcast.to(@id).emit(TandemFile.routes.JOIN, userId)
@@ -94,12 +102,13 @@ class TandemFile extends EventEmitter
     @users[userId] += 1
     initSocketListeners.call(this, socket, userId)
 
+  close: (callback) ->
+    @cache.del('history', callback)
+
   removeClient: (socket, userId) ->
     socket.broadcast.to(@id).emit(TandemFile.routes.LEAVE, userId) if userId?
     socket.leave(@id)
-    if @users[userId]?
-      @users[userId] -= 1
-      delete @users[userId] if @users[userId] == 0
+    @users[userId] -= 1 if @users[userId]?
 
   getHead: ->
     return @engine.head

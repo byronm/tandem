@@ -25,7 +25,8 @@ describe('Storage', ->
         update: (fileId, head, version, deltas, callback) ->
           eventEmitter.emit('update', head, version, deltas)
           callback(null)
-      'save interval': 1000
+      'check interval': 250
+      'inactive timeout': 1000
     })
     client = new TandemClient.Client('http://localhost:9090')
   )

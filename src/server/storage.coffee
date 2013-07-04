@@ -6,7 +6,24 @@ Tandem        = require('tandem-core')
 TandemFile    = require('./file')
 
 
-save = (file, callback = ->) ->
+_check = ->
+  _.each(@files, (file, id) =>
+    return if !file? or _.isArray(file)
+    usersConnected = _.any(file.users, (online, userId) -> return online > 0 )
+    if !usersConnected or file.lastUpdated + @settings['inactive timeout'] < Date.now()
+      _save.call(this, file, (err) =>
+        return file.emit(TandemFile.events.ERROR, err) if err?
+        _close.call(this, file) if !usersConnected
+      )
+  )
+
+_close = (file) ->
+  file.close((err) =>
+    return file.emit(TandemFile.events.ERROR, err) if err?
+    delete @files[file.id]
+  )
+
+_save = (file, callback) ->
   return callback(null) if !file.isDirty()
   version = file.getVersion()
   head = file.getHead()
@@ -25,19 +42,15 @@ save = (file, callback = ->) ->
 
 class TandemStorage
   @DEFAULTS:
-    'save interval': 10000
+    'check interval'   : 1000 * 60
+    'inactive timeout' : 1000 * 60 * 15
 
   constructor: (@storage, @options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemStorage.DEFAULTS)), TandemStorage.DEFAULTS)
     @files = {}
     setInterval( =>
-      _.each(@files, (file, id) =>
-        return if !file? or _.isArray(file)
-        save.call(this, file, (err) =>
-          file.emit(TandemFile.events.ERROR, err) if err?
-        )
-      )
-    , @settings['save interval'])
+      _check.call(this)
+    , @settings['check interval'])
 
   authorize: (authPacket, callback) ->
     return callback(null) unless @storage?
