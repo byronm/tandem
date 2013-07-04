@@ -32,10 +32,10 @@ describe('Connection', ->
     file.on(TandemClient.File.events.READY, ->
       expect(file.health).to.equal(TandemClient.File.health.HEALTHY)
       client.adapter.socket.disconnect()
-      _.defer( =>
+      setTimeout( =>
         expect(server.storage.files['disconnect-test'].users[client.settings.userId]).to.equal(0)
         done()
-      )
+      , 100)
     )
   )
 )

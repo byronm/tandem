@@ -16,8 +16,7 @@ class TandemMemoryCache extends TandemCache
     callback(null, TandemMemoryCache.storage[key])
 
   push: (key, value, callback) ->
-    unless _.isArray(TandemMemoryCache.storage[key])
-      TandemMemoryCache.storage[key] = []
+    TandemMemoryCache.storage[key] ?= []
     TandemMemoryCache.storage[key].push(value)
     callback(null, TandemMemoryCache.storage[key].length)
 
