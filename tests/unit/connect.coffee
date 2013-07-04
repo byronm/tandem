@@ -27,21 +27,15 @@ describe('Connection', ->
     )
   )
 
-  return
   it('should detect disconnect', (done) ->
     file = client.open('disconnect-test')
     file.on(TandemClient.File.events.READY, ->
       expect(file.health).to.equal(TandemClient.File.health.HEALTHY)
-      server.network.on(TandemServer.Network.events.DISCONNECT, (client) =>
-        expect(client).to.exist
-        client.get('metadata', (err, metadata) =>
-          expect(err).to.not.exist
-          expect(metadata.fileId).to.equal('disconnect-test')
-          done()
-        )
-      )
-      console.log('switch')
       client.adapter.socket.disconnect()
+      _.defer( =>
+        expect(server.storage.files['disconnect-test'].users[client.settings.userId]).to.equal(0)
+        done()
+      )
     )
   )
 )

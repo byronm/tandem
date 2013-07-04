@@ -20,7 +20,6 @@ initSocketListeners = (socket, userId) ->
     socket.broadcast.to(@id).emit(TandemFile.routes.BROADCAST, packet)
     callback({}) if callback?
   ).on('disconnect', =>
-    console.log 'disconnect'
     this.removeClient(socket, userId)
   )
 
