@@ -1,4 +1,5 @@
 _             = require('underscore')._
+async         = require('async')
 socketio      = require('socket.io')
 EventEmitter  = require('events').EventEmitter
 
