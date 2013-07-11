@@ -31,14 +31,16 @@ module.exports = (grunt) ->
           ' *  Jason Chen, Salesforce.com\n' +
           ' *  Byron Milligan, Salesforce.com\n' + 
           ' */\n\n'
-      'build/tandem.js': ['build/tandem.js'],
       'build/tandem.all.js': [
         'node_modules/async/lib/async.js'
         'node_modules/socket.io-client/dist/socket.io.js'
         'node_modules/underscore/underscore.js'
         'vendor/assets/javascripts/eventemitter2.js'
+        'src/ext/header.js'
         'build/tandem.js'
+        'src/ext/footer.js'
       ]
+      'build/tandem.js': ['build/tandem.js']
 
     watch:
       files: ['src/client/*.coffee', 'node_modules/tandem-core/src/*']
