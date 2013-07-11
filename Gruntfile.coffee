@@ -1,7 +1,7 @@
 module.exports = (grunt) ->
 
   grunt.loadNpmTasks('grunt-coffeeify')
-  grunt.loadNpmTasks 'grunt-contrib-coffee'
+  grunt.loadNpmTasks('grunt-contrib-coffee')
   grunt.loadNpmTasks('grunt-contrib-concat')
   grunt.loadNpmTasks('grunt-contrib-watch')
 
@@ -18,6 +18,7 @@ module.exports = (grunt) ->
 
     coffeeify: 
       options:
+        extensions: ['.js', '.coffee']
         requires: ['tandem-core/delta.js']
       files:
         { dest: 'build/tandem.js', src: ['browser.js'] }
