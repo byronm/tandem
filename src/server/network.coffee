@@ -37,10 +37,11 @@ class TandemNetwork extends EventEmitter
   @events:
     CONNECT : 'network-connect'
     ERROR   : 'network-error'
+  events: TandemNetwork.events
 
-  constructor: (server, @storage, options = {}) ->
+  constructor: (tandemServer, httpServer, @storage, options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemNetwork.DEFAULTS)), TandemNetwork.DEFAULTS)
-    _initNetwork.call(this, server)
+    _initNetwork.call(this, httpServer)
 
 
 module.exports = TandemNetwork

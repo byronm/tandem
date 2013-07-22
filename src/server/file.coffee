@@ -36,7 +36,7 @@ sync = (socket, userId, packet, callback) ->
     if err?
       err.fileId = @id
       err.userId = userId
-      this.emit(TandemFile.events.ERROR, err)
+      @server.emit(@server.events.ERROR, err)
       return resync.call(this, callback)
     socket.join(@id)
     callback(
@@ -53,7 +53,7 @@ update = (socket, userId, packet, callback) ->
     if err?
       err.fileId = @id
       err.userId = userId
-      this.emit(TandemFile.events.ERROR, err)
+      @server.emit(@server.events.ERROR, err)
       return resync.call(this, callback)
     broadcastPacket =
       delta   : delta
@@ -73,9 +73,6 @@ class TandemFile extends EventEmitter
   @DEFAULTS:
     'cache': TandemMemoryCache
 
-  @events:
-    ERROR: 'file-error'
-
   @routes:
     BROADCAST : 'broadcast'
     JOIN      : 'user/join'
@@ -83,8 +80,9 @@ class TandemFile extends EventEmitter
     RESYNC    : 'ot/resync'
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
+  routes: TandemFile.routes
 
-  constructor: (@id, initial, version, options, callback) ->
+  constructor: (@server, @id, initial, version, options, callback) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemFile.DEFAULTS)), TandemFile.DEFAULTS)
     @versionSaved = version
     @users = {}
@@ -97,6 +95,7 @@ class TandemFile extends EventEmitter
 
   addClient: (socket, userId) ->
     socket.broadcast.to(@id).emit(TandemFile.routes.JOIN, userId)
+    @server.emit(@server.events.JOIN, this, userId)
     @users[userId] ?= 0
     @users[userId] += 1
     initSocketListeners.call(this, socket, userId)
@@ -106,6 +105,7 @@ class TandemFile extends EventEmitter
 
   removeClient: (socket, userId) ->
     socket.broadcast.to(@id).emit(TandemFile.routes.LEAVE, userId) if userId?
+    @server.emit(@server.events.LEAVE, this, userId)
     socket.leave(@id)
     @users[userId] -= 1 if @users[userId]?
 

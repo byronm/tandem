@@ -12,7 +12,7 @@ _check = (force = false, done = ->) ->
     usersConnected = _.any(file.users, (online, userId) -> return online > 0 )
     if force or !usersConnected or file.lastUpdated + @settings['inactive timeout'] < Date.now()
       _save.call(this, file, (err) =>
-        return file.emit(TandemFile.events.ERROR, err) if err?
+        return @server.emit(@server.events.ERROR, err) if err?
         if usersConnected and !force
           callback(null)
         else
@@ -26,8 +26,10 @@ _check = (force = false, done = ->) ->
 
 _close = (file, callback) ->
   file.close((err) =>
-    return file.emit(TandemFile.events.ERROR, err) if err?
-    delete @files[file.id]
+    if err?
+      @server.emit(@server.events.ERROR, err)
+    else
+      delete @files[file.id]
     callback(err)
   )
 
@@ -53,15 +55,15 @@ class TandemStorage
     'check interval'   : 1000 * 60
     'inactive timeout' : 1000 * 60 * 15
 
-  constructor: (@storage, @options = {}) ->
+  constructor: (@server, @storage, @options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemStorage.DEFAULTS)), TandemStorage.DEFAULTS)
     @files = {}
     setInterval( =>
       _check.call(this)
     , @settings['check interval'])
     process.on('SIGTERM', =>
-      _check.call(this, true, (err) ->
-        file.emit(TandemFile.events.ERROR, err) if err?
+      _check.call(this, true, (err) =>
+        @server.emit(@server.events.ERROR, err) if err?
         process.exit(if err? then 1 else 0) 
       )
     )
@@ -85,7 +87,7 @@ class TandemStorage
           else
             callback(null, Tandem.Delta.getInitial(''), 0)
         (head, version, callback) =>
-          new TandemFile(id, head, version, @options, callback)
+          new TandemFile(@server, id, head, version, @options, callback)
       ], (err, file) =>
         callbacks = @files[id]
         @files[id] = if err? then undefined else file
@@ -94,6 +96,5 @@ class TandemStorage
         )
       )
       
-
 
 module.exports = TandemStorage
