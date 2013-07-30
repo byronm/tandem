@@ -3,7 +3,7 @@ authenticate = ->
     auth: @authObj
     fileId: @fileId
     userId: @userId
-  info "Attempting auth to", @fileId, authPacket if @settings.debug
+  info.call(this, "Attempting auth to", @fileId, authPacket)
   @socket.emit('auth', authPacket, (response) =>
     unless response.error?
       info.call(this, "Connected!", response)
