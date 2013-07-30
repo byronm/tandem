@@ -3,10 +3,10 @@ authenticate = ->
     auth: @authObj
     fileId: @fileId
     userId: @userId
-  console.info "Attempting auth to", @fileId, authPacket if @settings.debug
+  info "Attempting auth to", @fileId, authPacket if @settings.debug
   @socket.emit('auth', authPacket, (response) =>
     unless response.error?
-      console.info "Connected!", response if @settings.debug
+      info.call(this, "Connected!", response)
       setReady.call(this) if @ready == false
     else
       this.emit(TandemNetworkAdapter.events.ERROR, response.error)
@@ -18,12 +18,16 @@ doSend = (route, packet, callback) ->
     if callback?
       @socket.emit(route, packet, (response) =>
         track.call(this, TandemNetworkAdapter.CALLBACK, route, response)
-        console.info 'Callback:', response if @settings.debug
+        info.call(this, 'Callback:', response)
         callback.call(this, response)
       )
     else
       @socket.emit(route, packet)
   , @settings.latency)
+
+info = (args...) ->
+  return unless @settings.debug
+  console.info(args...) if console?.info?
 
 setReady = ->
   this.emit(TandemNetworkAdapter.events.READY)
@@ -32,7 +36,7 @@ setReady = ->
   , (callback) =>
     elem = @sendQueue.shift()
     [route, packet, sendCallback] = elem
-    console.info "Sending from queue:", route, packet if @settings.debug
+    info.call(this, "Sending from queue:", route, packet)
     doSend.call(this, route, packet, (args...) =>
       sendCallback.apply(this, args) if sendCallback?
       callback()
@@ -118,8 +122,8 @@ class TandemNetworkAdapter extends EventEmitter2
     if _.indexOf(_.values(TandemNetworkAdapter.events), route) > -1
       super
     else
-      onSocketCallback = (packet) =>   
-        console.info "Got", route, packet if @settings.debug
+      onSocketCallback = (packet) =>
+        info.call(this, "Got", route, packet)
         track.call(this, TandemNetworkAdapter.RECIEVE, route, packet)
         callback.call(this, packet) if callback?
       @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?
@@ -129,10 +133,10 @@ class TandemNetworkAdapter extends EventEmitter2
 
   send: (route, packet, callback, priority = false) ->
     if @ready
-      console.info "Sending:", route, packet if @settings.debug
+      info.call(this, "Sending:", route, packet)
       doSend.call(this, route, packet, callback)
     else
-      console.info "Queued:", route, packet if @settings.debug
+      info.call(this, "Queued:", route, packet)
       if priority
         @sendQueue.unshift([route, packet, callback])
       else

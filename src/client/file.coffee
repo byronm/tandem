@@ -3,13 +3,17 @@ TandemEngine = require('./engine')
 TandemNetworkAdapter = require('./network')
 
 
+warn = (args...) ->
+  console.warn(args...) if console?.warn?
+
+
 initAdapterListeners = ->
   @adapter.on(TandemFile.routes.UPDATE, (packet) =>
     if packet.fileId != @fileId
-      console.warn "Got update for other file", packet.fileId
+      warn("Got update for other file", packet.fileId)
     else
       unless @engine.remoteUpdate(packet.delta, packet.version)
-        console.warn "Remote update failed, requesting resync"
+        warn("Remote update failed, requesting resync")
         resync.call(this)
   ).on(TandemFile.routes.BROADCAST, (packet) =>
     type = packet.type
@@ -36,8 +40,8 @@ initEngineListeners = ->
   @engine.on(TandemEngine.events.UPDATE, (delta) =>
     this.emit(TandemFile.events.UPDATE, delta)
   ).on(TandemEngine.events.ERROR, (args...) =>
-    this.emit(TandemFile.events.ERROR, this, args)
-    console.warn "Engine error, attempting resync", @id, args
+    this.emit(TandemFile.events.ERROR, this, args...)
+    warn("Engine error, attempting resync", @id, args...)
     resync.call(this)
   )
 
@@ -75,14 +79,14 @@ resync = (callback) ->
 sendUpdate = (delta, version, callback) ->
   packet = { delta: delta, version: version }
   updateTimeout = setTimeout( =>
-    console.warn 'Update taking over 10s to respond'
+    warn('Update taking over 10s to respond')
     this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
   , 10000)
   this.send(TandemFile.routes.UPDATE, packet, (response) =>
     clearTimeout(updateTimeout)
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health) unless @health == TandemFile.health.HEALTHY
     if response.resync
-      console.warn "Update requesting resync", @id, packet, response
+      warn("Update requesting resync", @id, packet, response)
       delta = Delta.makeDelta(response.head)
       @engine.resync(delta, response.version)
       sendUpdate.call(this, @engine.inFlight, @engine.version, callback)
@@ -101,12 +105,12 @@ sync = ->
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     syncUsers.call(this, response.users)
     if response.resync
-      console.warn "Sync requesting resync"
+      warn("Sync requesting resync")
       @engine.resync(Delta.makeDelta(response.head), response.version)
     else if @engine.remoteUpdate(response.delta, response.version)
       setReady.call(this, response.delta, response.version, response.users, false)
     else
-      console.warn "Remote update failed on sync, requesting resync"
+      warn("Remote update failed on sync, requesting resync")
       resync.call(this, =>
         setReady.call(this, response.delta, response.version, response.users, true)
       )
