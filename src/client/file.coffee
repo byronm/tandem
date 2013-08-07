@@ -4,7 +4,11 @@ TandemNetworkAdapter = require('./network')
 
 
 warn = (args...) ->
-  console.warn(args...) if console?.warn?
+  return unless console?.warn?
+  if _.isFunction(console.warn.apply)
+    console.warn(args...)
+  else
+    console.warn(args)
 
 
 initAdapterListeners = ->

@@ -27,7 +27,11 @@ doSend = (route, packet, callback) ->
 
 info = (args...) ->
   return unless @settings.debug
-  console.info(args...) if console?.info?
+  return unless console?.info?
+  if _.isFunction(console.info.apply)
+    console.info(args...)
+  else
+    console.info(args)
 
 setReady = ->
   this.emit(TandemNetworkAdapter.events.READY)
