@@ -6,8 +6,8 @@
     "commander"   : "1.1.x",
     "request"     : "2.12.x",
     "socket.io"   : "0.9.x",
-    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.4.1",
-    "underscore"  : "1.4.x"
+    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.4.2",
+    "underscore"  : "1.5.x"
   },
   "devDependencies": {
     "chai"                 : "1.6.x",
