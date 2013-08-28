@@ -1,0 +1,25 @@
+<html>
+  <script src="./engine.io.js"></script>
+  <script>
+    var socket = new eio.Socket('ws://localhost:1700');
+    socket.on('open', function () {
+      socket.send(JSON.stringify({ userId: '1234', fileId: '6789' }));
+
+      socket.once('message', function (data) {
+        console.log("Auth response: ", data);
+        socket.send(JSON.stringify(
+          {event: 'test',
+           data: { userId: '1234',
+           fileId: '6789' }}));
+      });
+
+      socket.on('message', function (data) {
+        console.log("Message event fired with: " + data);
+      });
+
+      socket.on('close', function (reason) {
+        console.log('goodbye: ' + reason);
+      });
+    });
+  </script>
+</html>
