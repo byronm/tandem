@@ -23,12 +23,12 @@ module.exports = (grunt) ->
         ext: '.js'
 
     browserify: 
-      options:
-        extensions: ['.js', '.coffee']
-        transform: ['coffeeify']
       client:
-        standalone: 'tandem-client'
-        files: [{ dest: 'build/client.js', src: ['src/client/tandem.coffee'] }]
+        options:
+          extensions: ['.js', '.coffee']
+          standalone: 'Tandem'
+          transform: ['coffeeify']
+        files: [{ dest: 'build/tandem.js', src: ['browser.js'] }]
 
     concat:
       options:
@@ -39,14 +39,14 @@ module.exports = (grunt) ->
           ' *  Jason Chen, Salesforce.com\n' +
           ' *  Byron Milligan, Salesforce.com\n' + 
           ' */\n\n'
-      'build/client.all.js': [
+      'build/tandem.all.js': [
         'node_modules/async/lib/async.js'
         'node_modules/socket.io-client/dist/socket.io.js'
         'node_modules/underscore/underscore.js'
         'vendor/assets/javascripts/eventemitter2.js'
-        'build/client.js'
+        'build/tandem.js'
       ]
-      'build/client.js': ['build/client.js']
+      'build/tandem.js': ['build/tandem.js']
 
     watch:
       files: ['src/**/*.coffee']
