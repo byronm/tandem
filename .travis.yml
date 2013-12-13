@@ -5,6 +5,15 @@ before_script:
 - grunt
 branches:
   only:
-    - master
-    - develop
-    - /^v\d+\.\d+\.\d+$/
+  - master
+  - develop
+  - /^v\d+\.\d+\.\d+$/
+deploy:
+  provider: npm
+  email: jhchen7@gmail.com
+  api_key:
+    secure: BcyggfPX/F/V/lQmBlvuj0yXSCt+RId8lczjhrtRMQqCL4uHeC583saqpxZEjQcUEdfoAiVX/6vfFdXhRWVU5/lar3bkJWD8cAYID09Tx1vfCGyHdnYPO1mPG91J6HzAeOybb6ibh2bue+lP8lkuw+R/JpVqWCcAJn2K6TXOTqE=
+  on:
+    tags: true
+    repo: stypi/tandem
+    branch: develop
