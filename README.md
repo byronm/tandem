@@ -88,6 +88,5 @@ All other files/directories are just supporting npm/bundler, build, or documenta
 Until we write a script, version numbers will have to be updated in the following files:
 
 - lib/tandem/version.rb
-- Gruntfile.coffee
 - package.json
 - demo/package.json
