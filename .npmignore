@@ -1,8 +1,12 @@
-build
 demo
 lib
 node_modules
+src
 tests
 vendor
 tandem-rails.gemspec
-coverage.html
+browser.js
+client.coffee
+Gruntfile.coffee
+Makefile
+.travis.yml
