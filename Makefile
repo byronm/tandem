@@ -11,15 +11,3 @@ fuzzer:
 
 test:
 	@./node_modules/.bin/mocha tests/unit/*.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
-
-test-connect:
-	@./node_modules/.bin/mocha tests/unit/connect.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
-
-test-engine:
-	@./node_modules/.bin/mocha tests/unit/engine.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
-
-test-message:
-	@./node_modules/.bin/mocha tests/unit/message.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
-
-test-storage:
-	@./node_modules/.bin/mocha tests/unit/storage.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
