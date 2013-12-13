@@ -1,8 +1,14 @@
+WARNING
+===
+
+Please do not publicize this repository in any way. There are a few known documentation gaps and other issues we wish to address before publication. Thank you for your patience.
+
 Tandem Realtime Coauthoring Engine
 ===
 
 This repository is also both a Rails gem and a Node.js module.
 
+[![Build Status](https://secure.travis-ci.org/stypi/tandem.png?branch=master)](http://travis-ci.org/stypi/tandem)
 
 How to Use
 ---
