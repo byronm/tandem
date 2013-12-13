@@ -6,7 +6,7 @@
     "commander"   : "1.1.x",
     "request"     : "2.12.x",
     "socket.io"   : "0.9.x",
-    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.4.7",
+    "tandem-core" : "0.4.x",
     "underscore"  : "1.5.x"
   },
   "devDependencies": {
@@ -29,7 +29,18 @@
   "engines": {
     "node": ">=0.8"
   },
+  "license": {
+    "type": "BSD",
+    "url": "https://github.com/stypi/tandem/blob/master/LICENSE"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stypi/tandem"
+  },
   "scripts": {
     "test": "make test"
+  },
+  "bugs": {
+    "url": "https://github.com/stypi/tandem/issues"
   }
 }
