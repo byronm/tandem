@@ -1,1 +1,1 @@
-module.exports = require('./src/server/tandem');
+module.exports = require('./build/server/tandem');

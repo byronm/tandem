@@ -6,17 +6,20 @@
     "commander"   : "1.1.x",
     "request"     : "2.12.x",
     "socket.io"   : "0.9.x",
-    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#v0.4.2",
+    "tandem-core" : "git+ssh://git@github.com:stypi/tandem-core.git#master",
     "underscore"  : "1.5.x"
   },
   "devDependencies": {
     "chai"                 : "1.6.x",
     "coffee-script"        : "1.6.x",
+    "coffeeify"            : "0.5.x",
     "grunt"                : "0.4.x",
-    "grunt-coffeeify"      : "git+ssh://git@github.com:stypi/grunt-coffeeify.git#master",
+    "grunt-browserify"     : "1.2.x",
+    "grunt-contrib-clean"  : "0.5.x",
     "grunt-contrib-coffee" : "0.7.x",
     "grunt-contrib-concat" : "0.1.x",
     "grunt-contrib-watch"  : "0.3.x",
+    "istanbul"             : "0.1.x",
     "jade"                 : "0.30.x",
     "mocha"                : "1.9.x",
     "socket.io-client"     : "0.9.x"

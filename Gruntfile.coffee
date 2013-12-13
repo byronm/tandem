@@ -1,27 +1,34 @@
+pkgJson = require('./package.json')
+
 module.exports = (grunt) ->
 
-  grunt.loadNpmTasks('grunt-coffeeify')
+  grunt.loadNpmTasks('grunt-browserify')
+  grunt.loadNpmTasks('grunt-contrib-clean')
   grunt.loadNpmTasks('grunt-contrib-coffee')
   grunt.loadNpmTasks('grunt-contrib-concat')
   grunt.loadNpmTasks('grunt-contrib-watch')
 
   grunt.initConfig(
     meta:
-      version: '0.11.5'
+      version: pkgJson.version
+
+    clean: ['build']
 
     coffee:
-      tests:
+      src:
+        cwd: 'src/'
         expand: true
         dest: 'build/'
-        src: ['tests/client/*.coffee']
+        src: ['server/**/*.coffee']
         ext: '.js'
 
-    coffeeify: 
+    browserify: 
       options:
         extensions: ['.js', '.coffee']
-        requires: ['tandem-core/delta.js']
-      files:
-        { dest: 'build/tandem.js', src: ['browser.js'] }
+        transform: ['coffeeify']
+      client:
+        standalone: 'tandem-client'
+        files: [{ dest: 'build/client.js', src: ['src/client/tandem.coffee'] }]
 
     concat:
       options:
@@ -32,20 +39,18 @@ module.exports = (grunt) ->
           ' *  Jason Chen, Salesforce.com\n' +
           ' *  Byron Milligan, Salesforce.com\n' + 
           ' */\n\n'
-      'build/tandem.all.js': [
+      'build/client.all.js': [
         'node_modules/async/lib/async.js'
         'node_modules/socket.io-client/dist/socket.io.js'
         'node_modules/underscore/underscore.js'
         'vendor/assets/javascripts/eventemitter2.js'
-        'src/ext/header.js'
-        'build/tandem.js'
-        'src/ext/footer.js'
+        'build/client.js'
       ]
-      'build/tandem.js': ['build/tandem.js']
+      'build/client.js': ['build/client.js']
 
     watch:
-      files: ['src/client/*.coffee', 'node_modules/tandem-core/src/*']
+      files: ['src/**/*.coffee']
       tasks: ['default']
   )
 
-  grunt.registerTask('default', ['coffee', 'coffeeify', 'concat'])
+  grunt.registerTask('default', ['clean', 'coffee', 'browserify', 'concat'])

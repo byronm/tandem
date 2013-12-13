@@ -53,9 +53,9 @@ We use mocha as our testing framework. To run the unit tests, simply:
     
     make test
 
-To run our coverage tool, install [node-jscoverage](https://github.com/visionmedia/node-jscoverage) and run
+To run our coverage tool:
 
-    make coverage
+    make cov
 
 
 Project Organization
@@ -76,7 +76,7 @@ All other files/directories are just supporting npm/bundler, build, or documenta
     tests - unit tests
     vendor/assets/javascripts/tandem - symlinks to src with .module added before extension
     browser.js - npm
-    client.js - enable node.js to require src/client, used by unit tests
+    client.coffee - enable node.js to require src/client, used by unit tests
     Gruntfile.coffee - grunt configs
     index.js - npm
     Makefile - define make commands
