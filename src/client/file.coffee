@@ -1,6 +1,5 @@
-Delta = require('tandem-core/delta')
-TandemEngine = require('./engine')
-TandemNetworkAdapter = require('./network')
+Delta         = require('tandem-core/delta')
+TandemEngine  = require('./engine')
 
 
 warn = (args...) ->
@@ -9,7 +8,6 @@ warn = (args...) ->
     console.warn(args...)
   else
     console.warn(args)
-
 
 initAdapterListeners = ->
   @adapter.on(TandemFile.routes.UPDATE, (packet) =>
@@ -50,16 +48,16 @@ initEngineListeners = ->
   )
 
 initHealthListeners = ->
-  @adapter.on(TandemNetworkAdapter.events.READY, =>
+  @adapter.on(@adapter.constructor.events.READY, =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     sync.call(this)
-  ).on(TandemNetworkAdapter.events.RECONNECT, (transport, attempts) =>
+  ).on(@adapter.constructor.events.RECONNECT, (transport, attempts) =>
     sync.call(this)
-  ).on(TandemNetworkAdapter.events.RECONNECTING, (timeout, attempts) =>
+  ).on(@adapter.constructor.events.RECONNECTING, (timeout, attempts) =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health) if attempts == 1
-  ).on(TandemNetworkAdapter.events.DISCONNECT, =>
+  ).on(@adapter.constructor.events.DISCONNECT, =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health)
-  ).on(TandemNetworkAdapter.events.ERROR, (args...) =>
+  ).on(@adapter.constructor.events.ERROR, (args...) =>
     this.emit(TandemFile.events.ERROR, args...)
     this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health)
   )

@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.11.6 - 2013-12-13
+/*! Tandem Realtime Coauthoring Engine - v0.11.6 - 2013-12-14
  *  https://www.stypi.com/
  *  Copyright (c) 2013
  *  Jason Chen, Salesforce.com
@@ -6672,15 +6672,18 @@ if (typeof define === "function" && define.amd) {
 
 }(typeof process !== 'undefined' && typeof process.title !== 'undefined' && typeof exports !== 'undefined' ? exports : window);
 !function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.Tandem=e():"undefined"!=typeof global?global.Tandem=e():"undefined"!=typeof self&&(self.Tandem=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-Tandem                 = require('tandem-core');
-Tandem.Client          = require('./src/client/tandem');
-Tandem.Engine          = require('./src/client/engine');
-Tandem.File            = require('./src/client/file');
-Tandem.NetworkAdapter  = require('./src/client/network');
+Tandem         = require('tandem-core');
+Tandem.Client  = require('./src/client/tandem');
+Tandem.Engine  = require('./src/client/engine');
+Tandem.File    = require('./src/client/file');
+Tandem.Network = {
+  Adapter : require('./src/client/network/adapter'),
+  Socket  : require('./src/client/network/socket')
+};
 
 module.exports = Tandem
 
-},{"./src/client/engine":14,"./src/client/file":15,"./src/client/network":16,"./src/client/tandem":17,"tandem-core":10}],2:[function(require,module,exports){
+},{"./src/client/engine":14,"./src/client/file":15,"./src/client/network/adapter":16,"./src/client/network/socket":17,"./src/client/tandem":18,"tandem-core":10}],2:[function(require,module,exports){
 (function() {
   var Delta, InsertOp, Op, RetainOp, diff_match_patch, dmp, _;
 
@@ -11452,7 +11455,7 @@ module.exports = ClientEngine;
 
 
 },{"tandem-core/delta":9}],15:[function(require,module,exports){
-var Delta, TandemEngine, TandemFile, TandemNetworkAdapter, initAdapterListeners, initEngine, initEngineListeners, initHealthListeners, initListeners, resync, sendUpdate, setReady, sync, syncUsers, warn,
+var Delta, TandemEngine, TandemFile, initAdapterListeners, initEngine, initEngineListeners, initHealthListeners, initListeners, resync, sendUpdate, setReady, sync, syncUsers, warn,
   __slice = [].slice,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
@@ -11461,8 +11464,6 @@ var Delta, TandemEngine, TandemFile, TandemNetworkAdapter, initAdapterListeners,
 Delta = require('tandem-core/delta');
 
 TandemEngine = require('./engine');
-
-TandemNetworkAdapter = require('./network');
 
 warn = function() {
   var args;
@@ -11535,18 +11536,18 @@ initEngineListeners = function() {
 
 initHealthListeners = function() {
   var _this = this;
-  this.adapter.on(TandemNetworkAdapter.events.READY, function() {
+  this.adapter.on(this.adapter.constructor.events.READY, function() {
     _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
     return sync.call(_this);
-  }).on(TandemNetworkAdapter.events.RECONNECT, function(transport, attempts) {
+  }).on(this.adapter.constructor.events.RECONNECT, function(transport, attempts) {
     return sync.call(_this);
-  }).on(TandemNetworkAdapter.events.RECONNECTING, function(timeout, attempts) {
+  }).on(this.adapter.constructor.events.RECONNECTING, function(timeout, attempts) {
     if (attempts === 1) {
       return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
     }
-  }).on(TandemNetworkAdapter.events.DISCONNECT, function() {
+  }).on(this.adapter.constructor.events.DISCONNECT, function() {
     return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
-  }).on(TandemNetworkAdapter.events.ERROR, function() {
+  }).on(this.adapter.constructor.events.ERROR, function() {
     var args;
     args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
     _this.emit.apply(_this, [TandemFile.events.ERROR].concat(__slice.call(args)));
@@ -11742,11 +11743,87 @@ TandemFile = (function(_super) {
 module.exports = TandemFile;
 
 
-},{"./engine":14,"./network":16,"tandem-core/delta":9}],16:[function(require,module,exports){
-var TandemNetworkAdapter, authenticate, doSend, info, setReady, track,
+},{"./engine":14,"tandem-core/delta":9}],16:[function(require,module,exports){
+var TandemNetworkAdapter,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  __slice = [].slice;
+
+TandemNetworkAdapter = (function(_super) {
+  __extends(TandemNetworkAdapter, _super);
+
+  TandemNetworkAdapter.events = {
+    DISCONNECT: 'adapter-disconnect',
+    ERROR: 'adapter-error',
+    READY: 'adapter-ready',
+    RECONNECT: 'adapter-reconnect',
+    RECONNECTING: 'adapter-reconnecting'
+  };
+
+  function TandemNetworkAdapter() {
+    this.ready = false;
+    this.sendQueue = [];
+  }
+
+  TandemNetworkAdapter.prototype.close = function() {
+    return this.removeAllListeners();
+  };
+
+  TandemNetworkAdapter.prototype.send = function(route, packet, callback, priority) {
+    if (priority == null) {
+      priority = false;
+    }
+    if (this.ready) {
+      return this._send(route, packet, callback, priority);
+    } else {
+      if (priority) {
+        return this.sendQueue.unshift([route, packet, callback]);
+      } else {
+        return this.sendQueue.push([route, packet, callback]);
+      }
+    }
+  };
+
+  TandemNetworkAdapter.prototype.setReady = function() {
+    var _this = this;
+    this.emit(TandemNetworkAdapter.events.READY);
+    return async.until(function() {
+      return _this.sendQueue.length === 0;
+    }, function(callback) {
+      var elem, packet, route, sendCallback;
+      elem = _this.sendQueue.shift();
+      route = elem[0], packet = elem[1], sendCallback = elem[2];
+      return _this._send(route, packet, function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        if (sendCallback != null) {
+          sendCallback.apply(_this, args);
+        }
+        return callback();
+      });
+    }, function(err) {
+      return _this.ready = true;
+    });
+  };
+
+  TandemNetworkAdapter.prototype._send = function(route, packet, callback) {
+    return console.warn("Should be overwritten by descendant");
+  };
+
+  return TandemNetworkAdapter;
+
+})(EventEmitter2);
+
+module.exports = TandemNetworkAdapter;
+
+
+},{}],17:[function(require,module,exports){
+var TandemAdapter, TandemSocketAdapter, authenticate, info, track,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+TandemAdapter = require('./adapter');
 
 authenticate = function() {
   var authPacket,
@@ -11761,28 +11838,12 @@ authenticate = function() {
     if (response.error == null) {
       info.call(_this, "Connected!", response);
       if (_this.ready === false) {
-        return setReady.call(_this);
+        return _this.setReady();
       }
     } else {
-      return _this.emit(TandemNetworkAdapter.events.ERROR, response.error);
+      return _this.emit(TandemAdapter.events.ERROR, response.error);
     }
   });
-};
-
-doSend = function(route, packet, callback) {
-  var _this = this;
-  track.call(this, TandemNetworkAdapter.SEND, route, packet);
-  return setTimeout(function() {
-    if (callback != null) {
-      return _this.socket.emit(route, packet, function(response) {
-        track.call(_this, TandemNetworkAdapter.CALLBACK, route, response);
-        info.call(_this, 'Callback:', response);
-        return callback.call(_this, response);
-      });
-    } else {
-      return _this.socket.emit(route, packet);
-    }
-  }, this.settings.latency);
 };
 
 info = function() {
@@ -11801,29 +11862,6 @@ info = function() {
   }
 };
 
-setReady = function() {
-  var _this = this;
-  this.emit(TandemNetworkAdapter.events.READY);
-  return async.until(function() {
-    return _this.sendQueue.length === 0;
-  }, function(callback) {
-    var elem, packet, route, sendCallback;
-    elem = _this.sendQueue.shift();
-    route = elem[0], packet = elem[1], sendCallback = elem[2];
-    info.call(_this, "Sending from queue:", route, packet);
-    return doSend.call(_this, route, packet, function() {
-      var args;
-      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      if (sendCallback != null) {
-        sendCallback.apply(_this, args);
-      }
-      return callback();
-    });
-  }, function(err) {
-    return _this.ready = true;
-  });
-};
-
 track = function(type, route, packet) {
   if (this.stats[type] == null) {
     this.stats[type] = {};
@@ -11834,29 +11872,21 @@ track = function(type, route, packet) {
   return this.stats[type][route] += 1;
 };
 
-TandemNetworkAdapter = (function(_super) {
-  __extends(TandemNetworkAdapter, _super);
+TandemSocketAdapter = (function(_super) {
+  __extends(TandemSocketAdapter, _super);
 
-  TandemNetworkAdapter.events = {
-    DISCONNECT: 'adapter-disconnect',
-    ERROR: 'adapter-error',
-    READY: 'adapter-ready',
-    RECONNECT: 'adapter-reconnect',
-    RECONNECTING: 'adapter-reconnecting'
-  };
+  TandemSocketAdapter.CALLBACK = 'callback';
 
-  TandemNetworkAdapter.CALLBACK = 'callback';
+  TandemSocketAdapter.RECIEVE = 'recieve';
 
-  TandemNetworkAdapter.RECIEVE = 'recieve';
+  TandemSocketAdapter.SEND = 'send';
 
-  TandemNetworkAdapter.SEND = 'send';
-
-  TandemNetworkAdapter.DEFAULTS = {
+  TandemSocketAdapter.DEFAULTS = {
     debug: false,
     latency: 0
   };
 
-  TandemNetworkAdapter.IO_DEFAULTS = {
+  TandemSocketAdapter.IO_DEFAULTS = {
     'force new connection': true,
     'max reconnection attempts': Infinity,
     'port': 80,
@@ -11864,7 +11894,7 @@ TandemNetworkAdapter = (function(_super) {
     'sync disconnect on unload': false
   };
 
-  TandemNetworkAdapter.parseUrl = function(url) {
+  TandemSocketAdapter.parseUrl = function(url) {
     var a, protocol, ret;
     a = document.createElement('a');
     a.href = url;
@@ -11879,7 +11909,7 @@ TandemNetworkAdapter = (function(_super) {
     return ret;
   };
 
-  function TandemNetworkAdapter(endpointUrl, fileId, userId, authObj, options) {
+  function TandemSocketAdapter(endpointUrl, fileId, userId, authObj, options) {
     var socketOptions, url,
       _this = this;
     this.fileId = fileId;
@@ -11888,19 +11918,18 @@ TandemNetworkAdapter = (function(_super) {
     if (options == null) {
       options = {};
     }
-    options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS).concat(_.keys(TandemNetworkAdapter.IO_DEFAULTS)));
-    this.settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, TandemNetworkAdapter.IO_DEFAULTS, options);
+    TandemSocketAdapter.__super__.constructor.apply(this, arguments);
+    options = _.pick(options, _.keys(TandemSocketAdapter.DEFAULTS).concat(_.keys(TandemSocketAdapter.IO_DEFAULTS)));
+    this.settings = _.extend({}, TandemSocketAdapter.DEFAULTS, TandemSocketAdapter.IO_DEFAULTS, options);
     this.id = _.uniqueId('adapter-');
     this.socketListeners = {};
-    this.sendQueue = [];
-    this.ready = false;
     this.stats = {
       send: {},
       recieve: {},
       callback: {}
     };
     socketOptions = _.clone(this.settings);
-    url = TandemNetworkAdapter.parseUrl(endpointUrl);
+    url = TandemSocketAdapter.parseUrl(endpointUrl);
     if (url.protocol === 'https:') {
       socketOptions['secure'] = true;
       socketOptions['port'] = 443;
@@ -11911,34 +11940,34 @@ TandemNetworkAdapter = (function(_super) {
     socketOptions['query'] = "fileId=" + this.fileId;
     this.socket = io.connect("" + url.protocol + "//" + url.hostname, socketOptions);
     this.socket.on('reconnecting', function() {
-      _this.emit(TandemNetworkAdapter.events.RECONNECTING);
+      _this.emit(TandemAdapter.events.RECONNECTING);
       return _this.ready = false;
     }).on('reconnect', function() {
-      _this.emit(TandemNetworkAdapter.events.RECONNECT);
+      _this.emit(TandemAdapter.events.RECONNECT);
       if (_this.ready === false) {
         return authenticate.call(_this);
       }
     }).on('disconnect', function() {
-      return _this.emit(TandemNetworkAdapter.events.DISCONNECT);
+      return _this.emit(TandemAdapter.events.DISCONNECT);
     });
     authenticate.call(this);
   }
 
-  TandemNetworkAdapter.prototype.close = function() {
-    this.removeAllListeners();
+  TandemSocketAdapter.prototype.close = function() {
+    TandemSocketAdapter.__super__.close.apply(this, arguments);
     this.socket.removeAllListeners();
     return this.socketListeners = {};
   };
 
-  TandemNetworkAdapter.prototype.on = function(route, callback) {
+  TandemSocketAdapter.prototype.on = function(route, callback) {
     var onSocketCallback,
       _this = this;
-    if (_.indexOf(_.values(TandemNetworkAdapter.events), route) > -1) {
-      TandemNetworkAdapter.__super__.on.apply(this, arguments);
+    if (_.indexOf(_.values(TandemAdapter.events), route) > -1) {
+      TandemSocketAdapter.__super__.on.apply(this, arguments);
     } else {
       onSocketCallback = function(packet) {
         info.call(_this, "Got", route, packet);
-        track.call(_this, TandemNetworkAdapter.RECIEVE, route, packet);
+        track.call(_this, TandemSocketAdapter.RECIEVE, route, packet);
         if (callback != null) {
           return callback.call(_this, packet);
         }
@@ -11952,36 +11981,35 @@ TandemNetworkAdapter = (function(_super) {
     return this;
   };
 
-  TandemNetworkAdapter.prototype.send = function(route, packet, callback, priority) {
-    if (priority == null) {
-      priority = false;
-    }
-    if (this.ready) {
-      info.call(this, "Sending:", route, packet);
-      return doSend.call(this, route, packet, callback);
-    } else {
-      info.call(this, "Queued:", route, packet);
-      if (priority) {
-        return this.sendQueue.unshift([route, packet, callback]);
+  TandemSocketAdapter.prototype._send = function(route, packet, callback) {
+    var _this = this;
+    track.call(this, TandemSocketAdapter.SEND, route, packet);
+    return setTimeout(function() {
+      if (callback != null) {
+        return _this.socket.emit(route, packet, function(response) {
+          track.call(_this, TandemSocketAdapter.CALLBACK, route, response);
+          info.call(_this, 'Callback:', response);
+          return callback.call(_this, response);
+        });
       } else {
-        return this.sendQueue.push([route, packet, callback]);
+        return _this.socket.emit(route, packet);
       }
-    }
+    }, this.settings.latency);
   };
 
-  return TandemNetworkAdapter;
+  return TandemSocketAdapter;
 
-})(EventEmitter2);
+})(TandemAdapter);
 
-module.exports = TandemNetworkAdapter;
+module.exports = TandemSocketAdapter;
 
 
-},{}],17:[function(require,module,exports){
-var TandemClient, TandemFile, TandemNetwork;
+},{"./adapter":16}],18:[function(require,module,exports){
+var TandemClient, TandemFile, TandemSocket;
 
 TandemFile = require('./file');
 
-TandemNetwork = require('./network');
+TandemSocket = require('./network/socket');
 
 TandemClient = (function() {
   TandemClient.DEFAULTS = {
@@ -11999,7 +12027,7 @@ TandemClient = (function() {
   }
 
   TandemClient.prototype.open = function(fileId, authObj, initial) {
-    this.adapter = new TandemNetwork(this.endpointUrl, fileId, this.settings.userId, authObj, this.options);
+    this.adapter = new TandemSocket(this.endpointUrl, fileId, this.settings.userId, authObj, this.options);
     return new TandemFile(fileId, this.adapter, initial);
   };
 
@@ -12010,7 +12038,7 @@ TandemClient = (function() {
 module.exports = TandemClient;
 
 
-},{"./file":15,"./network":16}]},{},[1])
+},{"./file":15,"./network/socket":17}]},{},[1])
 (1)
 });
 ;

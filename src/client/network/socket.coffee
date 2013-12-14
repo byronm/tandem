@@ -1,3 +1,6 @@
+TandemAdapter = require('./adapter')
+
+
 authenticate = ->
   authPacket =
     auth: @authObj
@@ -7,23 +10,10 @@ authenticate = ->
   @socket.emit('auth', authPacket, (response) =>
     unless response.error?
       info.call(this, "Connected!", response)
-      setReady.call(this) if @ready == false
+      this.setReady() if @ready == false
     else
-      this.emit(TandemNetworkAdapter.events.ERROR, response.error)
+      this.emit(TandemAdapter.events.ERROR, response.error)
   )
-
-doSend = (route, packet, callback) ->
-  track.call(this, TandemNetworkAdapter.SEND, route, packet)
-  setTimeout( =>
-    if callback?
-      @socket.emit(route, packet, (response) =>
-        track.call(this, TandemNetworkAdapter.CALLBACK, route, response)
-        info.call(this, 'Callback:', response)
-        callback.call(this, response)
-      )
-    else
-      @socket.emit(route, packet)
-  , @settings.latency)
 
 info = (args...) ->
   return unless @settings.debug
@@ -33,36 +23,13 @@ info = (args...) ->
   else
     console.info(args)
 
-setReady = ->
-  this.emit(TandemNetworkAdapter.events.READY)
-  async.until( =>
-    return @sendQueue.length == 0
-  , (callback) =>
-    elem = @sendQueue.shift()
-    [route, packet, sendCallback] = elem
-    info.call(this, "Sending from queue:", route, packet)
-    doSend.call(this, route, packet, (args...) =>
-      sendCallback.apply(this, args) if sendCallback?
-      callback()
-    )
-  , (err) =>
-    @ready = true
-  )
-
 track = (type, route, packet) ->
   @stats[type] = {} unless @stats[type]?
   @stats[type][route] = 0  unless @stats[type][route]?
   @stats[type][route] += 1
 
 
-class TandemNetworkAdapter extends EventEmitter2
-  @events:
-    DISCONNECT   : 'adapter-disconnect'
-    ERROR        : 'adapter-error'
-    READY        : 'adapter-ready'
-    RECONNECT    : 'adapter-reconnect'
-    RECONNECTING : 'adapter-reconnecting'
-
+class TandemSocketAdapter extends TandemAdapter
   @CALLBACK : 'callback'
   @RECIEVE  : 'recieve'
   @SEND     : 'send'
@@ -86,20 +53,18 @@ class TandemNetworkAdapter extends EventEmitter2
     ret['port'] = a.port if a.port
     return ret
 
-
   constructor: (endpointUrl, @fileId, @userId, @authObj, options = {}) ->
-    options = _.pick(options, _.keys(TandemNetworkAdapter.DEFAULTS).concat(_.keys(TandemNetworkAdapter.IO_DEFAULTS)))
-    @settings = _.extend({}, TandemNetworkAdapter.DEFAULTS, TandemNetworkAdapter.IO_DEFAULTS, options)
+    super
+    options = _.pick(options, _.keys(TandemSocketAdapter.DEFAULTS).concat(_.keys(TandemSocketAdapter.IO_DEFAULTS)))
+    @settings = _.extend({}, TandemSocketAdapter.DEFAULTS, TandemSocketAdapter.IO_DEFAULTS, options)
     @id = _.uniqueId('adapter-')
     @socketListeners = {}
-    @sendQueue = []
-    @ready = false
     @stats =
       send     : {}
       recieve  : {}
       callback : {}
     socketOptions = _.clone(@settings)
-    url = TandemNetworkAdapter.parseUrl(endpointUrl)
+    url = TandemSocketAdapter.parseUrl(endpointUrl)
     if url.protocol == 'https:'
       socketOptions['secure'] = true
       socketOptions['port'] = 443
@@ -107,44 +72,46 @@ class TandemNetworkAdapter extends EventEmitter2
     socketOptions['query'] = "fileId=#{@fileId}"
     @socket = io.connect("#{url.protocol}//#{url.hostname}", socketOptions)
     @socket.on('reconnecting', =>
-      this.emit(TandemNetworkAdapter.events.RECONNECTING)
+      this.emit(TandemAdapter.events.RECONNECTING)
       @ready = false
     ).on('reconnect', =>
-      this.emit(TandemNetworkAdapter.events.RECONNECT)
+      this.emit(TandemAdapter.events.RECONNECT)
       authenticate.call(this) if @ready == false
     ).on('disconnect', =>
-      this.emit(TandemNetworkAdapter.events.DISCONNECT)
+      this.emit(TandemAdapter.events.DISCONNECT)
     )
     authenticate.call(this)
 
   close: ->
-    this.removeAllListeners()
+    super
     @socket.removeAllListeners()
     @socketListeners = {}
 
   on: (route, callback) ->
-    if _.indexOf(_.values(TandemNetworkAdapter.events), route) > -1
+    if _.indexOf(_.values(TandemAdapter.events), route) > -1
       super
     else
       onSocketCallback = (packet) =>
         info.call(this, "Got", route, packet)
-        track.call(this, TandemNetworkAdapter.RECIEVE, route, packet)
+        track.call(this, TandemSocketAdapter.RECIEVE, route, packet)
         callback.call(this, packet) if callback?
       @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?
       @socketListeners[route] = onSocketCallback
       @socket.addListener(route, onSocketCallback)
     return this
 
-  send: (route, packet, callback, priority = false) ->
-    if @ready
-      info.call(this, "Sending:", route, packet)
-      doSend.call(this, route, packet, callback)
-    else
-      info.call(this, "Queued:", route, packet)
-      if priority
-        @sendQueue.unshift([route, packet, callback])
+  _send: (route, packet, callback) ->
+    track.call(this, TandemSocketAdapter.SEND, route, packet)
+    setTimeout( =>
+      if callback?
+        @socket.emit(route, packet, (response) =>
+          track.call(this, TandemSocketAdapter.CALLBACK, route, response)
+          info.call(this, 'Callback:', response)
+          callback.call(this, response)
+        )
       else
-        @sendQueue.push([route, packet, callback])
+        @socket.emit(route, packet)
+    , @settings.latency)
 
 
-module.exports = TandemNetworkAdapter
+module.exports = TandemSocketAdapter
