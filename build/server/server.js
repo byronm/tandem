@@ -1,9 +1,12 @@
 (function() {
-  var EventEmitter, TandemFileManager, TandemServer, TandemSocket,
+  var EventEmitter, TandemEmitter, TandemFileManager, TandemServer, TandemSocket,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
 
   EventEmitter = require('events').EventEmitter;
+
+  TandemEmitter = require('./emitter');
 
   TandemFileManager = require('./file-manager');
 
@@ -31,12 +34,17 @@
         return _this.fileManager.find(fileId, function(err, file) {
           if (err != null) {
             callback(new Error('Error retrieving document'));
-            return _this.emit(TandemServer.events.ERROR, err);
+            return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
           } else {
             file.addClient(socket, userId);
             return callback(null);
           }
         });
+      });
+      TandemEmitter.on(TandemEmitter.events.ERROR, function() {
+        var args;
+        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+        return _this.emit.apply(_this, [TandemServer.events.ERROR].concat(__slice.call(args)));
       });
     }
 

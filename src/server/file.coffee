@@ -1,6 +1,7 @@
 _                 = require('underscore')._
 EventEmitter      = require('events').EventEmitter
 Tandem            = require('tandem-core')
+TandemEmitter     = require('./emitter')
 TandemEngine      = require('./engine')
 TandemMemoryCache = require('./cache/memory')
 
@@ -36,7 +37,7 @@ sync = (socket, userId, packet, callback) ->
     if err?
       err.fileId = @id
       err.userId = userId
-      @server.emit(@server.events.ERROR, err)
+      TandemEmitter.emit(TandemEmitter.events.ERROR, err)
       return resync.call(this, callback)
     socket.join(@id)
     callback(
@@ -53,7 +54,7 @@ update = (socket, userId, packet, callback) ->
     if err?
       err.fileId = @id
       err.userId = userId
-      @server.emit(@server.events.ERROR, err)
+      TandemEmitter.emit(TandemEmitter.events.ERROR, err)
       return resync.call(this, callback)
     broadcastPacket =
       delta   : delta

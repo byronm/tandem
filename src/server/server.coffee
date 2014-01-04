@@ -1,4 +1,5 @@
 EventEmitter      = require('events').EventEmitter
+TandemEmitter     = require('./emitter')
 TandemFileManager = require('./file-manager')
 TandemSocket      = require('./network/socket')
 
@@ -17,11 +18,14 @@ class TandemServer extends EventEmitter
       @fileManager.find(fileId, (err, file) =>
         if err?
           callback(new Error('Error retrieving document'))
-          this.emit(TandemServer.events.ERROR, err)
+          TandemEmitter.emit(TandemEmitter.events.ERROR, err)
         else
           file.addClient(socket, userId)
           callback(null)
       )
+    )
+    TandemEmitter.on(TandemEmitter.events.ERROR, (args...) =>
+      this.emit(TandemServer.events.ERROR, args...)
     )
 
 

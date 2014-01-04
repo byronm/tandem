@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, Tandem, TandemFile, TandemFileManager, async, request, _, _check, _close, _save;
+  var Tandem, TandemEmitter, TandemFile, TandemFileManager, async, request, _, _check, _close, _save;
 
   _ = require('underscore')._;
 
@@ -7,9 +7,9 @@
 
   request = require('request');
 
-  EventEmitter = require('events').EventEmitter;
-
   Tandem = require('tandem-core');
+
+  TandemEmitter = require('./emitter');
 
   TandemFile = require('./file');
 
@@ -32,7 +32,7 @@
       if (force || !usersConnected || file.lastUpdated + _this.settings['inactive timeout'] < Date.now()) {
         return _save.call(_this, file, function(err) {
           if (err != null) {
-            return _this.server.emit(_this.server.events.ERROR, err);
+            return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
           }
           if (usersConnected && !force) {
             return callback(null);
@@ -52,7 +52,7 @@
     var _this = this;
     return file.close(function(err) {
       if (err != null) {
-        _this.server.emit(_this.server.events.ERROR, err);
+        TandemEmitter.emit(TandemEmitter.events.ERROR, err);
       } else {
         delete _this.files[file.id];
       }
@@ -107,7 +107,7 @@
       process.on('SIGTERM', function() {
         return _check.call(_this, true, function(err) {
           if (err != null) {
-            _this.server.emit(_this.server.events.ERROR, err);
+            TandemEmitter.emit(TandemEmitter.events.ERROR, err);
           }
           return process.exit(err != null ? 1 : 0);
         });

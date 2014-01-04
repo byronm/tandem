@@ -1,8 +1,8 @@
 _             = require('underscore')._
 async         = require('async')
 request       = require('request')
-EventEmitter  = require('events').EventEmitter
 Tandem        = require('tandem-core')
+TandemEmitter = require('./emitter')
 TandemFile    = require('./file')
 
 
@@ -12,7 +12,7 @@ _check = (force = false, done = ->) ->
     usersConnected = _.any(file.users, (online, userId) -> return online > 0 )
     if force or !usersConnected or file.lastUpdated + @settings['inactive timeout'] < Date.now()
       _save.call(this, file, (err) =>
-        return @server.emit(@server.events.ERROR, err) if err?
+        return TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
         if usersConnected and !force
           callback(null)
         else
@@ -27,7 +27,7 @@ _check = (force = false, done = ->) ->
 _close = (file, callback) ->
   file.close((err) =>
     if err?
-      @server.emit(@server.events.ERROR, err)
+      TandemEmitter.emit(TandemEmitter.events.ERROR, err)
     else
       delete @files[file.id]
     callback(err)
@@ -63,7 +63,7 @@ class TandemFileManager
     , @settings['check interval'])
     process.on('SIGTERM', =>
       _check.call(this, true, (err) =>
-        @server.emit(@server.events.ERROR, err) if err?
+        TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
         process.exit(if err? then 1 else 0) 
       )
     )

@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, Tandem, TandemEngine, TandemFile, TandemMemoryCache, initSocketListeners, resync, sync, update, _,
+  var EventEmitter, Tandem, TandemEmitter, TandemEngine, TandemFile, TandemMemoryCache, initSocketListeners, resync, sync, update, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -8,6 +8,8 @@
   EventEmitter = require('events').EventEmitter;
 
   Tandem = require('tandem-core');
+
+  TandemEmitter = require('./emitter');
 
   TandemEngine = require('./engine');
 
@@ -50,7 +52,7 @@
       if (err != null) {
         err.fileId = _this.id;
         err.userId = userId;
-        _this.server.emit(_this.server.events.ERROR, err);
+        TandemEmitter.emit(TandemEmitter.events.ERROR, err);
         return resync.call(_this, callback);
       }
       socket.join(_this.id);
@@ -72,7 +74,7 @@
       if (err != null) {
         err.fileId = _this.id;
         err.userId = userId;
-        _this.server.emit(_this.server.events.ERROR, err);
+        TandemEmitter.emit(TandemEmitter.events.ERROR, err);
         return resync.call(_this, callback);
       }
       broadcastPacket = {
