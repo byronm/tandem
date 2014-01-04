@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, TandemAdapter, TandemFile, TandemSocket, async, initSocketListeners, socketio, _, _authenticate,
+  var EventEmitter, Tandem, TandemAdapter, TandemEmitter, TandemFile, TandemSocket, async, initSocketListeners, resync, socketio, _, _authenticate,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -11,7 +11,11 @@
 
   EventEmitter = require('events').EventEmitter;
 
+  Tandem = require('tandem-core');
+
   TandemAdapter = require('./adapter');
+
+  TandemEmitter = require('../emitter');
 
   TandemFile = require('../file');
 
@@ -39,11 +43,46 @@
       return socket.removeAllListeners(route);
     });
     return socket.on(TandemFile.routes.RESYNC, function(packet, callback) {
-      return file.resync(callback);
+      return resync.call(_this, file, callback);
     }).on(TandemFile.routes.SYNC, function(packet, callback) {
-      return file.sync(socket, userId, packet, callback);
+      return file.sync(parseInt(packet.version), function(err, delta, version) {
+        if (err != null) {
+          err.fileId = file.id;
+          err.userId = userId;
+          TandemEmitter.emit(TandemEmitter.events.ERROR, err);
+          return resync.call(_this, file, callback);
+        } else {
+          socket.join(file.id);
+          return callback({
+            delta: delta,
+            users: file.users,
+            version: version
+          });
+        }
+      });
     }).on(TandemFile.routes.UPDATE, function(packet, callback) {
-      return file.update(socket, userId, packet, callback);
+      return file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), function(err, delta, version) {
+        var broadcastPacket;
+        if (err != null) {
+          err.fileId = file.id;
+          err.userId = userId;
+          TandemEmitter.emit(TandemEmitter.events.ERROR, err);
+          return resync.call(_this, file, callback);
+        } else {
+          broadcastPacket = {
+            delta: delta,
+            fileId: file.id,
+            version: version
+          };
+          broadcastPacket['userId'] = userId;
+          socket.broadcast.to(file.id).emit(TandemFile.routes.UPDATE, broadcastPacket);
+          file.lastUpdated = Date.now();
+          return callback({
+            fileId: file.id,
+            version: version
+          });
+        }
+      });
     }).on(TandemFile.routes.BROADCAST, function(packet, callback) {
       packet['userId'] = userId;
       socket.broadcast.to(_this.id).emit(TandemFile.routes.BROADCAST, packet);
@@ -52,6 +91,15 @@
       }
     }).on('disconnect', function() {
       return _this.removeClient(file, socket, userId);
+    });
+  };
+
+  resync = function(file, callback) {
+    return callback({
+      resync: true,
+      head: file.getHead(),
+      version: file.getVersion(),
+      users: file.users
     });
   };
 

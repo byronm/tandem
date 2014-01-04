@@ -1,13 +1,11 @@
 (function() {
-  var EventEmitter, Tandem, TandemEmitter, TandemEngine, TandemFile, TandemMemoryCache, _,
+  var EventEmitter, TandemEmitter, TandemEngine, TandemFile, TandemMemoryCache, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   _ = require('underscore')._;
 
   EventEmitter = require('events').EventEmitter;
-
-  Tandem = require('tandem-core');
 
   TandemEmitter = require('./emitter');
 
@@ -68,59 +66,12 @@
       return this.engine.version !== this.versionSaved;
     };
 
-    TandemFile.prototype.resync = function(callback) {
-      return callback({
-        resync: true,
-        head: this.engine.head,
-        version: this.engine.version,
-        users: this.users
-      });
+    TandemFile.prototype.sync = function(version, callback) {
+      return this.engine.getDeltaSince(version, callback);
     };
 
-    TandemFile.prototype.sync = function(socket, userId, packet, callback) {
-      var _this = this;
-      return this.engine.getDeltaSince(parseInt(packet.version), function(err, delta, version, next) {
-        if (err != null) {
-          err.fileId = _this.id;
-          err.userId = userId;
-          TandemEmitter.emit(TandemEmitter.events.ERROR, err);
-          return resync.call(_this, callback);
-        }
-        socket.join(_this.id);
-        return callback({
-          delta: delta,
-          users: _this.users,
-          version: version
-        });
-      });
-    };
-
-    TandemFile.prototype.update = function(socket, userId, packet, callback) {
-      var delta, version,
-        _this = this;
-      delta = Tandem.Delta.makeDelta(packet.delta);
-      version = parseInt(packet.version);
-      return this.engine.update(delta, version, function(err, delta, version) {
-        var broadcastPacket;
-        if (err != null) {
-          err.fileId = _this.id;
-          err.userId = userId;
-          TandemEmitter.emit(TandemEmitter.events.ERROR, err);
-          return resync.call(_this, callback);
-        }
-        broadcastPacket = {
-          delta: delta,
-          fileId: _this.id,
-          version: version
-        };
-        broadcastPacket['userId'] = userId;
-        socket.broadcast.to(_this.id).emit(TandemFile.routes.UPDATE, broadcastPacket);
-        _this.lastUpdated = Date.now();
-        return callback({
-          fileId: _this.id,
-          version: version
-        });
-      });
+    TandemFile.prototype.update = function(clientDelta, clientVersion, callback) {
+      return this.engine.update(clientDelta, clientVersion, callback);
     };
 
     return TandemFile;
