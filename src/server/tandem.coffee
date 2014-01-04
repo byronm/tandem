@@ -2,8 +2,8 @@ Tandem            = require('tandem-core')
 TandemEngine      = require('./engine')
 TandemFile        = require('./file')
 TandemFileManager = require('./file-manager')
-TandemNetwork     = require('./network')
 TandemServer      = require('./server')
+TandemSocket      = require('./network/socket')
 
 module.exports =
   Delta     : Tandem.Delta
@@ -14,5 +14,5 @@ module.exports =
   Engine      : TandemEngine
   File        : TandemFile
   FileManager : TandemFileManager
-  Network     : TandemNetwork
+  Network     : TandemSocket
   Server      : TandemServer
