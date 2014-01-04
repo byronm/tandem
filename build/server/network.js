@@ -15,7 +15,7 @@
     var _this = this;
     return async.waterfall([
       function(callback) {
-        return _this.storage.authorize(packet, callback);
+        return _this.fileManager.authorize(packet, callback);
       }, function(callback) {
         return _this.emit(TandemNetwork.events.CONNECT, client, packet.fileId, packet.userId, callback);
       }
@@ -59,8 +59,8 @@
 
     TandemNetwork.prototype.events = TandemNetwork.events;
 
-    function TandemNetwork(tandemServer, httpServer, storage, options) {
-      this.storage = storage;
+    function TandemNetwork(tandemServer, httpServer, fileManager, options) {
+      this.fileManager = fileManager;
       if (options == null) {
         options = {};
       }

@@ -1,13 +1,13 @@
 (function() {
-  var EventEmitter, TandemNetwork, TandemServer, TandemStorage,
+  var EventEmitter, TandemFileManager, TandemNetwork, TandemServer,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   EventEmitter = require('events').EventEmitter;
 
-  TandemNetwork = require('./network');
+  TandemFileManager = require('./file-manager');
 
-  TandemStorage = require('./storage');
+  TandemNetwork = require('./network');
 
   TandemServer = (function(_super) {
     __extends(TandemServer, _super);
@@ -25,10 +25,10 @@
       if (options == null) {
         options = {};
       }
-      this.storage = new TandemStorage(this, options.storage, options);
-      this.network = new TandemNetwork(this, server, this.storage, options);
+      this.fileManager = new TandemFileManager(this, options.storage, options);
+      this.network = new TandemNetwork(this, server, this.fileManager, options);
       this.network.on(TandemNetwork.events.CONNECT, function(socket, fileId, userId, callback) {
-        return _this.storage.find(fileId, function(err, file) {
+        return _this.fileManager.find(fileId, function(err, file) {
           if (err != null) {
             callback(new Error('Error retrieving document'));
             return _this.emit(TandemServer.events.ERROR, err);

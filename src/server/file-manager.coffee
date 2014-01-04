@@ -50,13 +50,13 @@ _save = (file, callback) ->
     callback(null)
 
 
-class TandemStorage
+class TandemFileManager
   @DEFAULTS:
     'check interval'   : 1000 * 60
     'inactive timeout' : 1000 * 60 * 15
 
   constructor: (@server, @storage, @options = {}) ->
-    @settings = _.defaults(_.pick(options, _.keys(TandemStorage.DEFAULTS)), TandemStorage.DEFAULTS)
+    @settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS)
     @files = {}
     setInterval( =>
       _check.call(this)
@@ -97,4 +97,4 @@ class TandemStorage
       )
       
 
-module.exports = TandemStorage
+module.exports = TandemFileManager

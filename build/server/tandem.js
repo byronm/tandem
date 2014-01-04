@@ -1,5 +1,5 @@
 (function() {
-  var Tandem, TandemEngine, TandemFile, TandemNetwork, TandemServer, TandemStorage;
+  var Tandem, TandemEngine, TandemFile, TandemFileManager, TandemNetwork, TandemServer;
 
   Tandem = require('tandem-core');
 
@@ -7,11 +7,11 @@
 
   TandemFile = require('./file');
 
+  TandemFileManager = require('./file-manager');
+
   TandemNetwork = require('./network');
 
   TandemServer = require('./server');
-
-  TandemStorage = require('./storage');
 
   module.exports = {
     Delta: Tandem.Delta,
@@ -20,9 +20,9 @@
     RetainOp: Tandem.RetainOp,
     Engine: TandemEngine,
     File: TandemFile,
+    FileManager: TandemFileManager,
     Network: TandemNetwork,
-    Server: TandemServer,
-    Storage: TandemStorage
+    Server: TandemServer
   };
 
 }).call(this);

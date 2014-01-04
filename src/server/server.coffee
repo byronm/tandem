@@ -1,6 +1,6 @@
-EventEmitter    = require('events').EventEmitter
-TandemNetwork   = require('./network')
-TandemStorage   = require('./storage')
+EventEmitter      = require('events').EventEmitter
+TandemFileManager = require('./file-manager')
+TandemNetwork     = require('./network')
 
 
 class TandemServer extends EventEmitter
@@ -11,10 +11,10 @@ class TandemServer extends EventEmitter
   events: TandemServer.events
 
   constructor: (server, options = {}) ->
-    @storage = new TandemStorage(this, options.storage, options)
-    @network = new TandemNetwork(this, server, @storage, options)
+    @fileManager = new TandemFileManager(this, options.storage, options)
+    @network = new TandemNetwork(this, server, @fileManager, options)
     @network.on(TandemNetwork.events.CONNECT, (socket, fileId, userId, callback) =>
-      @storage.find(fileId, (err, file) =>
+      @fileManager.find(fileId, (err, file) =>
         if err?
           callback(new Error('Error retrieving document'))
           this.emit(TandemServer.events.ERROR, err)

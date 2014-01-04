@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, Tandem, TandemFile, TandemStorage, async, request, _, _check, _close, _save;
+  var EventEmitter, Tandem, TandemFile, TandemFileManager, async, request, _, _check, _close, _save;
 
   _ = require('underscore')._;
 
@@ -88,18 +88,18 @@
     }
   };
 
-  TandemStorage = (function() {
-    TandemStorage.DEFAULTS = {
+  TandemFileManager = (function() {
+    TandemFileManager.DEFAULTS = {
       'check interval': 1000 * 60,
       'inactive timeout': 1000 * 60 * 15
     };
 
-    function TandemStorage(server, storage, options) {
+    function TandemFileManager(server, storage, options) {
       var _this = this;
       this.server = server;
       this.storage = storage;
       this.options = options != null ? options : {};
-      this.settings = _.defaults(_.pick(options, _.keys(TandemStorage.DEFAULTS)), TandemStorage.DEFAULTS);
+      this.settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS);
       this.files = {};
       setInterval(function() {
         return _check.call(_this);
@@ -114,14 +114,14 @@
       });
     }
 
-    TandemStorage.prototype.authorize = function(authPacket, callback) {
+    TandemFileManager.prototype.authorize = function(authPacket, callback) {
       if (this.storage == null) {
         return callback(null);
       }
       return this.storage.authorize(authPacket, callback);
     };
 
-    TandemStorage.prototype.find = function(id, callback) {
+    TandemFileManager.prototype.find = function(id, callback) {
       var _this = this;
       if (this.files[id] != null) {
         if (_.isArray(this.files[id])) {
@@ -152,10 +152,10 @@
       }
     };
 
-    return TandemStorage;
+    return TandemFileManager;
 
   })();
 
-  module.exports = TandemStorage;
+  module.exports = TandemFileManager;
 
 }).call(this);

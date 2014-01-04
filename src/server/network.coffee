@@ -7,7 +7,7 @@ EventEmitter  = require('events').EventEmitter
 _authenticate = (client, packet, callback) ->
   async.waterfall([
     (callback) =>
-      @storage.authorize(packet, callback)
+      @fileManager.authorize(packet, callback)
     (callback) =>
       this.emit(TandemNetwork.events.CONNECT, client, packet.fileId, packet.userId, callback)
   ], (err) =>
@@ -39,7 +39,7 @@ class TandemNetwork extends EventEmitter
     ERROR   : 'network-error'
   events: TandemNetwork.events
 
-  constructor: (tandemServer, httpServer, @storage, options = {}) ->
+  constructor: (tandemServer, httpServer, @fileManager, options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemNetwork.DEFAULTS)), TandemNetwork.DEFAULTS)
     _initNetwork.call(this, httpServer)
 
