@@ -81,9 +81,8 @@
       });
     };
 
-    TandemNetworkAdapter.prototype.listen = function(fileId, route, callback) {
-      console.warn("Should be overwritten by descendant");
-      return this;
+    TandemNetworkAdapter.prototype.broadcast = function(sessionId, roomId, packet) {
+      return console.warn("Should be overwritten by descendant");
     };
 
     TandemNetworkAdapter.prototype.join = function(fileId) {
@@ -94,8 +93,9 @@
       return console.warn("Should be overwritten by descendant");
     };
 
-    TandemNetworkAdapter.prototype.broadcast = function(sessionId, roomId, packet) {
-      return console.warn("Should be overwritten by descendant");
+    TandemNetworkAdapter.prototype.listen = function(fileId, route, callback) {
+      console.warn("Should be overwritten by descendant");
+      return this;
     };
 
     return TandemNetworkAdapter;

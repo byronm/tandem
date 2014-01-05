@@ -9,7 +9,6 @@ class TandemServer extends EventEmitter
     ERROR  : 'tandem-error'
     JOIN   : 'file-join'
     LEAVE  : 'file-leave'
-  events: TandemServer.events
 
   constructor: (server, options = {}) ->
     @fileManager = new TandemFileManager(this, options.storage, options)

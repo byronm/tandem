@@ -16,7 +16,6 @@ class TandemFile extends EventEmitter
     RESYNC    : 'ot/resync'
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
-  routes: TandemFile.routes
 
   constructor: (@server, @id, initial, version, options, callback) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemFile.DEFAULTS)), TandemFile.DEFAULTS)

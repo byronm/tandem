@@ -70,7 +70,7 @@
       var _base,
         _this = this;
       this.broadcast(socket.id, TandemFile.routes.JOIN, userId);
-      this.tandemServer.emit(this.tandemServer.events.JOIN, this, userId);
+      this.tandemServer.emit(this.tandemServer.constructor.events.JOIN, this, userId);
       if ((_base = file.users)[userId] == null) {
         _base[userId] = 0;
       }
@@ -88,7 +88,7 @@
       if (userId != null) {
         this.broadcast(socket.id, TandemFile.routes.LEAVE, userId);
       }
-      this.tandemServer.emit(this.tandemServer.events.LEAVE, this, userId);
+      this.tandemServer.emit(this.tandemServer.constructor.events.LEAVE, this, userId);
       this.leave(socket.id, file.id);
       if (file.users[userId] != null) {
         return file.users[userId] -= 1;
@@ -101,13 +101,6 @@
       return socket.broadcast.to(fileId).emit(route, packet);
     };
 
-    TandemSocket.prototype.listen = function(sessionId, route, callback) {
-      var socket;
-      socket = this.sockets[sessionId];
-      socket.on(route, callback);
-      return this;
-    };
-
     TandemSocket.prototype.join = function(sessionId, fileId) {
       var socket;
       socket = this.sockets[sessionId];
@@ -118,6 +111,13 @@
       var socket;
       socket = this.sockets[sessionId];
       return socket.leave(fileId);
+    };
+
+    TandemSocket.prototype.listen = function(sessionId, route, callback) {
+      var socket;
+      socket = this.sockets[sessionId];
+      socket.on(route, callback);
+      return this;
     };
 
     return TandemSocket;

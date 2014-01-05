@@ -63,10 +63,8 @@ class TandemNetworkAdapter extends EventEmitter
       callback({}) if callback?
     )
 
-  # Listen on room messages
-  listen: (fileId, route, callback) ->
+  broadcast: (sessionId, roomId, packet) ->
     console.warn "Should be overwritten by descendant"
-    return this
 
   # Join room
   join: (fileId) ->
@@ -76,8 +74,10 @@ class TandemNetworkAdapter extends EventEmitter
   leave: (fileId) ->
     console.warn "Should be overwritten by descendant"
 
-  broadcast: (sessionId, roomId, packet) ->
+  # Listen on room messages
+  listen: (fileId, route, callback) ->
     console.warn "Should be overwritten by descendant"
+    return this
 
 
 module.exports = TandemNetworkAdapter

@@ -65,8 +65,6 @@
       UPDATE: 'update'
     };
 
-    TandemServerEngine.prototype.events = TandemServerEngine.events;
-
     function TandemServerEngine(cache, head, version, callback) {
       var _this = this;
       this.cache = cache;

@@ -21,8 +21,6 @@
       LEAVE: 'file-leave'
     };
 
-    TandemServer.prototype.events = TandemServer.events;
-
     function TandemServer(server, options) {
       var _this = this;
       if (options == null) {

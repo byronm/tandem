@@ -42,7 +42,7 @@ class TandemSocket extends TandemAdapter
 
   addClient: (file, socket, userId) ->
     this.broadcast(socket.id, TandemFile.routes.JOIN, userId)
-    @tandemServer.emit(@tandemServer.events.JOIN, this, userId)
+    @tandemServer.emit(@tandemServer.constructor.events.JOIN, this, userId)
     file.users[userId] ?= 0
     file.users[userId] += 1
     _.each(TandemFile.routes, (route, name) ->
@@ -55,18 +55,13 @@ class TandemSocket extends TandemAdapter
 
   removeClient: (socket, userId, file) ->
     this.broadcast(socket.id, TandemFile.routes.LEAVE, userId) if userId?
-    @tandemServer.emit(@tandemServer.events.LEAVE, this, userId)
+    @tandemServer.emit(@tandemServer.constructor.events.LEAVE, this, userId)
     this.leave(socket.id, file.id)
     file.users[userId] -= 1 if file.users[userId]?
 
   broadcast: (sessionId, fileId, route, packet) ->
     socket = @sockets[sessionId]
     socket.broadcast.to(fileId).emit(route, packet)
-
-  listen: (sessionId, route, callback) ->
-    socket = @sockets[sessionId]
-    socket.on(route, callback)
-    return this
 
   join: (sessionId, fileId) ->
     socket = @sockets[sessionId]
@@ -75,6 +70,11 @@ class TandemSocket extends TandemAdapter
   leave: (sessionId, fileId) ->
     socket = @sockets[sessionId]
     socket.leave(fileId)
+
+  listen: (sessionId, route, callback) ->
+    socket = @sockets[sessionId]
+    socket.on(route, callback)
+    return this
 
 
 module.exports = TandemSocket

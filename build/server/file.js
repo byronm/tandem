@@ -29,8 +29,6 @@
       UPDATE: 'ot/update'
     };
 
-    TandemFile.prototype.routes = TandemFile.routes;
-
     function TandemFile(server, id, initial, version, options, callback) {
       var _this = this;
       this.server = server;

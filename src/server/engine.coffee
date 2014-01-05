@@ -40,7 +40,6 @@ class EngineError extends Error
 class TandemServerEngine extends EventEmitter
   @events:
     UPDATE: 'update'
-  events: TandemServerEngine.events
 
   constructor: (@cache, @head, @version, callback) ->
     @id = _.uniqueId('engine-')
