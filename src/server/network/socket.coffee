@@ -2,7 +2,6 @@ _             = require('underscore')._
 async         = require('async')
 socketio      = require('socket.io')
 EventEmitter  = require('events').EventEmitter
-Tandem        = require('tandem-core')
 TandemAdapter = require('./adapter')
 TandemEmitter = require('../emitter')
 TandemFile    = require('../file')
@@ -19,64 +18,6 @@ _authenticate = (client, packet, callback) ->
     callback({ error: err })
   )
 
-initSocketListeners = (file, socket, userId) ->
-  _.each(TandemFile.routes, (route, name) ->
-    socket.removeAllListeners(route)
-  )
-  socket.on(TandemFile.routes.RESYNC, (packet, callback) =>
-    resync.call(this, file, callback)
-  ).on(TandemFile.routes.SYNC, (packet, callback) =>
-    file.sync(parseInt(packet.version), (err, delta, version) =>
-      if err?
-        err.fileId = file.id
-        err.userId = userId
-        TandemEmitter.emit(TandemEmitter.events.ERROR, err)
-        return resync.call(this, file, callback)
-      else
-        socket.join(file.id)
-        callback(
-          delta: delta
-          users: file.users
-          version: version
-        )
-    )
-  ).on(TandemFile.routes.UPDATE, (packet, callback) =>
-    file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
-      if err?
-        err.fileId = file.id
-        err.userId = userId
-        TandemEmitter.emit(TandemEmitter.events.ERROR, err)
-        return resync.call(this, file, callback)
-      else 
-        broadcastPacket =
-          delta   : delta
-          fileId  : file.id
-          version : version
-        broadcastPacket['userId'] = userId
-        socket.broadcast.to(file.id).emit(TandemFile.routes.UPDATE, broadcastPacket)
-        file.lastUpdated = Date.now()
-        callback(
-          fileId  : file.id
-          version : version
-        )
-    )
-  ).on(TandemFile.routes.BROADCAST, (packet, callback) =>
-    packet['userId'] = userId
-    socket.broadcast.to(@id).emit(TandemFile.routes.BROADCAST, packet)
-    callback({}) if callback?
-  ).on('disconnect', =>
-    this.removeClient(file, socket, userId)
-  )
-
-resync = (file, callback) ->
-  callback(
-    resync  : true
-    head    : file.getHead()
-    version : file.getVersion()
-    users   : file.users
-  )
-
-
 
 class TandemSocket extends TandemAdapter
   @DEFAULTS:
@@ -86,33 +27,54 @@ class TandemSocket extends TandemAdapter
 
   constructor: (@tandemServer, httpServer, @fileManager, options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemSocket.DEFAULTS)), TandemSocket.DEFAULTS)
+    @sockets = {}
     @io = socketio.listen(httpServer, @settings)
     @io.configure('production', =>
       @io.enable('browser client minification')
       @io.enable('browser client etag')
     )
-    @io.sockets.on('connection', (client) =>
-      client.on('auth', (packet, callback) =>
-        _authenticate.call(this, client, packet, callback)
+    @io.sockets.on('connection', (socket) =>
+      @sockets[socket.id] = socket
+      socket.on('auth', (packet, callback) =>
+        _authenticate.call(this, socket, packet, callback)
       )
     )
 
   addClient: (file, socket, userId) ->
-    socket.broadcast.to(@id).emit(TandemFile.routes.JOIN, userId)
+    this.broadcast(socket.id, TandemFile.routes.JOIN, userId)
     @tandemServer.emit(@tandemServer.events.JOIN, this, userId)
     file.users[userId] ?= 0
     file.users[userId] += 1
-    initSocketListeners.call(this, file, socket, userId)
+    _.each(TandemFile.routes, (route, name) ->
+      socket.removeAllListeners(route)
+    )
+    this.initListeners(socket.id, userId, file)
+    socket.on('disconnect', =>
+      this.removeClient(socket, userId, file)
+    )
 
-  removeClient: (file, socket, userId) ->
-    socket.broadcast.to(file.id).emit(TandemFile.routes.LEAVE, userId) if userId?
+  removeClient: (socket, userId, file) ->
+    this.broadcast(socket.id, TandemFile.routes.LEAVE, userId) if userId?
     @tandemServer.emit(@tandemServer.events.LEAVE, this, userId)
-    socket.leave(file.id)
+    this.leave(socket.id, file.id)
     file.users[userId] -= 1 if file.users[userId]?
 
-  broadcast: (fileId, route, packet) ->
+  broadcast: (sessionId, fileId, route, packet) ->
+    socket = @sockets[sessionId]
+    socket.broadcast.to(fileId).emit(route, packet)
 
-  send: (route, packet) ->
+  listen: (sessionId, route, callback) ->
+    socket = @sockets[sessionId]
+    socket.on(route, callback)
+    return this
+
+  join: (sessionId, fileId) ->
+    socket = @sockets[sessionId]
+    socket.join(fileId)
+
+  leave: (sessionId, fileId) ->
+    socket = @sockets[sessionId]
+    socket.leave(fileId)
 
 
 module.exports = TandemSocket
