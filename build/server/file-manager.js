@@ -94,9 +94,8 @@
       'inactive timeout': 1000 * 60 * 15
     };
 
-    function TandemFileManager(server, storage, options) {
+    function TandemFileManager(storage, options) {
       var _this = this;
-      this.server = server;
       this.storage = storage;
       this.options = options != null ? options : {};
       this.settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS);
@@ -139,7 +138,7 @@
               return callback(null, Tandem.Delta.getInitial(''), 0);
             }
           }, function(head, version, callback) {
-            return new TandemFile(_this.server, id, head, version, _this.options, callback);
+            return new TandemFile(id, head, version, _this.options, callback);
           }
         ], function(err, file) {
           var callbacks;

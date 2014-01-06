@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, TandemEmitter, TandemEngine, TandemFile, TandemMemoryCache, _,
+  var EventEmitter, TandemEmitter, TandemEngine, TandemFile, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -11,14 +11,8 @@
 
   TandemEngine = require('./engine');
 
-  TandemMemoryCache = require('./cache/memory');
-
   TandemFile = (function(_super) {
     __extends(TandemFile, _super);
-
-    TandemFile.DEFAULTS = {
-      'cache': TandemMemoryCache
-    };
 
     TandemFile.routes = {
       BROADCAST: 'broadcast',
@@ -29,14 +23,12 @@
       UPDATE: 'ot/update'
     };
 
-    function TandemFile(server, id, initial, version, options, callback) {
+    function TandemFile(id, initial, version, options, callback) {
       var _this = this;
-      this.server = server;
       this.id = id;
-      this.settings = _.defaults(_.pick(options, _.keys(TandemFile.DEFAULTS)), TandemFile.DEFAULTS);
       this.versionSaved = version;
       this.users = {};
-      this.cache = new this.settings['cache'](this.id);
+      this.cache = _.isFunction(options.cache) ? new options.cache(this.id) : options.cache;
       this.engine = new TandemEngine(this.cache, initial, version, function(err, engine) {
         _this.engine = engine;
         return callback(err, _this);

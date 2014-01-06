@@ -2,13 +2,9 @@ _                 = require('underscore')._
 EventEmitter      = require('events').EventEmitter
 TandemEmitter     = require('./emitter')
 TandemEngine      = require('./engine')
-TandemMemoryCache = require('./cache/memory')
 
 
 class TandemFile extends EventEmitter
-  @DEFAULTS:
-    'cache': TandemMemoryCache
-
   @routes:
     BROADCAST : 'broadcast'
     JOIN      : 'user/join'
@@ -17,11 +13,10 @@ class TandemFile extends EventEmitter
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@server, @id, initial, version, options, callback) ->
-    @settings = _.defaults(_.pick(options, _.keys(TandemFile.DEFAULTS)), TandemFile.DEFAULTS)
+  constructor: (@id, initial, version, options, callback) ->
     @versionSaved = version
     @users = {}
-    @cache = new @settings['cache'](@id)
+    @cache = if _.isFunction(options.cache) then new options.cache(@id) else options.cache
     @engine = new TandemEngine(@cache, initial, version, (err, engine) =>
       @engine = engine
       callback(err, this)

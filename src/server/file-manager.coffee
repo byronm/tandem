@@ -55,7 +55,7 @@ class TandemFileManager
     'check interval'   : 1000 * 60
     'inactive timeout' : 1000 * 60 * 15
 
-  constructor: (@server, @storage, @options = {}) ->
+  constructor: (@storage, @options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS)
     @files = {}
     setInterval( =>
@@ -87,7 +87,7 @@ class TandemFileManager
           else
             callback(null, Tandem.Delta.getInitial(''), 0)
         (head, version, callback) =>
-          new TandemFile(@server, id, head, version, @options, callback)
+          new TandemFile(id, head, version, @options, callback)
       ], (err, file) =>
         callbacks = @files[id]
         @files[id] = if err? then undefined else file

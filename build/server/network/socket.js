@@ -44,9 +44,8 @@
       'transports': ['websocket', 'xhr-polling']
     };
 
-    function TandemSocket(tandemServer, httpServer, fileManager, options) {
+    function TandemSocket(httpServer, fileManager, options) {
       var _this = this;
-      this.tandemServer = tandemServer;
       this.fileManager = fileManager;
       if (options == null) {
         options = {};
@@ -70,7 +69,6 @@
       var socket, _base,
         _this = this;
       this.broadcast(sessionId, TandemFile.routes.JOIN, userId);
-      this.tandemServer.emit(this.tandemServer.constructor.events.JOIN, this, userId);
       if ((_base = file.users)[userId] == null) {
         _base[userId] = 0;
       }
@@ -89,7 +87,6 @@
       if (userId != null) {
         this.broadcast(sessionId, TandemFile.routes.LEAVE, userId);
       }
-      this.tandemServer.emit(this.tandemServer.constructor.events.LEAVE, this, userId);
       this.leave(sessionId, file.id);
       if (file.users[userId] != null) {
         return file.users[userId] -= 1;
