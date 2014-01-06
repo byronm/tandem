@@ -68,10 +68,6 @@ class TandemFileManager
       )
     )
 
-  authorize: (authPacket, callback) ->
-    return callback(null) unless @storage?
-    @storage.authorize(authPacket, callback)
-
   find: (id, callback) ->
     if @files[id]?
       if _.isArray(@files[id])

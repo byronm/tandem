@@ -36,8 +36,8 @@
       }
       this.settings = _.defaults(options, TandemServer.DEFAULTS);
       this.storage = _.isFunction(this.settings.storage) ? new this.settings.storage : this.settings.storage;
+      this.network = _.isFunction(this.settings.network) ? new this.settings.network(server, this.storage, this.settings) : this.settings.network;
       this.fileManager = new TandemFileManager(this.storage, this.settings);
-      this.network = _.isFunction(this.settings.network) ? new this.settings.network(server, this.fileManager, this.settings) : this.settings.network;
       this.network.on(TandemSocket.events.CONNECT, function(sessionId, fileId, userId, callback) {
         return _this.fileManager.find(fileId, function(err, file) {
           if (err != null) {

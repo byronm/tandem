@@ -113,13 +113,6 @@
       });
     }
 
-    TandemFileManager.prototype.authorize = function(authPacket, callback) {
-      if (this.storage == null) {
-        return callback(null);
-      }
-      return this.storage.authorize(authPacket, callback);
-    };
-
     TandemFileManager.prototype.find = function(id, callback) {
       var _this = this;
       if (this.files[id] != null) {

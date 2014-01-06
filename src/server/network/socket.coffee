@@ -10,7 +10,7 @@ TandemFile    = require('../file')
 _authenticate = (client, packet, callback) ->
   async.waterfall([
     (callback) =>
-      @fileManager.authorize(packet, callback)
+      @storage.authorize(packet, callback)
     (callback) =>
       this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, packet.userId, callback)
   ], (err) =>
@@ -25,7 +25,7 @@ class TandemSocket extends TandemAdapter
     'log level': 1
     'transports': ['websocket', 'xhr-polling']
 
-  constructor: (httpServer, @fileManager, options = {}) ->
+  constructor: (httpServer, @storage, options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemSocket.DEFAULTS)), TandemSocket.DEFAULTS)
     @sockets = {}
     @io = socketio.listen(httpServer, @settings)

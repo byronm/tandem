@@ -21,7 +21,7 @@
     var _this = this;
     return async.waterfall([
       function(callback) {
-        return _this.fileManager.authorize(packet, callback);
+        return _this.storage.authorize(packet, callback);
       }, function(callback) {
         return _this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, packet.userId, callback);
       }
@@ -44,9 +44,9 @@
       'transports': ['websocket', 'xhr-polling']
     };
 
-    function TandemSocket(httpServer, fileManager, options) {
+    function TandemSocket(httpServer, storage, options) {
       var _this = this;
-      this.fileManager = fileManager;
+      this.storage = storage;
       if (options == null) {
         options = {};
       }
