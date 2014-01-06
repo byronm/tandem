@@ -23,7 +23,7 @@
       function(callback) {
         return _this.fileManager.authorize(packet, callback);
       }, function(callback) {
-        return _this.emit(TandemAdapter.events.CONNECT, client, packet.fileId, packet.userId, callback);
+        return _this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, packet.userId, callback);
       }
     ], function(err) {
       if ((err != null) && _.isObject(err)) {
@@ -66,30 +66,31 @@
       });
     }
 
-    TandemSocket.prototype.addClient = function(file, socket, userId) {
-      var _base,
+    TandemSocket.prototype.addClient = function(sessionId, userId, file) {
+      var socket, _base,
         _this = this;
-      this.broadcast(socket.id, TandemFile.routes.JOIN, userId);
+      this.broadcast(sessionId, TandemFile.routes.JOIN, userId);
       this.tandemServer.emit(this.tandemServer.constructor.events.JOIN, this, userId);
       if ((_base = file.users)[userId] == null) {
         _base[userId] = 0;
       }
       file.users[userId] += 1;
+      socket = this.sockets[sessionId];
       _.each(TandemFile.routes, function(route, name) {
         return socket.removeAllListeners(route);
       });
-      this.initListeners(socket.id, userId, file);
-      return socket.on('disconnect', function() {
-        return _this.removeClient(socket, userId, file);
+      socket.on('disconnect', function() {
+        return _this.removeClient(sessionId, userId, file);
       });
+      return TandemSocket.__super__.addClient.apply(this, arguments);
     };
 
-    TandemSocket.prototype.removeClient = function(socket, userId, file) {
+    TandemSocket.prototype.removeClient = function(sessionId, userId, file) {
       if (userId != null) {
-        this.broadcast(socket.id, TandemFile.routes.LEAVE, userId);
+        this.broadcast(sessionId, TandemFile.routes.LEAVE, userId);
       }
       this.tandemServer.emit(this.tandemServer.constructor.events.LEAVE, this, userId);
-      this.leave(socket.id, file.id);
+      this.leave(sessionId, file.id);
       if (file.users[userId] != null) {
         return file.users[userId] -= 1;
       }

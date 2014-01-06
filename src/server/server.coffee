@@ -13,13 +13,13 @@ class TandemServer extends EventEmitter
   constructor: (server, options = {}) ->
     @fileManager = new TandemFileManager(this, options.storage, options)
     @network = new TandemSocket(this, server, @fileManager, options)
-    @network.on(TandemSocket.events.CONNECT, (socket, fileId, userId, callback) =>
+    @network.on(TandemSocket.events.CONNECT, (sessionId, fileId, userId, callback) =>
       @fileManager.find(fileId, (err, file) =>
         if err?
           callback(new Error('Error retrieving document'))
           TandemEmitter.emit(TandemEmitter.events.ERROR, err)
         else
-          @network.addClient(file, socket, userId)
+          @network.addClient(sessionId, userId, file)
           callback(null)
       )
     )

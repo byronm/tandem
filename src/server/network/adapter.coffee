@@ -63,6 +63,9 @@ class TandemNetworkAdapter extends EventEmitter
       callback({}) if callback?
     )
 
+  addClient: (sessionId, userId, file) ->
+    this.initListeners(sessionId, userId, file)
+
   broadcast: (sessionId, roomId, packet) ->
     console.warn "Should be overwritten by descendant"
 

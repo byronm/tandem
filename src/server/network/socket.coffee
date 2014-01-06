@@ -12,7 +12,7 @@ _authenticate = (client, packet, callback) ->
     (callback) =>
       @fileManager.authorize(packet, callback)
     (callback) =>
-      this.emit(TandemAdapter.events.CONNECT, client, packet.fileId, packet.userId, callback)
+      this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, packet.userId, callback)
   ], (err) =>
     err = err.message if err? and _.isObject(err)   # Filter error info passed to front end client
     callback({ error: err })
@@ -40,23 +40,24 @@ class TandemSocket extends TandemAdapter
       )
     )
 
-  addClient: (file, socket, userId) ->
-    this.broadcast(socket.id, TandemFile.routes.JOIN, userId)
+  addClient: (sessionId, userId, file) ->
+    this.broadcast(sessionId, TandemFile.routes.JOIN, userId)
     @tandemServer.emit(@tandemServer.constructor.events.JOIN, this, userId)
     file.users[userId] ?= 0
     file.users[userId] += 1
+    socket = @sockets[sessionId]
     _.each(TandemFile.routes, (route, name) ->
       socket.removeAllListeners(route)
     )
-    this.initListeners(socket.id, userId, file)
     socket.on('disconnect', =>
-      this.removeClient(socket, userId, file)
+      this.removeClient(sessionId, userId, file)
     )
+    super
 
-  removeClient: (socket, userId, file) ->
-    this.broadcast(socket.id, TandemFile.routes.LEAVE, userId) if userId?
+  removeClient: (sessionId, userId, file) ->
+    this.broadcast(sessionId, TandemFile.routes.LEAVE, userId) if userId?
     @tandemServer.emit(@tandemServer.constructor.events.LEAVE, this, userId)
-    this.leave(socket.id, file.id)
+    this.leave(sessionId, file.id)
     file.users[userId] -= 1 if file.users[userId]?
 
   broadcast: (sessionId, fileId, route, packet) ->

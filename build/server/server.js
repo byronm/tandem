@@ -28,13 +28,13 @@
       }
       this.fileManager = new TandemFileManager(this, options.storage, options);
       this.network = new TandemSocket(this, server, this.fileManager, options);
-      this.network.on(TandemSocket.events.CONNECT, function(socket, fileId, userId, callback) {
+      this.network.on(TandemSocket.events.CONNECT, function(sessionId, fileId, userId, callback) {
         return _this.fileManager.find(fileId, function(err, file) {
           if (err != null) {
             callback(new Error('Error retrieving document'));
             return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
           } else {
-            _this.network.addClient(file, socket, userId);
+            _this.network.addClient(sessionId, userId, file);
             return callback(null);
           }
         });

@@ -81,6 +81,10 @@
       });
     };
 
+    TandemNetworkAdapter.prototype.addClient = function(sessionId, userId, file) {
+      return this.initListeners(sessionId, userId, file);
+    };
+
     TandemNetworkAdapter.prototype.broadcast = function(sessionId, roomId, packet) {
       return console.warn("Should be overwritten by descendant");
     };
