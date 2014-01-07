@@ -4,7 +4,6 @@
   "dependencies": {
     "async"       : "0.2.x",
     "commander"   : "1.1.x",
-    "request"     : "2.12.x",
     "socket.io"   : "0.9.x",
     "tandem-core" : "0.5.x",
     "underscore"  : "1.5.x"

@@ -1,6 +1,5 @@
 _             = require('underscore')._
 async         = require('async')
-request       = require('request')
 Tandem        = require('tandem-core')
 TandemEmitter = require('./emitter')
 TandemFile    = require('./file')

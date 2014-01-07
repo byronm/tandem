@@ -1,10 +1,7 @@
 _             = require('underscore')._
 async         = require('async')
 socketio      = require('socket.io')
-EventEmitter  = require('events').EventEmitter
 TandemAdapter = require('./adapter')
-TandemEmitter = require('../emitter')
-TandemFile    = require('../file')
 
 
 _authenticate = (client, packet, callback) ->
@@ -42,7 +39,7 @@ class TandemSocket extends TandemAdapter
 
   addClient: (sessionId, userId, file) ->
     socket = @sockets[sessionId]
-    _.each(TandemFile.routes, (route, name) ->
+    _.each(TandemAdapter.routes, (route, name) ->
       socket.removeAllListeners(route)
     )
     socket.on('disconnect', =>

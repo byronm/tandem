@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, TandemAdapter, TandemEmitter, TandemFile, TandemSocket, async, socketio, _, _authenticate,
+  var TandemAdapter, TandemSocket, async, socketio, _, _authenticate,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -9,13 +9,7 @@
 
   socketio = require('socket.io');
 
-  EventEmitter = require('events').EventEmitter;
-
   TandemAdapter = require('./adapter');
-
-  TandemEmitter = require('../emitter');
-
-  TandemFile = require('../file');
 
   _authenticate = function(client, packet, callback) {
     var _this = this;
@@ -69,7 +63,7 @@
       var socket,
         _this = this;
       socket = this.sockets[sessionId];
-      _.each(TandemFile.routes, function(route, name) {
+      _.each(TandemAdapter.routes, function(route, name) {
         return socket.removeAllListeners(route);
       });
       socket.on('disconnect', function() {

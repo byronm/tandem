@@ -1,7 +1,6 @@
 _             = require('underscore')._
 EventEmitter  = require('events').EventEmitter
 Tandem        = require('tandem-core')
-TandemEmitter = require('./emitter')
 
 
 _atomic = (fn) ->
@@ -52,11 +51,6 @@ class FileError extends Error
 
 
 class TandemFile extends EventEmitter
-  @routes:
-    BROADCAST : 'broadcast'
-    RESYNC    : 'ot/resync'
-    SYNC      : 'ot/sync'
-    UPDATE    : 'ot/update'
   @events:
     UPDATE: 'update'
 

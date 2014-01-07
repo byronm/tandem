@@ -1,11 +1,9 @@
 (function() {
-  var Tandem, TandemEmitter, TandemFile, TandemFileManager, async, request, _, _check, _close, _save;
+  var Tandem, TandemEmitter, TandemFile, TandemFileManager, async, _, _check, _close, _save;
 
   _ = require('underscore')._;
 
   async = require('async');
-
-  request = require('request');
 
   Tandem = require('tandem-core');
 

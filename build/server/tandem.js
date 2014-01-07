@@ -16,9 +16,6 @@
     Op: Tandem.Op,
     InsertOp: Tandem.InsertOp,
     RetainOp: Tandem.RetainOp,
-    File: TandemFile,
-    FileManager: TandemFileManager,
-    Network: TandemSocket,
     Server: TandemServer
   };
 

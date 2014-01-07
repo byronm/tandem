@@ -1,6 +1,5 @@
 EventEmitter = require('events').EventEmitter
 Tandem       = require('tandem-core')
-TandemFile   = require('../file')
 
 
 _makeResyncPacket = (file) ->
@@ -21,13 +20,18 @@ class TandemNetworkAdapter extends EventEmitter
   @events:
     CONNECT : 'network-connect'
     ERROR   : 'network-error'
+  @routes:
+    BROADCAST : 'broadcast'
+    RESYNC    : 'ot/resync'
+    SYNC      : 'ot/sync'
+    UPDATE    : 'ot/update'
 
   constructor: ->
 
   initListeners: (sessionId, userId, file) ->
-    this.listen(sessionId, TandemFile.routes.RESYNC, (packet, callback) =>
+    this.listen(sessionId, TandemNetworkAdapter.routes.RESYNC, (packet, callback) =>
       callback(_makeResyncPacket(file))
-    ).listen(sessionId, TandemFile.routes.SYNC, (packet, callback) =>
+    ).listen(sessionId, TandemNetworkAdapter.routes.SYNC, (packet, callback) =>
       file.sync(parseInt(packet.version), (err, delta, version) =>
         if err?
           _onMessageError(err, file, callback)
@@ -38,7 +42,7 @@ class TandemNetworkAdapter extends EventEmitter
             version: version
           )
       )
-    ).listen(sessionId, TandemFile.routes.UPDATE, (packet, callback) =>
+    ).listen(sessionId, TandemNetworkAdapter.routes.UPDATE, (packet, callback) =>
       file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
         if err?
           _onMessageError(err, file, callback)
@@ -48,16 +52,16 @@ class TandemNetworkAdapter extends EventEmitter
             fileId  : file.id
             version : version
           broadcastPacket['userId'] = userId
-          this.broadcast(sessionId, file.id, TandemFile.routes.UPDATE, broadcastPacket)
+          this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket)
           file.lastUpdated = Date.now()
           callback(
             fileId  : file.id
             version : version
           )
       )
-    ).listen(sessionId, TandemFile.routes.BROADCAST, (packet, callback) =>
+    ).listen(sessionId, TandemNetworkAdapter.routes.BROADCAST, (packet, callback) =>
       packet['userId'] = userId
-      this.broadcast(sessionId, file.id, TandemFile.routes.BROADCAST, packet)
+      this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.BROADCAST, packet)
       callback({}) if callback?
     )
 
