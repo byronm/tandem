@@ -146,7 +146,7 @@
           return callback(err);
         }
         delta = _.reduce(deltas, function(delta, hist) {
-          return delta.follows(hist, true);
+          return delta.transform(hist, true);
         }, delta);
         return callback(null, delta, _this.version);
       });

@@ -38,10 +38,10 @@ class ClientEngine extends EventEmitter2
     delta = Delta.makeDelta(delta)
     if @arrived.canCompose(delta)
       @arrived = @arrived.compose(delta)
-      flightDeltaFollows = delta.follows(@inFlight, false)
-      textFollows = flightDeltaFollows.follows(@inLine, false)
-      @inFlight = @inFlight.follows(delta, true)
-      @inLine = @inLine.follows(flightDeltaFollows, true)
+      flightDeltaFollows = delta.transform(@inFlight, false)
+      textFollows = flightDeltaFollows.transform(@inLine, false)
+      @inFlight = @inFlight.transform(delta, true)
+      @inLine = @inLine.transform(flightDeltaFollows, true)
       this.emit(ClientEngine.events.UPDATE, textFollows)
       return true
     else

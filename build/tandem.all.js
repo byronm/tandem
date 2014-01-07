@@ -6700,6 +6700,8 @@ module.exports = Tandem
   dmp = new diff_match_patch();
 
   Delta = (function() {
+    var _insertInsertCase, _retainRetainCase;
+
     Delta.getIdentity = function(length) {
       return new Delta(length, length, [new RetainOp(0, length)]);
     };
@@ -6714,7 +6716,7 @@ module.exports = Tandem
         _ref = delta.ops;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           op = _ref[_i];
-          if (!(Delta.isRetain(op) || Delta.isInsert(op))) {
+          if (!(Op.isRetain(op) || Op.isInsert(op))) {
             return false;
           }
         }
@@ -6723,19 +6725,11 @@ module.exports = Tandem
       return false;
     };
 
-    Delta.isInsert = function(op) {
-      return InsertOp.isInsert(op);
-    };
-
-    Delta.isRetain = function(op) {
-      return RetainOp.isRetain(op);
-    };
-
     Delta.makeDelta = function(obj) {
       return new Delta(obj.startLength, obj.endLength, _.map(obj.ops, function(op) {
-        if (InsertOp.isInsert(op)) {
+        if (Op.isInsert(op)) {
           return new InsertOp(op.value, op.attributes);
-        } else if (RetainOp.isRetain(op)) {
+        } else if (Op.isRetain(op)) {
           return new RetainOp(op.start, op.end, op.attributes);
         } else {
           return null;
@@ -6789,9 +6783,9 @@ module.exports = Tandem
         this.endLength = null;
       }
       this.ops = _.map(this.ops, function(op) {
-        if (RetainOp.isRetain(op)) {
+        if (Op.isRetain(op)) {
           return op;
-        } else if (InsertOp.isInsert(op)) {
+        } else if (Op.isInsert(op)) {
           return op;
         } else {
           throw new Error("Creating delta with invalid op. Expecting an insert or retain.");
@@ -6830,10 +6824,10 @@ module.exports = Tandem
       offset = 0;
       retains = [];
       _.each(this.ops, function(op) {
-        if (Delta.isInsert(op)) {
+        if (Op.isInsert(op)) {
           insertFn.call(context, index + offset, op.value, op.attributes);
           return offset += op.getLength();
-        } else if (Delta.isRetain(op)) {
+        } else if (Op.isRetain(op)) {
           if (op.start > index) {
             deleteFn.call(context, index + offset, op.start - index);
             offset -= op.start - index;
@@ -6869,7 +6863,7 @@ module.exports = Tandem
       _ref = delta.ops;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         op = _ref[_i];
-        if (Delta.isInsert(op)) {
+        if (Op.isInsert(op)) {
           appliedText.push(op.value);
         } else {
           appliedText.push(text.substring(op.start, op.end));
@@ -6898,9 +6892,9 @@ module.exports = Tandem
           return compacted.push(op);
         } else {
           last = _.last(compacted);
-          if (InsertOp.isInsert(last) && InsertOp.isInsert(op) && last.attributesMatch(op)) {
+          if (Op.isInsert(last) && Op.isInsert(op) && last.attributesMatch(op)) {
             return compacted[compacted.length - 1] = new InsertOp(last.value + op.value, op.attributes);
-          } else if (RetainOp.isRetain(last) && RetainOp.isRetain(op) && last.end === op.start && last.attributesMatch(op)) {
+          } else if (Op.isRetain(last) && Op.isRetain(op) && last.end === op.start && last.attributesMatch(op)) {
             return compacted[compacted.length - 1] = new RetainOp(last.start, op.end, op.attributes);
           } else {
             return compacted.push(op);
@@ -6920,12 +6914,12 @@ module.exports = Tandem
       _ref = deltaB.ops;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         opInB = _ref[_i];
-        if (Delta.isInsert(opInB)) {
+        if (Op.isInsert(opInB)) {
           composed.push(opInB);
-        } else if (Delta.isRetain(opInB)) {
+        } else if (Op.isRetain(opInB)) {
           opsInRange = deltaA.getOpsAt(opInB.start, opInB.getLength());
           opsInRange = _.map(opsInRange, function(opInA) {
-            if (Delta.isInsert(opInA)) {
+            if (Op.isInsert(opInA)) {
               return new InsertOp(opInA.value, opInA.composeAttributes(opInB.attributes));
             } else {
               return new RetainOp(opInA.start, opInA.end, opInA.composeAttributes(opInB.attributes));
@@ -6949,12 +6943,12 @@ module.exports = Tandem
         throw new Error("startLength " + deltaA.startLength + " / startLength " + this.startLength + " mismatch");
       }
       if (!_.all(deltaA.ops, (function(op) {
-        return Delta.isInsert(op);
+        return Op.isInsert(op);
       }))) {
         throw new Error("DeltaA has retain in decompose");
       }
       if (!_.all(deltaC.ops, (function(op) {
-        return Delta.isInsert(op);
+        return Op.isInsert(op);
       }))) {
         throw new Error("DeltaC has retain in decompose");
       }
@@ -6988,10 +6982,10 @@ module.exports = Tandem
         offsetC = 0;
         _.each(opsInC, function(opInC) {
           var d, offsetA, opsInA;
-          if (Delta.isInsert(op)) {
+          if (Op.isInsert(op)) {
             d = new InsertOp(op.value.substring(offsetC, offsetC + opInC.getLength()), opInC.attributes);
             ops.push(d);
-          } else if (Delta.isRetain(op)) {
+          } else if (Op.isRetain(op)) {
             opsInA = deltaA.getOpsAt(op.start + offsetC, opInC.getLength());
             offsetA = 0;
             _.each(opsInA, function(opInA) {
@@ -7055,113 +7049,164 @@ module.exports = Tandem
       return insertDelta;
     };
 
-    Delta.prototype.follows = function(deltaA, aIsRemote) {
-      var addedAttributes, deltaB, elem, elemA, elemB, elemIndexA, elemIndexB, follow, followEndLength, followSet, followStartLength, indexA, indexB, length, _i, _len;
+    _insertInsertCase = function(elemA, elemB, indexes, aIsRemote) {
+      var length, results;
+      results = _.extend({}, indexes);
+      length = Math.min(elemA.getLength(), elemB.getLength());
+      if (aIsRemote) {
+        results.transformOp = new RetainOp(results.indexA, results.indexA + length);
+        results.indexA += length;
+        if (length === elemA.getLength()) {
+          results.elemIndexA++;
+        } else if (length < elemA.getLength()) {
+          results.elemA = _.last(elemA.split(length));
+        } else {
+          throw new Error("Invalid elem length in transform");
+        }
+      } else {
+        results.transformOp = _.first(elemB.split(length));
+        results.indexB += length;
+        if (length === elemB.getLength()) {
+          results.elemIndexB++;
+        } else {
+          results.elemB = _.last(elemB.split(length));
+        }
+      }
+      return results;
+    };
+
+    _retainRetainCase = function(elemA, elemB, indexes) {
+      var addedAttributes, elemIndexA, elemIndexB, errMsg, indexA, indexB, length, results;
+      indexA = indexes.indexA, indexB = indexes.indexB, elemIndexA = indexes.elemIndexA, elemIndexB = indexes.elemIndexB;
+      results = _.extend({}, indexes);
+      if (elemA.end < elemB.start) {
+        results.indexA += elemA.getLength();
+        results.elemIndexA++;
+      } else if (elemB.end < elemA.start) {
+        results.indexB += elemB.getLength();
+        results.elemIndexB++;
+      } else {
+        if (elemA.start < elemB.start) {
+          results.indexA += elemB.start - elemA.start;
+          elemA = results.elemA = new RetainOp(elemB.start, elemA.end, elemA.attributes);
+        } else if (elemB.start < elemA.start) {
+          results.indexB += elemA.start - elemB.start;
+          elemB = results.elemB = new RetainOp(elemA.start, elemB.end, elemB.attributes);
+        }
+        errMsg = "RetainOps must have same start length in transform";
+        if (elemA.start !== elemB.start) {
+          throw new Error(errMsg);
+        }
+        length = Math.min(elemA.end, elemB.end) - elemA.start;
+        addedAttributes = elemA.addAttributes(elemB.attributes);
+        results.transformOp = new RetainOp(results.indexA, results.indexA + length, addedAttributes);
+        results.indexA += length;
+        results.indexB += length;
+        if (elemA.end === elemB.end) {
+          results.elemIndexA++;
+          results.elemIndexB++;
+        } else if (elemA.end < elemB.end) {
+          results.elemIndexA++;
+          results.elemB = _.last(elemB.split(length));
+        } else {
+          results.elemIndexB++;
+          results.elemA = _.last(elemA.split(length));
+        }
+      }
+      if (results.elemIndexA !== indexes.elemIndexA) {
+        results.elemA = null;
+      }
+      if (results.elemIndexB !== indexes.elemIndexB) {
+        results.elemB = null;
+      }
+      return results;
+    };
+
+    Delta.prototype.transform = function(deltaA, aIsRemote) {
+      var deltaB, elemA, elemB, elemIndexA, elemIndexB, errMsg, indexA, indexB, results, transformEndLength, transformOps, transformStartLength, _applyResults, _buildIndexes;
       if (aIsRemote == null) {
         aIsRemote = false;
       }
-      deltaB = this;
       if (!Delta.isDelta(deltaA)) {
-        throw new Error("Follows called when deltaA is not a Delta, type: " + typeof deltaA);
+        errMsg = "Transform called when deltaA is not a Delta, type: ";
+        throw new Error(errMsg + typeof deltaA);
       }
       deltaA = new Delta(deltaA.startLength, deltaA.endLength, deltaA.ops);
-      deltaB = new Delta(deltaB.startLength, deltaB.endLength, deltaB.ops);
-      followStartLength = deltaA.endLength;
-      followSet = [];
+      deltaB = new Delta(this.startLength, this.endLength, this.ops);
+      transformOps = [];
       indexA = indexB = 0;
       elemIndexA = elemIndexB = 0;
+      _applyResults = function(results) {
+        if (results.indexA != null) {
+          indexA = results.indexA;
+        }
+        if (results.indexB != null) {
+          indexB = results.indexB;
+        }
+        if (results.elemIndexA != null) {
+          elemIndexA = results.elemIndexA;
+        }
+        if (results.elemIndexB != null) {
+          elemIndexB = results.elemIndexB;
+        }
+        if (results.elemA != null) {
+          deltaA.ops[elemIndexA] = results.elemA;
+        }
+        if (results.elemB != null) {
+          deltaB.ops[elemIndexB] = results.elemB;
+        }
+        if (results.transformOp != null) {
+          return transformOps.push(results.transformOp);
+        }
+      };
+      _buildIndexes = function() {
+        return {
+          indexA: indexA,
+          indexB: indexB,
+          elemIndexA: elemIndexA,
+          elemIndexB: elemIndexB
+        };
+      };
       while (elemIndexA < deltaA.ops.length && elemIndexB < deltaB.ops.length) {
         elemA = deltaA.ops[elemIndexA];
         elemB = deltaB.ops[elemIndexB];
-        if (Delta.isInsert(elemA) && Delta.isInsert(elemB)) {
-          length = Math.min(elemA.getLength(), elemB.getLength());
-          if (aIsRemote) {
-            followSet.push(new RetainOp(indexA, indexA + length));
-            indexA += length;
-            if (length === elemA.getLength()) {
-              elemIndexA++;
-            } else {
-              if (!(length < elemA.getLength())) {
-                throw new Error("Invalid elem length in follows");
-              }
-              deltaA.ops[elemIndexA] = _.last(elemA.split(length));
-            }
-          } else {
-            followSet.push(_.first(elemB.split(length)));
-            indexB += length;
-            if (length === elemB.getLength()) {
-              elemIndexB++;
-            } else {
-              deltaB.ops[elemIndexB] = _.last(elemB.split(length));
-            }
-          }
-        } else if (Delta.isRetain(elemA) && Delta.isRetain(elemB)) {
-          if (elemA.end < elemB.start) {
-            indexA += elemA.getLength();
-            elemIndexA++;
-          } else if (elemB.end < elemA.start) {
-            indexB += elemB.getLength();
-            elemIndexB++;
-          } else {
-            if (elemA.start < elemB.start) {
-              indexA += elemB.start - elemA.start;
-              elemA = deltaA.ops[elemIndexA] = new RetainOp(elemB.start, elemA.end, elemA.attributes);
-            } else if (elemB.start < elemA.start) {
-              indexB += elemA.start - elemB.start;
-              elemB = deltaB.ops[elemIndexB] = new RetainOp(elemA.start, elemB.end, elemB.attributes);
-            }
-            if (elemA.start !== elemB.start) {
-              throw new Error("RetainOps must have same start length in follow set");
-            }
-            length = Math.min(elemA.end, elemB.end) - elemA.start;
-            addedAttributes = elemA.addAttributes(elemB.attributes);
-            followSet.push(new RetainOp(indexA, indexA + length, addedAttributes));
-            indexA += length;
-            indexB += length;
-            if (elemA.end === elemB.end) {
-              elemIndexA++;
-              elemIndexB++;
-            } else if (elemA.end < elemB.end) {
-              elemIndexA++;
-              deltaB.ops[elemIndexB] = _.last(elemB.split(length));
-            } else {
-              deltaA.ops[elemIndexA] = _.last(elemA.split(length));
-              elemIndexB++;
-            }
-          }
-        } else if (Delta.isInsert(elemA) && Delta.isRetain(elemB)) {
-          followSet.push(new RetainOp(indexA, indexA + elemA.getLength()));
+        if (Op.isInsert(elemA) && Op.isInsert(elemB)) {
+          results = _insertInsertCase(elemA, elemB, _buildIndexes(), aIsRemote);
+          _applyResults(results);
+        } else if (Op.isRetain(elemA) && Op.isRetain(elemB)) {
+          results = _retainRetainCase(elemA, elemB, _buildIndexes());
+          _applyResults(results);
+        } else if (Op.isInsert(elemA) && Op.isRetain(elemB)) {
+          transformOps.push(new RetainOp(indexA, indexA + elemA.getLength()));
           indexA += elemA.getLength();
           elemIndexA++;
-        } else if (Delta.isRetain(elemA) && Delta.isInsert(elemB)) {
-          followSet.push(elemB);
+        } else if (Op.isRetain(elemA) && Op.isInsert(elemB)) {
+          transformOps.push(elemB);
           indexB += elemB.getLength();
           elemIndexB++;
         }
       }
       while (elemIndexA < deltaA.ops.length) {
         elemA = deltaA.ops[elemIndexA];
-        if (Delta.isInsert(elemA)) {
-          followSet.push(new RetainOp(indexA, indexA + elemA.getLength()));
+        if (Op.isInsert(elemA)) {
+          transformOps.push(new RetainOp(indexA, indexA + elemA.getLength()));
         }
         indexA += elemA.getLength();
         elemIndexA++;
       }
       while (elemIndexB < deltaB.ops.length) {
         elemB = deltaB.ops[elemIndexB];
-        if (Delta.isInsert(elemB)) {
-          followSet.push(elemB);
+        if (Op.isInsert(elemB)) {
+          transformOps.push(elemB);
         }
         indexB += elemB.getLength();
         elemIndexB++;
       }
-      followEndLength = 0;
-      for (_i = 0, _len = followSet.length; _i < _len; _i++) {
-        elem = followSet[_i];
-        followEndLength += elem.getLength();
-      }
-      follow = new Delta(followStartLength, followEndLength, followSet);
-      return follow;
+      transformStartLength = deltaA.endLength;
+      transformEndLength = _.reduce(transformOps, function(transformEndLength, op) {
+        return transformEndLength + op.getLength();
+      }, 0);
+      return new Delta(transformStartLength, transformEndLength, transformOps);
     };
 
     Delta.prototype.getOpsAt = function(index, length) {
@@ -7227,7 +7272,7 @@ module.exports = Tandem
         _ref = this.ops;
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
           op = _ref[_i];
-          if (!RetainOp.isRetain(op)) {
+          if (!Op.isRetain(op)) {
             return false;
           }
           if (op.start !== index) {
@@ -7248,7 +7293,7 @@ module.exports = Tandem
 
     Delta.prototype.isInsertsOnly = function() {
       return _.every(this.ops, function(op) {
-        return Delta.isInsert(op);
+        return Op.isInsert(op);
       });
     };
 
@@ -7256,7 +7301,7 @@ module.exports = Tandem
       var ops,
         _this = this;
       ops = _.map(other.ops, function(op) {
-        if (RetainOp.isRetain(op)) {
+        if (Op.isRetain(op)) {
           return new RetainOp(op.start + _this.startLength, op.end + _this.startLength, op.attributes);
         } else {
           return op;
@@ -7306,7 +7351,7 @@ module.exports = Tandem
 
 },{"./diff_match_patch":4,"./insert":5,"./op":6,"./retain":7,"underscore":13}],3:[function(require,module,exports){
 (function() {
-  var Delta, DeltaGenerator, InsertOp, RetainOp, _;
+  var Delta, DeltaGenerator, InsertOp, RetainOp, getUtils, setDomain, _, _cachedDomain;
 
   _ = require('underscore')._;
 
@@ -7316,339 +7361,322 @@ module.exports = Tandem
 
   RetainOp = require('./retain');
 
-  DeltaGenerator = (function() {
-    var formatBooleanAttribute, formatNonBooleanAttribute, limitScope, splitOpInThree,
-      _this = this;
+  _cachedDomain = null;
 
-    function DeltaGenerator() {}
+  setDomain = function(domain) {
+    return _cachedDomain = domain;
+  };
 
-    DeltaGenerator.constants = {
-      attributes: {
-        'bold': [true, false],
-        'italic': [true, false],
-        'strike': [true, false],
-        'font-face': ['monospace', 'serif'],
-        'fore-color': ['white', 'black', 'red', 'blue', 'lime', 'teal', 'magenta', 'yellow'],
-        'font-size': ['huge', 'large', 'small'],
-        'back-color': ['white', 'black', 'red', 'blue', 'lime', 'teal', 'magenta', 'yellow']
+  getUtils = function(domain) {
+    domain = domain || _cachedDomain;
+    if (domain == null) {
+      throw new Error("Must provide DeltaGenerator with a domain.");
+    }
+    if (domain.alphabet == null) {
+      throw new Error("Domain must define alphabet.");
+    }
+    if (domain.booleanAttributes == null) {
+      throw new Error("Domain must define booleanAttributes.");
+    }
+    if (domain.nonBooleanAttributes == null) {
+      throw new Error("Domain must define nonBooleanAttributes.");
+    }
+    if (domain.defaultAttributeValue == null) {
+      throw new Error("Domain must define defaultAttributeValue.");
+    }
+    return {
+      getRandomString: function(length) {
+        var _i, _ref, _results;
+        return _.map((function() {
+          _results = [];
+          for (var _i = 0, _ref = length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; 0 <= _ref ? _i++ : _i--){ _results.push(_i); }
+          return _results;
+        }).apply(this), function() {
+          return domain.alphabet[_.random(0, domain.alphabet.length - 1)];
+        }).join('');
       },
-      default_attribute_value: {
-        'back-color': 'white',
-        'fore-color': 'black',
-        'font-face': 'san-serif',
-        'font-size': 'normal'
-      },
-      alphabet: "abcdefghijklmnopqrstuvwxyz\n\n\n\n  "
-    };
-
-    DeltaGenerator.getRandomString = function(alphabet, length) {
-      var _i, _ref, _results;
-      return _.map((function() {
-        _results = [];
-        for (var _i = 0, _ref = length - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; 0 <= _ref ? _i++ : _i--){ _results.push(_i); }
-        return _results;
-      }).apply(this), function() {
-        return alphabet[_.random(0, alphabet.length - 1)];
-      }).join('');
-    };
-
-    DeltaGenerator.getRandomLength = function() {
-      var rand;
-      rand = Math.random();
-      if (rand < 0.6) {
-        return _.random(1, 2);
-      } else if (rand < 0.8) {
-        return _.random(3, 4);
-      } else if (rand < 0.9) {
-        return _.random(5, 9);
-      } else {
-        return _.random(10, 50);
-      }
-    };
-
-    DeltaGenerator.insertAt = function(delta, insertionPoint, insertions) {
-      var charIndex, head, op, opIndex, tail, _i, _len, _ref, _ref1;
-      charIndex = opIndex = 0;
-      _ref = delta.ops;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        op = _ref[_i];
-        if (charIndex === insertionPoint) {
-          break;
+      getRandomLength: function() {
+        var rand;
+        rand = Math.random();
+        if (rand < 0.6) {
+          return _.random(1, 2);
+        } else if (rand < 0.8) {
+          return _.random(3, 4);
+        } else if (rand < 0.9) {
+          return _.random(5, 9);
+        } else {
+          return _.random(10, 50);
         }
-        if (insertionPoint < charIndex + op.getLength()) {
-          _ref1 = op.split(insertionPoint - charIndex), head = _ref1[0], tail = _ref1[1];
-          delta.ops.splice(opIndex, 1, head, tail);
+      },
+      insertAt: function(delta, insertionPoint, insertions) {
+        var charIndex, head, op, opIndex, tail, _i, _len, _ref, _ref1;
+        charIndex = opIndex = 0;
+        _ref = delta.ops;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          op = _ref[_i];
+          if (charIndex === insertionPoint) {
+            break;
+          }
+          if (insertionPoint < charIndex + op.getLength()) {
+            _ref1 = op.split(insertionPoint - charIndex), head = _ref1[0], tail = _ref1[1];
+            delta.ops.splice(opIndex, 1, head, tail);
+            opIndex++;
+            break;
+          }
+          charIndex += op.getLength();
           opIndex++;
-          break;
         }
-        charIndex += op.getLength();
-        opIndex++;
-      }
-      delta.ops.splice(opIndex, 0, new InsertOp(insertions));
-      delta.endLength += insertions.length;
-      return delta.compact();
-    };
-
-    DeltaGenerator.deleteAt = function(delta, deletionPoint, numToDelete) {
-      var charIndex, curDelete, head, newText, op, ops, reachedDeletionPoint, tail, _i, _len, _ref;
-      charIndex = 0;
-      ops = [];
-      _ref = delta.ops;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        op = _ref[_i];
-        reachedDeletionPoint = charIndex === deletionPoint || deletionPoint < charIndex + op.getLength();
-        if (numToDelete > 0 && reachedDeletionPoint) {
-          curDelete = Math.min(numToDelete, op.getLength() - (deletionPoint - charIndex));
-          numToDelete -= curDelete;
-          if (Delta.isInsert(op)) {
-            newText = op.value.substring(0, deletionPoint - charIndex) + op.value.substring(deletionPoint - charIndex + curDelete);
-            if (newText.length > 0) {
-              ops.push(new InsertOp(newText));
+        delta.ops.splice(opIndex, 0, new InsertOp(insertions));
+        delta.endLength += insertions.length;
+        return delta.compact();
+      },
+      deleteAt: function(delta, deletionPoint, numToDelete) {
+        var charIndex, curDelete, head, newText, op, ops, reachedDeletionPoint, tail, _i, _len, _ref;
+        charIndex = 0;
+        ops = [];
+        _ref = delta.ops;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          op = _ref[_i];
+          reachedDeletionPoint = charIndex === deletionPoint || deletionPoint < charIndex + op.getLength();
+          if (numToDelete > 0 && reachedDeletionPoint) {
+            curDelete = Math.min(numToDelete, op.getLength() - (deletionPoint - charIndex));
+            numToDelete -= curDelete;
+            if (InsertOp.isInsert(op)) {
+              newText = op.value.substring(0, deletionPoint - charIndex) + op.value.substring(deletionPoint - charIndex + curDelete);
+              if (newText.length > 0) {
+                ops.push(new InsertOp(newText));
+              }
+            } else {
+              if (!RetainOp.isRetain(op)) {
+                throw new Error("Expected retain but got " + op);
+              }
+              head = new RetainOp(op.start, op.start + deletionPoint - charIndex, _.clone(op.attributes));
+              tail = new RetainOp(op.start + deletionPoint - charIndex + curDelete, op.end, _.clone(op.attributes));
+              if (head.start < head.end) {
+                ops.push(head);
+              }
+              if (tail.start < tail.end) {
+                ops.push(tail);
+              }
+            }
+            deletionPoint += curDelete;
+          } else {
+            ops.push(op);
+          }
+          charIndex += op.getLength();
+        }
+        delta.ops = ops;
+        return delta.endLength = _.reduce(ops, function(length, op) {
+          return length + op.getLength();
+        }, 0);
+      },
+      formatAt: function(delta, formatPoint, numToFormat, attrs, reference) {
+        var attr, charIndex, cur, curFormat, head, op, ops, reachedFormatPoint, tail, _formatBooleanAttribute, _formatNonBooleanAttribute, _i, _j, _len, _len1, _limitScope, _ref, _ref1, _splitOpInThree,
+          _this = this;
+        _splitOpInThree = function(elem, splitAt, length, reference) {
+          var cur, curStr, head, headStr, marker, newCur, op, origOps, tail, tailStr, _i, _len;
+          if (InsertOp.isInsert(elem)) {
+            headStr = elem.value.substring(0, splitAt);
+            head = new InsertOp(headStr, _.clone(elem.attributes));
+            curStr = elem.value.substring(splitAt, splitAt + length);
+            cur = new InsertOp(curStr, _.clone(elem.attributes));
+            tailStr = elem.value.substring(splitAt + length);
+            tail = new InsertOp(tailStr, _.clone(elem.attributes));
+            if (curStr.indexOf('\n') !== -1) {
+              newCur = curStr.substring(0, curStr.indexOf('\n'));
+              tailStr = curStr.substring(curStr.indexOf('\n')) + tailStr;
+              cur = new InsertOp(newCur, _.clone(elem.attributes));
+              tail = new InsertOp(tailStr, _.clone(elem.attributes));
             }
           } else {
-            if (!Delta.isRetain(op)) {
-              throw new Error("Expected retain but got " + op);
+            if (!RetainOp.isRetain(elem)) {
+              throw new Error("Expected retain but got " + elem);
             }
-            head = new RetainOp(op.start, op.start + deletionPoint - charIndex, _.clone(op.attributes));
-            tail = new RetainOp(op.start + deletionPoint - charIndex + curDelete, op.end, _.clone(op.attributes));
-            if (head.start < head.end) {
-              ops.push(head);
+            head = new RetainOp(elem.start, elem.start + splitAt, _.clone(elem.attributes));
+            cur = new RetainOp(head.end, head.end + length, _.clone(elem.attributes));
+            tail = new RetainOp(cur.end, elem.end, _.clone(elem.attributes));
+            origOps = reference.getOpsAt(cur.start, cur.getLength());
+            if (!_.every(origOps, function(op) {
+              return InsertOp.isInsert(op);
+            })) {
+              throw new Error("Non insert op in backref");
             }
-            if (tail.start < tail.end) {
-              ops.push(tail);
+            marker = cur.start;
+            for (_i = 0, _len = origOps.length; _i < _len; _i++) {
+              op = origOps[_i];
+              if (InsertOp.isInsert(op)) {
+                if (op.value.indexOf('\n') !== -1) {
+                  cur = new RetainOp(cur.start, marker + op.value.indexOf('\n'), _.clone(cur.attributes));
+                  tail = new RetainOp(marker + op.value.indexOf('\n'), tail.end, _.clone(tail.attributes));
+                  break;
+                } else {
+                  marker += op.getLength();
+                }
+              } else {
+                throw new Error("Got retainOp in reference delta!");
+              }
             }
           }
-          deletionPoint += curDelete;
-        } else {
-          ops.push(op);
-        }
-        charIndex += op.getLength();
-      }
-      delta.ops = ops;
-      return delta.endLength = _.reduce(ops, function(length, op) {
-        return length + op.getLength();
-      }, 0);
-    };
-
-    splitOpInThree = function(elem, splitAt, length, reference) {
-      var cur, curStr, head, headStr, marker, newCur, op, origOps, tail, tailStr, _i, _len;
-      if (Delta.isInsert(elem)) {
-        headStr = elem.value.substring(0, splitAt);
-        head = new InsertOp(headStr, _.clone(elem.attributes));
-        curStr = elem.value.substring(splitAt, splitAt + length);
-        cur = new InsertOp(curStr, _.clone(elem.attributes));
-        tailStr = elem.value.substring(splitAt + length);
-        tail = new InsertOp(tailStr, _.clone(elem.attributes));
-        if (curStr.indexOf('\n') !== -1) {
-          newCur = curStr.substring(0, curStr.indexOf('\n'));
-          tailStr = curStr.substring(curStr.indexOf('\n')) + tailStr;
-          cur = new InsertOp(newCur, _.clone(elem.attributes));
-          tail = new InsertOp(tailStr, _.clone(elem.attributes));
-        }
-      } else {
-        if (!Delta.isRetain(elem)) {
-          throw new Error("Expected retain but got " + elem);
-        }
-        head = new RetainOp(elem.start, elem.start + splitAt, _.clone(elem.attributes));
-        cur = new RetainOp(head.end, head.end + length, _.clone(elem.attributes));
-        tail = new RetainOp(cur.end, elem.end, _.clone(elem.attributes));
-        origOps = reference.getOpsAt(cur.start, cur.getLength());
-        if (!_.every(origOps, function(op) {
-          return Delta.isInsert(op);
-        })) {
-          throw new Error("Non insert op in backref");
-        }
-        marker = cur.start;
-        for (_i = 0, _len = origOps.length; _i < _len; _i++) {
-          op = origOps[_i];
-          if (Delta.isInsert(op)) {
-            if (op.value.indexOf('\n') !== -1) {
-              cur = new RetainOp(cur.start, marker + op.value.indexOf('\n'), _.clone(cur.attributes));
-              tail = new RetainOp(marker + op.value.indexOf('\n'), tail.end, _.clone(tail.attributes));
+          return [head, cur, tail];
+        };
+        _limitScope = function(op, tail, attr, referenceOps) {
+          var length, refOp, val, _i, _len, _results;
+          length = 0;
+          val = referenceOps[0].attributes[attr];
+          _results = [];
+          for (_i = 0, _len = referenceOps.length; _i < _len; _i++) {
+            refOp = referenceOps[_i];
+            if (refOp.attributes[attr] !== val) {
+              op.end = op.start + length;
+              tail.start = op.end;
               break;
             } else {
-              marker += op.getLength();
+              _results.push(length += refOp.getLength());
             }
-          } else {
-            throw new Error("Got retainOp in reference delta!");
           }
-        }
-      }
-      return [head, cur, tail];
-    };
-
-    limitScope = function(op, tail, attr, referenceOps) {
-      var length, refOp, val, _i, _len, _results;
-      length = 0;
-      val = referenceOps[0].attributes[attr];
-      _results = [];
-      for (_i = 0, _len = referenceOps.length; _i < _len; _i++) {
-        refOp = referenceOps[_i];
-        if (refOp.attributes[attr] !== val) {
-          op.end = op.start + length;
-          tail.start = op.end;
-          break;
-        } else {
-          _results.push(length += refOp.getLength());
-        }
-      }
-      return _results;
-    };
-
-    formatBooleanAttribute = function(op, tail, attr, reference) {
-      var referenceOps;
-      if (Delta.isInsert(op)) {
-        if (op.attributes[attr] != null) {
-          return delete op.attributes[attr];
-        } else {
-          return op.attributes[attr] = true;
-        }
-      } else {
-        if (!Delta.isRetain(op)) {
-          throw new Error("Expected retain but got " + op);
-        }
-        if (op.attributes[attr] != null) {
-          return delete op.attributes[attr];
-        } else {
-          referenceOps = reference.getOpsAt(op.start, op.getLength());
-          if (!_.every(referenceOps, function(op) {
-            return Delta.isInsert(op);
-          })) {
-            throw new Error("Formatting a retain that does not refer to an insert.");
-          }
-          if (referenceOps.length > 0) {
-            limitScope(op, tail, attr, referenceOps);
-            if (referenceOps[0].attributes[attr] != null) {
-              if (!referenceOps[0].attributes[attr]) {
-                throw new Error("Boolean attribute on reference delta should only be true!");
-              }
-              return op.attributes[attr] = null;
+          return _results;
+        };
+        _formatBooleanAttribute = function(op, tail, attr, reference) {
+          var referenceOps;
+          if (InsertOp.isInsert(op)) {
+            if (op.attributes[attr] != null) {
+              return delete op.attributes[attr];
             } else {
               return op.attributes[attr] = true;
             }
-          }
-        }
-      }
-    };
-
-    formatNonBooleanAttribute = function(op, tail, attr, reference) {
-      var getNewAttrVal, referenceOps;
-      getNewAttrVal = function(prevVal) {
-        if (prevVal != null) {
-          return _.first(_.shuffle(_.without(DeltaGenerator.constants.attributes[attr], prevVal)));
-        } else {
-          return _.first(_.shuffle(_.without(DeltaGenerator.constants.attributes[attr], DeltaGenerator.constants.default_attribute_value[attr])));
-        }
-      };
-      if (Delta.isInsert(op)) {
-        return op.attributes[attr] = getNewAttrVal(attr, op.attributes[attr]);
-      } else {
-        if (!Delta.isRetain(op)) {
-          throw new Error("Expected retain but got " + op);
-        }
-        referenceOps = reference.getOpsAt(op.start, op.getLength());
-        if (!_.every(referenceOps, function(op) {
-          return Delta.isInsert(op);
-        })) {
-          throw new Error("Formatting a retain that does not refer to an insert.");
-        }
-        if (referenceOps.length > 0) {
-          limitScope(op, tail, attr, referenceOps);
-          if ((op.attributes[attr] != null) && Math.random() < 0.5) {
-            return delete op.attributes[attr];
           } else {
-            return op.attributes[attr] = getNewAttrVal(op.attributes[attr]);
-          }
-        }
-      }
-    };
-
-    DeltaGenerator.formatAt = function(delta, formatPoint, numToFormat, attrs, reference) {
-      var attr, charIndex, cur, curFormat, head, op, ops, reachedFormatPoint, tail, _i, _j, _len, _len1, _ref, _ref1;
-      charIndex = 0;
-      ops = [];
-      _ref = delta.ops;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        op = _ref[_i];
-        reachedFormatPoint = charIndex === formatPoint || charIndex + op.getLength() > formatPoint;
-        if (numToFormat > 0 && reachedFormatPoint) {
-          curFormat = Math.min(numToFormat, op.getLength() - (formatPoint - charIndex));
-          numToFormat -= curFormat;
-          _ref1 = splitOpInThree(op, formatPoint - charIndex, curFormat, reference), head = _ref1[0], cur = _ref1[1], tail = _ref1[2];
-          ops.push(head);
-          ops.push(cur);
-          ops.push(tail);
-          for (_j = 0, _len1 = attrs.length; _j < _len1; _j++) {
-            attr = attrs[_j];
-            switch (attr) {
-              case 'bold':
-              case 'italic':
-              case 'underline':
-              case 'strike':
-              case 'link':
-                formatBooleanAttribute(cur, tail, attr, reference);
-                break;
-              case 'font-size':
-              case 'font-face':
-              case 'fore-color':
-              case 'back-color':
-                formatNonBooleanAttribute(cur, tail, attr, reference);
-                break;
-              default:
-                throw new Error("Received unknown attribute: " + attr);
+            if (!RetainOp.isRetain(op)) {
+              throw new Error("Expected retain but got " + op);
+            }
+            if (op.attributes[attr] != null) {
+              return delete op.attributes[attr];
+            } else {
+              referenceOps = reference.getOpsAt(op.start, op.getLength());
+              if (!_.every(referenceOps, function(op) {
+                return InsertOp.isInsert(op);
+              })) {
+                throw new Error("Formatting a retain that does not refer to an insert.");
+              }
+              if (referenceOps.length > 0) {
+                _limitScope(op, tail, attr, referenceOps);
+                if (referenceOps[0].attributes[attr] != null) {
+                  if (!referenceOps[0].attributes[attr]) {
+                    throw new Error("Boolean attribute on reference delta should only be true!");
+                  }
+                  return op.attributes[attr] = null;
+                } else {
+                  return op.attributes[attr] = true;
+                }
+              }
             }
           }
-          formatPoint += curFormat;
+        };
+        _formatNonBooleanAttribute = function(op, tail, attr, reference) {
+          var getNewAttrVal, referenceOps;
+          getNewAttrVal = function(prevVal) {
+            if (prevVal != null) {
+              return _.first(_.shuffle(_.without(domain.nonBooleanAttributes[attr], prevVal)));
+            } else {
+              return _.first(_.shuffle(_.without(domain.nonBooleanAttributes[attr], domain.defaultAttributeValue[attr])));
+            }
+          };
+          if (InsertOp.isInsert(op)) {
+            return op.attributes[attr] = getNewAttrVal(attr, op.attributes[attr]);
+          } else {
+            if (!RetainOp.isRetain(op)) {
+              throw new Error("Expected retain but got " + op);
+            }
+            referenceOps = reference.getOpsAt(op.start, op.getLength());
+            if (!_.every(referenceOps, function(op) {
+              return InsertOp.isInsert(op);
+            })) {
+              throw new Error("Formatting a retain that does not refer to an insert.");
+            }
+            if (referenceOps.length > 0) {
+              _limitScope(op, tail, attr, referenceOps);
+              if ((op.attributes[attr] != null) && Math.random() < 0.5) {
+                return delete op.attributes[attr];
+              } else {
+                return op.attributes[attr] = getNewAttrVal(op.attributes[attr]);
+              }
+            }
+          }
+        };
+        charIndex = 0;
+        ops = [];
+        _ref = delta.ops;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          op = _ref[_i];
+          reachedFormatPoint = charIndex === formatPoint || charIndex + op.getLength() > formatPoint;
+          if (numToFormat > 0 && reachedFormatPoint) {
+            curFormat = Math.min(numToFormat, op.getLength() - (formatPoint - charIndex));
+            numToFormat -= curFormat;
+            _ref1 = _splitOpInThree(op, formatPoint - charIndex, curFormat, reference), head = _ref1[0], cur = _ref1[1], tail = _ref1[2];
+            ops.push(head);
+            ops.push(cur);
+            ops.push(tail);
+            for (_j = 0, _len1 = attrs.length; _j < _len1; _j++) {
+              attr = attrs[_j];
+              if (_.has(domain.booleanAttributes, attr)) {
+                _formatBooleanAttribute(cur, tail, attr, reference);
+              } else if (_.has(domain.nonBooleanAttributes, attr)) {
+                _formatNonBooleanAttribute(cur, tail, attr, reference);
+              } else {
+                throw new Error("Received unknown attribute: " + attr);
+              }
+            }
+            formatPoint += curFormat;
+          } else {
+            ops.push(op);
+          }
+          charIndex += op.getLength();
+        }
+        delta.endLength = _.reduce(ops, function(length, delta) {
+          return length + delta.getLength();
+        }, 0);
+        delta.ops = ops;
+        return delta.compact();
+      },
+      addRandomOp: function(newDelta, referenceDelta) {
+        var attrs, finalIndex, numAttrs, opIndex, opLength, rand, shuffled_attrs;
+        finalIndex = referenceDelta.endLength - 1;
+        opIndex = _.random(0, finalIndex);
+        rand = Math.random();
+        if (rand < 0.5) {
+          opLength = this.getRandomLength();
+          this.insertAt(newDelta, opIndex, this.getRandomString(domain.alphabet, opLength));
+        } else if (rand < 0.75) {
+          if (referenceDelta.endLength <= 1) {
+            return newDelta;
+          }
+          opIndex = _.random(0, finalIndex - 1);
+          opLength = _.random(1, finalIndex - opIndex);
+          this.deleteAt(newDelta, opIndex, opLength);
         } else {
-          ops.push(op);
+          shuffled_attrs = _.shuffle(_.keys(domain.booleanAttributes).concat(_.keys(domain.nonBooleanAttributes)));
+          numAttrs = _.random(1, shuffled_attrs.length);
+          attrs = shuffled_attrs.slice(0, numAttrs);
+          opLength = _.random(1, finalIndex - opIndex);
+          this.formatAt(newDelta, opIndex, opLength, attrs, referenceDelta);
         }
-        charIndex += op.getLength();
-      }
-      delta.endLength = _.reduce(ops, function(length, delta) {
-        return length + delta.getLength();
-      }, 0);
-      delta.ops = ops;
-      return delta.compact();
-    };
-
-    DeltaGenerator.addRandomOp = function(newDelta, referenceDelta) {
-      var attrs, finalIndex, numAttrs, opIndex, opLength, rand, shuffled_attrs;
-      finalIndex = referenceDelta.endLength - 1;
-      opIndex = _.random(0, finalIndex);
-      rand = Math.random();
-      if (rand < 0.5) {
-        opLength = this.getRandomLength();
-        this.insertAt(newDelta, opIndex, this.getRandomString(this.constants.alphabet, opLength));
-      } else if (rand < 0.75) {
-        if (referenceDelta.endLength <= 1) {
-          return newDelta;
+        return newDelta;
+      },
+      getRandomDelta: function(referenceDelta, numOps) {
+        var i, newDelta, _i;
+        newDelta = new Delta(referenceDelta.endLength, referenceDelta.endLength, [new RetainOp(0, referenceDelta.endLength)]);
+        numOps || (numOps = _.random(1, 10));
+        for (i = _i = 0; 0 <= numOps ? _i < numOps : _i > numOps; i = 0 <= numOps ? ++_i : --_i) {
+          this.addRandomOp(newDelta, referenceDelta);
         }
-        opIndex = _.random(0, finalIndex - 1);
-        opLength = _.random(1, finalIndex - opIndex);
-        this.deleteAt(newDelta, opIndex, opLength);
-      } else {
-        shuffled_attrs = _.shuffle(_.keys(this.constants.attributes));
-        numAttrs = _.random(1, shuffled_attrs.length);
-        attrs = shuffled_attrs.slice(0, numAttrs);
-        opLength = _.random(1, finalIndex - opIndex);
-        this.formatAt(newDelta, opIndex, opLength, attrs, referenceDelta);
+        return newDelta;
       }
-      return newDelta;
     };
+  };
 
-    DeltaGenerator.getRandomDelta = function(referenceDelta, numOps) {
-      var i, newDelta, _i;
-      newDelta = new Delta(referenceDelta.endLength, referenceDelta.endLength, [new RetainOp(0, referenceDelta.endLength)]);
-      numOps || (numOps = _.random(1, 10));
-      for (i = _i = 0; 0 <= numOps ? _i < numOps : _i > numOps; i = 0 <= numOps ? ++_i : --_i) {
-        this.addRandomOp(newDelta, referenceDelta);
-      }
-      return newDelta;
-    };
-
-    return DeltaGenerator;
-
-  }).call(this);
+  DeltaGenerator = {
+    setDomain: setDomain,
+    getUtils: getUtils
+  };
 
   module.exports = DeltaGenerator;
 
@@ -7682,10 +7710,6 @@ module.exports = Tandem
 
   InsertOp = (function(_super) {
     __extends(InsertOp, _super);
-
-    InsertOp.isInsert = function(i) {
-      return (i != null) && typeof i.value === "string";
-    };
 
     function InsertOp(value, attributes) {
       this.value = value;
@@ -7736,15 +7760,19 @@ module.exports = Tandem
 
 },{"./op":6,"underscore":13}],6:[function(require,module,exports){
 (function() {
-  var Op, isInsert, _;
+  var Op, _;
 
   _ = require('underscore')._;
 
-  isInsert = function(i) {
-    return (i != null) && typeof i.value === "string";
-  };
-
   Op = (function() {
+    Op.isInsert = function(i) {
+      return (i != null) && typeof i.value === "string";
+    };
+
+    Op.isRetain = function(r) {
+      return (r != null) && typeof r.start === "number" && typeof r.end === "number";
+    };
+
     function Op(attributes) {
       if (attributes == null) {
         attributes = {};
@@ -7781,7 +7809,7 @@ module.exports = Tandem
         resolvedAttrs = _.clone(oldAttrs);
         for (key in newAttrs) {
           value = newAttrs[key];
-          if (isInsert(_this) && value === null) {
+          if (Op.isInsert(_this) && value === null) {
             delete resolvedAttrs[key];
           } else if (typeof value !== 'undefined') {
             if (typeof resolvedAttrs[key] === 'object' && typeof value === 'object' && _.all([resolvedAttrs[key], newAttrs[key]], (function(val) {
@@ -7826,10 +7854,6 @@ module.exports = Tandem
 
   RetainOp = (function(_super) {
     __extends(RetainOp, _super);
-
-    RetainOp.isRetain = function(r) {
-      return (r != null) && typeof r.start === "number" && typeof r.end === "number";
-    };
 
     function RetainOp(start, end, attributes) {
       this.start = start;
@@ -11422,10 +11446,10 @@ ClientEngine = (function(_super) {
     delta = Delta.makeDelta(delta);
     if (this.arrived.canCompose(delta)) {
       this.arrived = this.arrived.compose(delta);
-      flightDeltaFollows = delta.follows(this.inFlight, false);
-      textFollows = flightDeltaFollows.follows(this.inLine, false);
-      this.inFlight = this.inFlight.follows(delta, true);
-      this.inLine = this.inLine.follows(flightDeltaFollows, true);
+      flightDeltaFollows = delta.transform(this.inFlight, false);
+      textFollows = flightDeltaFollows.transform(this.inLine, false);
+      this.inFlight = this.inFlight.transform(delta, true);
+      this.inLine = this.inLine.transform(flightDeltaFollows, true);
       this.emit(ClientEngine.events.UPDATE, textFollows);
       return true;
     } else {

@@ -41,7 +41,7 @@ describe('Engine', ->
     origDelta = TandemServer.Delta.makeInsertDelta(1, 1, 't')
     engine.transform(origDelta, 1, (err, delta, version) ->
       expect(version).to.equal(3)
-      expected = (origDelta.follows(deltas[1], true)).follows(deltas[2], true)
+      expected = (origDelta.transform(deltas[1], true)).transform(deltas[2], true)
       expect(delta).to.deep.equal(expected)
       done()
     )

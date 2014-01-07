@@ -91,7 +91,7 @@ class TandemServerEngine extends EventEmitter
     this.getHistory(version, (err, deltas) =>
       return callback(err) if err?
       delta = _.reduce(deltas, (delta, hist) ->
-        return delta.follows(hist, true)
+        return delta.transform(hist, true)
       , delta)
       return callback(null, delta, @version)
     )
