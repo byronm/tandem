@@ -2,6 +2,7 @@ _       = require('underscore')._
 async   = require('async')
 expect  = require('chai').expect
 http    = require('http')
+Tandem       = require('tandem-core')
 TandemClient = require('../client')
 TandemServer = require('../index')
 
