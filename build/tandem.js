@@ -4789,7 +4789,7 @@ module.exports = ClientEngine;
 
 
 },{"tandem-core/delta":9}],15:[function(require,module,exports){
-var Delta, TandemEngine, TandemFile, initAdapterListeners, initEngine, initEngineListeners, initHealthListeners, initListeners, resync, sendUpdate, setReady, sync, syncUsers, warn,
+var Delta, TandemEngine, TandemFile, initAdapterListeners, initEngine, initEngineListeners, initHealthListeners, initListeners, resync, sendUpdate, setReady, sync, warn,
   __slice = [].slice,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   __hasProp = {}.hasOwnProperty,
@@ -4828,23 +4828,6 @@ initAdapterListeners = function() {
     type = packet.type;
     packet = _.omit(packet, 'type');
     return _this.emit(type, packet);
-  }).on(TandemFile.routes.JOIN, function(userId) {
-    if (_this.users[userId] == null) {
-      _this.users[userId] = 0;
-    }
-    _this.users[userId] += 1;
-    if (_this.users[userId] === 1) {
-      return _this.emit(TandemFile.events.JOIN, userId, _this.users[userId]);
-    }
-  }).on(TandemFile.routes.LEAVE, function(userId) {
-    if (_this.users[userId] == null) {
-      return;
-    }
-    _this.users[userId] -= 1;
-    if (_this.users[userId] === 0) {
-      _this.emit(TandemFile.events.LEAVE, userId);
-      return delete _this.users[userId];
-    }
   });
 };
 
@@ -4937,14 +4920,14 @@ sendUpdate = function(delta, version, callback) {
   });
 };
 
-setReady = function(delta, version, users, resend) {
+setReady = function(delta, version, resend) {
   if (resend == null) {
     resend = false;
   }
   if (resend) {
     this.engine.resendUpdate();
   }
-  return this.emit(TandemFile.events.READY, delta, version, users);
+  return this.emit(TandemFile.events.READY, delta, version);
 };
 
 sync = function() {
@@ -4953,30 +4936,18 @@ sync = function() {
     version: this.engine.version
   }, function(response) {
     _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
-    syncUsers.call(_this, response.users);
     if (response.resync) {
       warn("Sync requesting resync");
       return _this.engine.resync(Delta.makeDelta(response.head), response.version);
     } else if (_this.engine.remoteUpdate(response.delta, response.version)) {
-      return setReady.call(_this, response.delta, response.version, response.users, false);
+      return setReady.call(_this, response.delta, response.version, false);
     } else {
       warn("Remote update failed on sync, requesting resync");
       return resync.call(_this, function() {
-        return setReady.call(_this, response.delta, response.version, response.users, true);
+        return setReady.call(_this, response.delta, response.version, true);
       });
     }
   }, true);
-};
-
-syncUsers = function(users) {
-  var _this = this;
-  _.each(_.difference(_.keys(users), _.keys(this.users)), function(userId) {
-    return _this.emit(TandemFile.events.JOIN, userId, users[userId]);
-  });
-  _.each(_.difference(_.keys(this.users), _.keys(users)), function(userId) {
-    return _this.emit(TandemFile.events.LEAVE, userId);
-  });
-  return this.users = users;
 };
 
 TandemFile = (function(_super) {
@@ -4985,8 +4956,6 @@ TandemFile = (function(_super) {
   TandemFile.events = {
     ERROR: 'file-error',
     HEALTH: 'file-health',
-    JOIN: 'file-join',
-    LEAVE: 'file-leave',
     READY: 'file-ready',
     UPDATE: 'file-update'
   };
@@ -4999,8 +4968,6 @@ TandemFile = (function(_super) {
 
   TandemFile.routes = {
     BROADCAST: 'broadcast',
-    JOIN: 'user/join',
-    LEAVE: 'user/leave',
     RESYNC: 'ot/resync',
     SYNC: 'ot/sync',
     UPDATE: 'ot/update'
@@ -5015,7 +4982,6 @@ TandemFile = (function(_super) {
     this.broadcast = __bind(this.broadcast, this);
     this.id = _.uniqueId('file-');
     this.health = TandemFile.health.WARNING;
-    this.users = {};
     initial || (initial = {
       head: Delta.getInitial(''),
       version: 0

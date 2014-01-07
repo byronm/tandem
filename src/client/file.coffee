@@ -21,16 +21,6 @@ initAdapterListeners = ->
     type = packet.type
     packet = _.omit(packet, 'type')
     this.emit(type, packet)
-  ).on(TandemFile.routes.JOIN, (userId) =>
-    @users[userId] = 0 unless @users[userId]?
-    @users[userId] += 1
-    this.emit(TandemFile.events.JOIN, userId, @users[userId]) if @users[userId] == 1
-  ).on(TandemFile.routes.LEAVE, (userId) =>
-    return unless @users[userId]?
-    @users[userId] -= 1
-    if @users[userId] == 0
-      this.emit(TandemFile.events.LEAVE, userId)
-      delete @users[userId]
   )
 
 initEngine = (initial, version) ->
@@ -96,44 +86,32 @@ sendUpdate = (delta, version, callback) ->
       callback.call(this, response)
   )
 
-setReady = (delta, version, users, resend = false) ->
+setReady = (delta, version, resend = false) ->
   # Need to resend before emitting ready
   # Otherwise listeners on ready might immediate send an update and thus resendUpdate will duplicate packet
   @engine.resendUpdate() if resend
-  this.emit(TandemFile.events.READY, delta, version, users)
+  this.emit(TandemFile.events.READY, delta, version)
 
 sync = ->
   this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
-    syncUsers.call(this, response.users)
     if response.resync
       warn("Sync requesting resync")
       @engine.resync(Delta.makeDelta(response.head), response.version)
     else if @engine.remoteUpdate(response.delta, response.version)
-      setReady.call(this, response.delta, response.version, response.users, false)
+      setReady.call(this, response.delta, response.version, false)
     else
       warn("Remote update failed on sync, requesting resync")
       resync.call(this, =>
-        setReady.call(this, response.delta, response.version, response.users, true)
+        setReady.call(this, response.delta, response.version, true)
       )
   , true)
-
-syncUsers = (users) ->
-  _.each(_.difference(_.keys(users), _.keys(@users)), (userId) =>
-    this.emit(TandemFile.events.JOIN, userId, users[userId])
-  )
-  _.each(_.difference(_.keys(@users), _.keys(users)), (userId) =>
-    this.emit(TandemFile.events.LEAVE, userId)
-  )
-  @users = users
 
 
 class TandemFile extends EventEmitter2
   @events:
     ERROR   : 'file-error'
     HEALTH  : 'file-health'
-    JOIN    : 'file-join'
-    LEAVE   : 'file-leave'
     READY   : 'file-ready'
     UPDATE  : 'file-update'
 
@@ -144,8 +122,6 @@ class TandemFile extends EventEmitter2
 
   @routes:
     BROADCAST : 'broadcast'
-    JOIN      : 'user/join'
-    LEAVE     : 'user/leave'
     RESYNC    : 'ot/resync'
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
@@ -153,7 +129,6 @@ class TandemFile extends EventEmitter2
   constructor: (@fileId, @adapter, initial = null) ->
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
-    @users = {}
     initial or= { head: Delta.getInitial(''), version: 0 }
     initEngine.call(this, initial.head, initial.version)
     initListeners.call(this)

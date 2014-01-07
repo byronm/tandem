@@ -13,8 +13,7 @@
     return {
       resync: true,
       head: file.getHead(),
-      version: file.getVersion(),
-      users: file.users
+      version: file.getVersion()
     };
   };
 
@@ -47,7 +46,6 @@
             _this.join(sessionId, file.id);
             return callback({
               delta: delta,
-              users: file.users,
               version: version
             });
           }

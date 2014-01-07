@@ -87,9 +87,7 @@ describe('Storage', ->
     file = client.open('basic-auth-file', { secret: 1337 })
     file.on(TandemClient.File.events.UPDATE, (delta) ->
       insertDelta = TandemServer.Delta.makeInsertDelta(delta.endLength, 0, 'Oh ')
-      setTimeout( ->
-        expect(server.fileManager.files['basic-auth-file'].versionSaved).to.equal(10)
-      , 500)
+      expect(server.fileManager.files['basic-auth-file'].versionSaved).to.equal(10)
       eventEmitter.on('update', (head, version, deltas) =>
         expect(version).to.equal(11)
         expect(head).to.deep.equal(helloDelta.compose(insertDelta))

@@ -41,9 +41,6 @@ class TandemSocket extends TandemAdapter
     )
 
   addClient: (sessionId, userId, file) ->
-    this.broadcast(sessionId, TandemFile.routes.JOIN, userId)
-    file.users[userId] ?= 0
-    file.users[userId] += 1
     socket = @sockets[sessionId]
     _.each(TandemFile.routes, (route, name) ->
       socket.removeAllListeners(route)
@@ -54,9 +51,7 @@ class TandemSocket extends TandemAdapter
     super
 
   removeClient: (sessionId, userId, file) ->
-    this.broadcast(sessionId, TandemFile.routes.LEAVE, userId) if userId?
     this.leave(sessionId, file.id)
-    file.users[userId] -= 1 if file.users[userId]?
 
   broadcast: (sessionId, fileId, route, packet) ->
     socket = @sockets[sessionId]

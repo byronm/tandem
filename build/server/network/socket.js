@@ -66,13 +66,8 @@
     }
 
     TandemSocket.prototype.addClient = function(sessionId, userId, file) {
-      var socket, _base,
+      var socket,
         _this = this;
-      this.broadcast(sessionId, TandemFile.routes.JOIN, userId);
-      if ((_base = file.users)[userId] == null) {
-        _base[userId] = 0;
-      }
-      file.users[userId] += 1;
       socket = this.sockets[sessionId];
       _.each(TandemFile.routes, function(route, name) {
         return socket.removeAllListeners(route);
@@ -84,13 +79,7 @@
     };
 
     TandemSocket.prototype.removeClient = function(sessionId, userId, file) {
-      if (userId != null) {
-        this.broadcast(sessionId, TandemFile.routes.LEAVE, userId);
-      }
-      this.leave(sessionId, file.id);
-      if (file.users[userId] != null) {
-        return file.users[userId] -= 1;
-      }
+      return this.leave(sessionId, file.id);
     };
 
     TandemSocket.prototype.broadcast = function(sessionId, fileId, route, packet) {

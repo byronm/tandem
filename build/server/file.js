@@ -16,8 +16,6 @@
 
     TandemFile.routes = {
       BROADCAST: 'broadcast',
-      JOIN: 'user/join',
-      LEAVE: 'user/leave',
       RESYNC: 'ot/resync',
       SYNC: 'ot/sync',
       UPDATE: 'ot/update'
@@ -27,7 +25,6 @@
       var _this = this;
       this.id = id;
       this.versionSaved = version;
-      this.users = {};
       this.cache = _.isFunction(options.cache) ? new options.cache(this.id) : options.cache;
       this.engine = new TandemEngine(this.cache, initial, version, function(err, engine) {
         _this.engine = engine;

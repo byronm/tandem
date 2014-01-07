@@ -8,7 +8,6 @@ _makeResyncPacket = (file) ->
     resync  : true
     head    : file.getHead()
     version : file.getVersion()
-    users   : file.users
   }
 
 _onMessageError = (err, file, callback) ->
@@ -36,7 +35,6 @@ class TandemNetworkAdapter extends EventEmitter
           this.join(sessionId, file.id)
           callback(
             delta: delta
-            users: file.users
             version: version
           )
       )

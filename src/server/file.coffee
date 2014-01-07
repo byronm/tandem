@@ -7,15 +7,12 @@ TandemEngine      = require('./engine')
 class TandemFile extends EventEmitter
   @routes:
     BROADCAST : 'broadcast'
-    JOIN      : 'user/join'
-    LEAVE     : 'user/leave'
     RESYNC    : 'ot/resync'
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
   constructor: (@id, initial, version, options, callback) ->
     @versionSaved = version
-    @users = {}
     @cache = if _.isFunction(options.cache) then new options.cache(@id) else options.cache
     @engine = new TandemEngine(@cache, initial, version, (err, engine) =>
       @engine = engine
