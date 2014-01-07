@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, TandemEmitter, TandemEngine, TandemFile, _,
+  var EventEmitter, FileError, Tandem, TandemEmitter, TandemFile, _, _atomic, _getDeltaSince, _getLoadedVersion,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -7,9 +7,83 @@
 
   EventEmitter = require('events').EventEmitter;
 
+  Tandem = require('tandem-core');
+
   TandemEmitter = require('./emitter');
 
-  TandemEngine = require('./engine');
+  _atomic = function(fn) {
+    var _this = this;
+    return async.until(function() {
+      return _this.locked === false;
+    }, function(callback) {
+      return setTimeout(callback, 100);
+    }, function() {
+      _this.locked = true;
+      return fn(function() {
+        return _this.locked = false;
+      });
+    });
+  };
+
+  _getLoadedVersion = function(callback) {
+    var _this = this;
+    return this.cache.range('history', 0, 1, function(err, range) {
+      if (err != null) {
+        return callback(err);
+      }
+      if (range.length > 0) {
+        return callback(null, JSON.parse(range[0]).version - 1);
+      } else {
+        return callback(null, -1);
+      }
+    });
+  };
+
+  _getDeltaSince = function(version, callback) {
+    var _this = this;
+    if (version < 0) {
+      return callback(new FileError("Negative version", this));
+    }
+    if (version === 0) {
+      return callback(null, this.head, this.version);
+    }
+    if (version === this.version) {
+      return callback(null, Tandem.Delta.getIdentity(this.head.endLength), this.version);
+    }
+    return this.getHistory(version, function(err, deltas) {
+      var delta, firstHist;
+      if (err != null) {
+        return callback(err);
+      }
+      if (deltas.length === 0) {
+        return callback(new FileError("No version " + version + " in history", _this));
+      }
+      firstHist = deltas.shift();
+      delta = _.reduce(deltas, function(delta, hist) {
+        return delta.compose(hist);
+      }, firstHist);
+      return callback(null, delta, _this.version);
+    });
+  };
+
+  FileError = (function(_super) {
+    __extends(FileError, _super);
+
+    function FileError(message, file) {
+      var _ref, _ref1, _ref2, _ref3;
+      this.message = message;
+      this.version = file.version;
+      this.versionLoaded = file.versionLoaded;
+      this.head = {
+        startLength: (_ref = file.head) != null ? _ref.startLength : void 0,
+        endLength: (_ref1 = file.head) != null ? _ref1.endLength : void 0,
+        opsLength: (_ref2 = file.head) != null ? (_ref3 = _ref2.ops) != null ? _ref3.length : void 0 : void 0
+      };
+    }
+
+    return FileError;
+
+  })(Error);
 
   TandemFile = (function(_super) {
     __extends(TandemFile, _super);
@@ -21,44 +95,113 @@
       UPDATE: 'ot/update'
     };
 
-    function TandemFile(id, initial, version, options, callback) {
+    TandemFile.events = {
+      UPDATE: 'update'
+    };
+
+    function TandemFile(id, head, version, options, callback) {
       var _this = this;
       this.id = id;
+      this.head = head;
+      this.version = version;
       this.versionSaved = version;
       this.cache = _.isFunction(options.cache) ? new options.cache(this.id) : options.cache;
-      this.engine = new TandemEngine(this.cache, initial, version, function(err, engine) {
-        _this.engine = engine;
+      this.lastUpdated = Date.now();
+      this.locked = false;
+      async.waterfall([
+        function(callback) {
+          return _getLoadedVersion.call(_this, callback);
+        }, function(cacheVersion, callback) {
+          if (cacheVersion === -1) {
+            _this.versionLoaded = _this.version;
+            return callback(null, []);
+          } else {
+            _this.versionLoaded = cacheVersion;
+            return _this.getHistory(_this.version, callback);
+          }
+        }
+      ], function(err, deltas) {
+        if (err == null) {
+          _.each(deltas, function(delta) {
+            _this.head = _this.head.compose(delta);
+            return _this.version += 1;
+          });
+        }
         return callback(err, _this);
       });
-      this.lastUpdated = Date.now();
     }
 
     TandemFile.prototype.close = function(callback) {
       return this.cache.del('history', callback);
     };
 
-    TandemFile.prototype.getHead = function() {
-      return this.engine.head;
-    };
-
     TandemFile.prototype.getHistory = function(version, callback) {
-      return this.engine.getHistory(version, callback);
-    };
-
-    TandemFile.prototype.getVersion = function() {
-      return this.engine.version;
+      var _this = this;
+      return this.cache.range('history', version - this.versionLoaded, function(err, range) {
+        var deltas;
+        if (err != null) {
+          return callback(err);
+        }
+        deltas = _.map(range, function(changeset) {
+          return Tandem.Delta.makeDelta(JSON.parse(changeset).delta);
+        });
+        return callback(null, deltas);
+      });
     };
 
     TandemFile.prototype.isDirty = function() {
-      return this.engine.version !== this.versionSaved;
+      return this.version !== this.versionSaved;
     };
 
     TandemFile.prototype.sync = function(version, callback) {
-      return this.engine.getDeltaSince(version, callback);
+      return _getDeltaSince.call(this, version, callback);
     };
 
-    TandemFile.prototype.update = function(clientDelta, clientVersion, callback) {
-      return this.engine.update(clientDelta, clientVersion, callback);
+    TandemFile.prototype.transform = function(delta, version, callback) {
+      var _this = this;
+      if (version < this.versionLoaded) {
+        return callback(new EngineError("No version in history", this));
+      }
+      return this.getHistory(version, function(err, deltas) {
+        if (err != null) {
+          return callback(err);
+        }
+        delta = _.reduce(deltas, function(delta, hist) {
+          return delta.transform(hist, true);
+        }, delta);
+        return callback(null, delta, _this.version);
+      });
+    };
+
+    TandemFile.prototype.update = function(delta, version, callback) {
+      var changeset,
+        _this = this;
+      changeset = {};
+      return _atomic.call(this, function(done) {
+        return async.waterfall([
+          function(callback) {
+            return _this.transform(delta, version, callback);
+          }, function(delta, version, callback) {
+            if (_this.head.canCompose(delta)) {
+              changeset = {
+                delta: delta,
+                version: _this.version + 1
+              };
+              return _this.cache.push('history', JSON.stringify(changeset), callback);
+            } else {
+              return callback(new FileError('Cannot compose deltas', _this));
+            }
+          }, function(length, callback) {
+            _this.head = _this.head.compose(changeset.delta);
+            _this.version += 1;
+            return callback(null);
+          }
+        ], function(err, delta, version) {
+          callback(err, changeset.delta, changeset.version);
+          _this.emit(TandemFile.events.UPDATE, changeset.delta, changeset.version);
+          return done();
+        });
+      });
     };
 
     return TandemFile;

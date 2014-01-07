@@ -35,8 +35,8 @@ _close = (file, callback) ->
 
 _save = (file, callback) ->
   return callback(null) if !file.isDirty()
-  version = file.getVersion()
-  head = file.getHead()
+  version = file.version
+  head = file.head
   if @storage?
     file.getHistory(file.versionSaved, (err, deltas) =>
       return callback(err) if err?

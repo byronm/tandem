@@ -1,9 +1,7 @@
 (function() {
-  var Tandem, TandemEngine, TandemFile, TandemFileManager, TandemServer, TandemSocket;
+  var Tandem, TandemFile, TandemFileManager, TandemServer, TandemSocket;
 
   Tandem = require('tandem-core');
-
-  TandemEngine = require('./engine');
 
   TandemFile = require('./file');
 
@@ -18,7 +16,6 @@
     Op: Tandem.Op,
     InsertOp: Tandem.InsertOp,
     RetainOp: Tandem.RetainOp,
-    Engine: TandemEngine,
     File: TandemFile,
     FileManager: TandemFileManager,
     Network: TandemSocket,

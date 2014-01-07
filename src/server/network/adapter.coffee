@@ -6,8 +6,8 @@ TandemFile   = require('../file')
 _makeResyncPacket = (file) ->
   return {
     resync  : true
-    head    : file.getHead()
-    version : file.getVersion()
+    head    : file.head
+    version : file.version
   }
 
 _onMessageError = (err, file, callback) ->

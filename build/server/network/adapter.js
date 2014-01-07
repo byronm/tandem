@@ -12,8 +12,8 @@
   _makeResyncPacket = function(file) {
     return {
       resync: true,
-      head: file.getHead(),
-      version: file.getVersion()
+      head: file.head,
+      version: file.version
     };
   };
 

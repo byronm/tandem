@@ -66,8 +66,8 @@
     if (!file.isDirty()) {
       return callback(null);
     }
-    version = file.getVersion();
-    head = file.getHead();
+    version = file.version;
+    head = file.head;
     if (this.storage != null) {
       return file.getHistory(file.versionSaved, function(err, deltas) {
         if (err != null) {
