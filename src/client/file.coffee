@@ -157,11 +157,11 @@ class TandemFile extends EventEmitter2
     delta = Delta.makeDelta(delta)
     if @arrived.canCompose(delta)
       @arrived = @arrived.compose(delta)
-      flightDeltaFollows = delta.transform(@inFlight, false)
-      textFollows = flightDeltaFollows.transform(@inLine, false)
+      flightDeltaTranform = delta.transform(@inFlight, false)
+      textTransform = flightDeltaTranform.transform(@inLine, false)
       @inFlight = @inFlight.transform(delta, true)
-      @inLine = @inLine.transform(flightDeltaFollows, true)
-      this.emit(TandemFile.events.UPDATE, textFollows)
+      @inLine = @inLine.transform(flightDeltaTranform, true)
+      this.emit(TandemFile.events.UPDATE, textTransform)
       return true
     else
       return false

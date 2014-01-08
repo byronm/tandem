@@ -68,9 +68,9 @@ describe('Connection', ->
         async.each(room.writers, (writer, writerCallback) ->
           iterationsLeft = numIterations
           sendUpdate = ->
-            delta = Tandem.DeltaGen.getRandomDelta(writer.arrived, 1)
+            delta = Tandem.DeltaGen.getUtils().getRandomDelta(writer.arrived, 1)
             while delta.isIdentity()
-              delta = Tandem.DeltaGen.getRandomDelta(writer.arrived, 1)
+              delta = Tandem.DeltaGen.getUtils().getRandomDelta(writer.arrived, 1)
             iterationsLeft -= 1
             if iterationsLeft > 0
               writer.update(delta)

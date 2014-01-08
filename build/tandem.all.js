@@ -17146,16 +17146,16 @@ TandemFile = (function(_super) {
   };
 
   TandemFile.prototype.remoteUpdate = function(delta, version) {
-    var flightDeltaFollows, textFollows;
+    var flightDeltaTranform, textTransform;
     this.version = version;
     delta = Delta.makeDelta(delta);
     if (this.arrived.canCompose(delta)) {
       this.arrived = this.arrived.compose(delta);
-      flightDeltaFollows = delta.transform(this.inFlight, false);
-      textFollows = flightDeltaFollows.transform(this.inLine, false);
+      flightDeltaTranform = delta.transform(this.inFlight, false);
+      textTransform = flightDeltaTranform.transform(this.inLine, false);
       this.inFlight = this.inFlight.transform(delta, true);
-      this.inLine = this.inLine.transform(flightDeltaFollows, true);
-      this.emit(TandemFile.events.UPDATE, textFollows);
+      this.inLine = this.inLine.transform(flightDeltaTranform, true);
+      this.emit(TandemFile.events.UPDATE, textTransform);
       return true;
     } else {
       return false;
