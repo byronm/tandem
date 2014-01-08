@@ -57,7 +57,7 @@ describe('Storage', ->
   it('should find file', (done) ->
     file = client.open('basic-auth-file', { secret: 1337 })
     file.on(TandemClient.File.events.UPDATE, (delta) ->
-      expect(file.engine.version).to.equal(10)
+      expect(file.version).to.equal(10)
       expect(delta).to.deep.equal(helloDelta)
       file.close()
       done()

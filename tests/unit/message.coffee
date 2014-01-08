@@ -62,7 +62,7 @@ describe('Messaging', ->
       ])
       file1.update(delta)
       async.until( ->
-        return file1.engine.inFlight.isIdentity() and file1.engine.inLine.isIdentity()
+        return file1.inFlight.isIdentity() and file1.inLine.isIdentity()
       , (callback) ->
         setTimeout(callback, 100)
       , next)
@@ -70,7 +70,7 @@ describe('Messaging', ->
       head = TandemClient.Delta.getInitial('ab')
       file2 = client2.open('sync-from-old-test', null, { head: head, version: 2 })
       file2.on(TandemClient.File.events.UPDATE, (delta) ->
-        expected = file1.engine.arrived.decompose(head)
+        expected = file1.arrived.decompose(head)
         expect(delta).to.deep.equal(expected)
         done()
       )
@@ -127,12 +127,12 @@ describe('Messaging', ->
         ]))
       )
       async.until(->
-        file1.engine.version == 7 and file2.engine.version == 7
+        file1.version == 7 and file2.version == 7
       , (callback) ->
         setTimeout(callback, 100)
       , ->
-        expect(file1.engine.arrived.endLength).to.deep.equal(4)
-        expect(file2.engine.arrived).to.deep.equal(file1.engine.arrived)
+        expect(file1.arrived.endLength).to.deep.equal(4)
+        expect(file2.arrived).to.deep.equal(file1.arrived)
         done()
       )
     )
@@ -140,13 +140,13 @@ describe('Messaging', ->
 
   it('should resync', (done) ->
     file = client1.open('resync-test')
-    file.engine.arrived = new TandemClient.Delta.getInitial('a')
+    file.arrived = new TandemClient.Delta.getInitial('a')
     file.once(TandemClient.File.events.UPDATE, ->
       expect(file.health).to.equal(TandemClient.File.health.WARNING)
       file.on(TandemClient.File.events.HEALTH, (newHealth, oldHealth) ->
         expect(newHealth).to.equal(TandemClient.File.health.HEALTHY)
         Storage.find('resync-test', (err, head, version) ->
-          expect(file.engine.arrived).to.deep.equal(head)
+          expect(file.arrived).to.deep.equal(head)
           done()
         )
       )

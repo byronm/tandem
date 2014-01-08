@@ -8,7 +8,6 @@ url = require('url')
 Tandem = require('tandem-core')
 base = if process.env.TANDEM_COV? then './build' else './src'
 Tandem.Client = require("#{base}/client/tandem")
-Tandem.Engine = require("#{base}/client/engine")
 Tandem.File   = require("#{base}/client/file")
 Tandem.Network = 
   Adapter : require("#{base}/client/network/adapter")

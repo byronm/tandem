@@ -1,6 +1,19 @@
 Delta         = require('tandem-core/delta')
-TandemEngine  = require('./engine')
 
+
+send = ->
+  this.sendUpdate(@inFlight, @version, (response) =>
+    @version = response.version
+    @arrived = @arrived.compose(@inFlight)
+    @inFlight = Delta.getIdentity(@arrived.endLength)
+    sendIfReady.call(this)
+  )
+
+sendIfReady = ->
+  if @inFlight.isIdentity() and !@inLine.isIdentity()
+    @inFlight = @inLine
+    @inLine = Delta.getIdentity(@inFlight.endLength)
+    send.call(this)
 
 warn = (args...) ->
   return unless console?.warn?
@@ -14,27 +27,13 @@ initAdapterListeners = ->
     if packet.fileId != @fileId
       warn("Got update for other file", packet.fileId)
     else
-      unless @engine.remoteUpdate(packet.delta, packet.version)
+      unless this.remoteUpdate(packet.delta, packet.version)
         warn("Remote update failed, requesting resync")
         resync.call(this)
   ).on(TandemFile.routes.BROADCAST, (packet) =>
     type = packet.type
     packet = _.omit(packet, 'type')
     this.emit(type, packet)
-  )
-
-initEngine = (initial, version) ->
-  @engine = new TandemEngine(initial, version, (delta, version, callback) =>
-    sendUpdate.call(this, delta, version, callback)
-  )
-
-initEngineListeners = ->
-  @engine.on(TandemEngine.events.UPDATE, (delta) =>
-    this.emit(TandemFile.events.UPDATE, delta)
-  ).on(TandemEngine.events.ERROR, (args...) =>
-    this.emit(TandemFile.events.ERROR, this, args...)
-    warn("Engine error, attempting resync", @id, args...)
-    resync.call(this)
   )
 
 initHealthListeners = ->
@@ -57,48 +56,33 @@ initHealthListeners = ->
 
 initListeners = ->
   initAdapterListeners.call(this)
-  initEngineListeners.call(this)
   initHealthListeners.call(this)
 
 resync = (callback) ->
   this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
   this.send(TandemFile.routes.RESYNC, {}, (response) =>
-    @engine.resync(Delta.makeDelta(response.head), response.version)
+    engineResync.call(this, Delta.makeDelta(response.head), response.version)
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     callback() if callback?
   )
 
-sendUpdate = (delta, version, callback) ->
-  packet = { delta: delta, version: version }
-  updateTimeout = setTimeout( =>
-    warn('Update taking over 10s to respond')
-    this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
-  , 10000)
-  this.send(TandemFile.routes.UPDATE, packet, (response) =>
-    clearTimeout(updateTimeout)
-    this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health) unless @health == TandemFile.health.HEALTHY
-    if response.resync
-      warn("Update requesting resync", @id, packet, response)
-      delta = Delta.makeDelta(response.head)
-      @engine.resync(delta, response.version)
-      sendUpdate.call(this, @engine.inFlight, @engine.version, callback)
-    else
-      callback.call(this, response)
-  )
+engineResync = (delta, version) ->
+  decomposed = delta.decompose(@arrived)
+  this.remoteUpdate(decomposed, version)
 
 setReady = (delta, version, resend = false) ->
   # Need to resend before emitting ready
   # Otherwise listeners on ready might immediate send an update and thus resendUpdate will duplicate packet
-  @engine.resendUpdate() if resend
+  this.resendUpdate() if resend
   this.emit(TandemFile.events.READY, delta, version)
 
 sync = ->
-  this.send(TandemFile.routes.SYNC, { version: @engine.version }, (response) =>
+  this.send(TandemFile.routes.SYNC, { version: @version }, (response) =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     if response.resync
       warn("Sync requesting resync")
-      @engine.resync(Delta.makeDelta(response.head), response.version)
-    else if @engine.remoteUpdate(response.delta, response.version)
+      engineResync.call(this, Delta.makeDelta(response.head), response.version)
+    else if this.remoteUpdate(response.delta, response.version)
       setReady.call(this, response.delta, response.version, false)
     else
       warn("Remote update failed on sync, requesting resync")
@@ -126,24 +110,26 @@ class TandemFile extends EventEmitter2
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@fileId, @adapter, initial = null) ->
+  constructor: (@fileId, @adapter, initial = {}) ->
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
-    initial or= { head: Delta.getInitial(''), version: 0 }
-    initEngine.call(this, initial.head, initial.version)
+    @version = initial.version or 0
+    @arrived = initial.head or Delta.getInitial('')
+    @inFlight = Delta.getIdentity(@arrived.endLength)
+    @inLine = Delta.getIdentity(@arrived.endLength)
     initListeners.call(this)
 
-  broadcast: (route, packet, callback) =>
+  broadcast: (type, packet, callback) ->
     packet = _.clone(packet)
-    packet.type = route
-    this.send(TandemFile.routes.BROADCAST, packet, callback)
+    packet.type = type
+    @adapter.send(TandemFile.routes.BROADCAST, packet, callback)
 
   close: ->
     @adapter.close()
-    @engine.removeAllListeners()
+    this.removeAllListeners()
 
   isDirty: ->
-    return !@engine.inFlight.isIdentity() or !@engine.inLine.isIdentity()
+    return !@inFlight.isIdentity() or !@inLine.isIdentity()
 
   send: (route, packet, callback = null, priority = false) ->
     if callback?
@@ -157,10 +143,49 @@ class TandemFile extends EventEmitter2
       @adapter.send(route, packet)
 
   transform: (indexes) ->
-    @engine.transform(indexes)
 
   update: (delta) ->
-    @engine.localUpdate(delta)
+    if @inLine.canCompose(delta)
+      @inLine = @inLine.compose(delta)
+      sendIfReady.call(this)
+    else
+      this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', @inLine, delta)
+      warn("Local update error, attempting resync", @id, @inLine, @delta)
+      resync.call(this)
+
+  remoteUpdate: (delta, @version) ->
+    delta = Delta.makeDelta(delta)
+    if @arrived.canCompose(delta)
+      @arrived = @arrived.compose(delta)
+      flightDeltaFollows = delta.transform(@inFlight, false)
+      textFollows = flightDeltaFollows.transform(@inLine, false)
+      @inFlight = @inFlight.transform(delta, true)
+      @inLine = @inLine.transform(flightDeltaFollows, true)
+      this.emit(TandemFile.events.UPDATE, textFollows)
+      return true
+    else
+      return false
+
+  resendUpdate: ->
+    send.call(this) unless @inFlight.isIdentity()
+
+  sendUpdate: (delta, version, callback) ->
+    packet = { delta: delta, version: version }
+    updateTimeout = setTimeout( =>
+      warn('Update taking over 10s to respond')
+      this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
+    , 10000)
+    this.send(TandemFile.routes.UPDATE, packet, (response) =>
+      clearTimeout(updateTimeout)
+      this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health) unless @health == TandemFile.health.HEALTHY
+      if response.resync
+        warn("Update requesting resync", @id, packet, response)
+        delta = Delta.makeDelta(response.head)
+        engineResync.call(this, delta, response.version)
+        this.sendUpdate(@inFlight, @version, callback)
+      else
+        callback.call(this, response)
+    )
 
 
 module.exports = TandemFile

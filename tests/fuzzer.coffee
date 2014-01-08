@@ -53,10 +53,10 @@ describe('Connection', ->
   verifyRoom = (room, callback) ->
     files = room.writers.concat(room.readers)
     _.each(files.slice(1), (file) ->
-      expect(file.engine.arrived.isEqual(files[0].engine.arrived)).to.be.true
-      expect(file.engine.inFlight.isEqual(files[0].engine.inFlight)).to.be.true
-      expect(file.engine.inLine.isEqual(files[0].engine.inLine)).to.be.true
-      expect(file.engine.version).to.be.equal(files[0].engine.version)
+      expect(file.arrived.isEqual(files[0].arrived)).to.be.true
+      expect(file.inFlight.isEqual(files[0].inFlight)).to.be.true
+      expect(file.inLine.isEqual(files[0].inLine)).to.be.true
+      expect(file.version).to.be.equal(files[0].version)
     )
     callback(null)
 
@@ -67,16 +67,16 @@ describe('Connection', ->
         async.each(room.writers, (writer, writerCallback) ->
           iterationsLeft = numIterations
           sendUpdate = ->
-            delta = Tandem.DeltaGen.getRandomDelta(writer.engine.arrived, 1)
+            delta = Tandem.DeltaGen.getRandomDelta(writer.arrived, 1)
             while delta.isIdentity()
-              delta = Tandem.DeltaGen.getRandomDelta(writer.engine.arrived, 1)
+              delta = Tandem.DeltaGen.getRandomDelta(writer.arrived, 1)
             iterationsLeft -= 1
             if iterationsLeft > 0
               writer.update(delta)
             else
               writerCallback(null)
-          writer.engine.sendFn = _.wrap(writer.engine.sendFn, (wrapper, delta, version, callback) ->
-            wrapper.call(writer.engine, delta, version, (response) ->
+          writer.sendUpdate = _.wrap(writer.sendUpdate, (wrapper, delta, version, callback) ->
+            wrapper.call(writer, delta, version, (response) ->
               callback(response)
               _.defer(sendUpdate)
             )
