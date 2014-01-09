@@ -10256,30 +10256,12 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 }.call(this));
 
 },{}],14:[function(require,module,exports){
-var Delta, TandemFile, engineResync, initAdapterListeners, initHealthListeners, initListeners, resync, send, sendIfReady, setReady, sync, warn,
+var Delta, TandemFile, initAdapterListeners, initHealthListeners, initListeners, onResync, onUpdate, sendIfReady, sendResync, sendSync, sendUpdate, setReady, warn,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 Delta = require('tandem-core/delta');
-
-send = function() {
-  var _this = this;
-  return this.sendUpdate(this.inFlight, this.version, function(response) {
-    _this.version = response.version;
-    _this.arrived = _this.arrived.compose(_this.inFlight);
-    _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
-    return sendIfReady.call(_this);
-  });
-};
-
-sendIfReady = function() {
-  if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
-    this.inFlight = this.inLine;
-    this.inLine = Delta.getIdentity(this.inFlight.endLength);
-    return send.call(this);
-  }
-};
 
 warn = function() {
   var args;
@@ -10302,7 +10284,7 @@ initAdapterListeners = function() {
     } else {
       if (!_this.remoteUpdate(packet.delta, packet.version)) {
         warn("Remote update failed, requesting resync");
-        return resync.call(_this);
+        return sendResync.call(_this);
       }
     }
   }).on(TandemFile.routes.BROADCAST, function(packet) {
@@ -10317,9 +10299,9 @@ initHealthListeners = function() {
   var _this = this;
   this.adapter.on(this.adapter.constructor.events.READY, function() {
     _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
-    return sync.call(_this);
+    return sendSync.call(_this);
   }).on(this.adapter.constructor.events.RECONNECT, function(transport, attempts) {
-    return sync.call(_this);
+    return sendSync.call(_this);
   }).on(this.adapter.constructor.events.RECONNECTING, function(timeout, attempts) {
     if (attempts === 1) {
       return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
@@ -10342,35 +10324,41 @@ initListeners = function() {
   return initHealthListeners.call(this);
 };
 
-resync = function(callback) {
+onResync = function(response) {
+  var decomposed, delta;
+  delta = Delta.makeDelta(response.head);
+  decomposed = delta.decompose(this.arrived);
+  this.remoteUpdate(decomposed, response.version);
+  return this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, this.health);
+};
+
+onUpdate = function(response) {
+  this.version = response.version;
+  this.arrived = this.arrived.compose(this.inFlight);
+  this.inFlight = Delta.getIdentity(this.arrived.endLength);
+  return sendUpdateIfReady.call(this);
+};
+
+sendIfReady = function() {
+  if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
+    this.inFlight = this.inLine;
+    this.inLine = Delta.getIdentity(this.inFlight.endLength);
+    return sendUpdate.call(this);
+  }
+};
+
+sendResync = function(callback) {
   var _this = this;
   this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, this.health);
   return this.send(TandemFile.routes.RESYNC, {}, function(response) {
-    engineResync.call(_this, Delta.makeDelta(response.head), response.version);
-    _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
+    onResync.call(_this, response);
     if (callback != null) {
       return callback();
     }
   });
 };
 
-engineResync = function(delta, version) {
-  var decomposed;
-  decomposed = delta.decompose(this.arrived);
-  return this.remoteUpdate(decomposed, version);
-};
-
-setReady = function(delta, version, resend) {
-  if (resend == null) {
-    resend = false;
-  }
-  if (resend) {
-    this.resendUpdate();
-  }
-  return this.emit(TandemFile.events.READY, delta, version);
-};
-
-sync = function() {
+sendSync = function() {
   var _this = this;
   return this.send(TandemFile.routes.SYNC, {
     version: this.version
@@ -10378,16 +10366,55 @@ sync = function() {
     _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
     if (response.resync) {
       warn("Sync requesting resync");
-      return engineResync.call(_this, Delta.makeDelta(response.head), response.version);
+      return onResync.call(_this, response);
     } else if (_this.remoteUpdate(response.delta, response.version)) {
       return setReady.call(_this, response.delta, response.version, false);
     } else {
       warn("Remote update failed on sync, requesting resync");
-      return resync.call(_this, function() {
+      return sendResync.call(_this, function() {
         return setReady.call(_this, response.delta, response.version, true);
       });
     }
   }, true);
+};
+
+sendUpdate = function() {
+  var packet, updateTimeout,
+    _this = this;
+  packet = {
+    delta: this.inFlight,
+    version: this.version
+  };
+  updateTimeout = setTimeout(function() {
+    warn('Update taking over 10s to respond');
+    return _this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, _this.health);
+  }, 10000);
+  return this.send(TandemFile.routes.UPDATE, packet, function(response) {
+    clearTimeout(updateTimeout);
+    if (_this.health !== TandemFile.health.HEALTHY) {
+      _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
+    }
+    if (response.resync) {
+      warn("Update requesting resync", _this.id, packet, response);
+      onResync.call(_this, response);
+      return sendUpdate.call(_this);
+    } else {
+      _this.version = response.version;
+      _this.arrived = _this.arrived.compose(_this.inFlight);
+      _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
+      return sendIfReady.call(_this);
+    }
+  });
+};
+
+setReady = function(delta, version, resend) {
+  if (resend == null) {
+    resend = false;
+  }
+  if (resend && !this.inFlight.isIdentity()) {
+    sendUpdate.call(this);
+  }
+  return this.emit(TandemFile.events.READY, delta, version);
 };
 
 TandemFile = (function(_super) {
@@ -10443,6 +10470,34 @@ TandemFile = (function(_super) {
     return !this.inFlight.isIdentity() || !this.inLine.isIdentity();
   };
 
+  TandemFile.prototype.remoteUpdate = function(delta, version) {
+    var flightDeltaTranform, textTransform;
+    this.version = version;
+    delta = Delta.makeDelta(delta);
+    if (this.arrived.canCompose(delta)) {
+      this.arrived = this.arrived.compose(delta);
+      flightDeltaTranform = delta.transform(this.inFlight, false);
+      textTransform = flightDeltaTranform.transform(this.inLine, false);
+      this.inFlight = this.inFlight.transform(delta, true);
+      this.inLine = this.inLine.transform(flightDeltaTranform, true);
+      this.emit(TandemFile.events.UPDATE, textTransform);
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  TandemFile.prototype.update = function(delta) {
+    if (this.inLine.canCompose(delta)) {
+      this.inLine = this.inLine.compose(delta);
+      return sendIfReady.call(this);
+    } else {
+      this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', this.inLine, delta);
+      warn("Local update error, attempting resync", this.id, this.inLine, this.delta);
+      return sendResync.call(this);
+    }
+  };
+
   TandemFile.prototype.send = function(route, packet, callback, priority) {
     var _this = this;
     if (callback == null) {
@@ -10467,67 +10522,6 @@ TandemFile = (function(_super) {
   };
 
   TandemFile.prototype.transform = function(indexes) {};
-
-  TandemFile.prototype.update = function(delta) {
-    if (this.inLine.canCompose(delta)) {
-      this.inLine = this.inLine.compose(delta);
-      return sendIfReady.call(this);
-    } else {
-      this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', this.inLine, delta);
-      warn("Local update error, attempting resync", this.id, this.inLine, this.delta);
-      return resync.call(this);
-    }
-  };
-
-  TandemFile.prototype.remoteUpdate = function(delta, version) {
-    var flightDeltaTranform, textTransform;
-    this.version = version;
-    delta = Delta.makeDelta(delta);
-    if (this.arrived.canCompose(delta)) {
-      this.arrived = this.arrived.compose(delta);
-      flightDeltaTranform = delta.transform(this.inFlight, false);
-      textTransform = flightDeltaTranform.transform(this.inLine, false);
-      this.inFlight = this.inFlight.transform(delta, true);
-      this.inLine = this.inLine.transform(flightDeltaTranform, true);
-      this.emit(TandemFile.events.UPDATE, textTransform);
-      return true;
-    } else {
-      return false;
-    }
-  };
-
-  TandemFile.prototype.resendUpdate = function() {
-    if (!this.inFlight.isIdentity()) {
-      return send.call(this);
-    }
-  };
-
-  TandemFile.prototype.sendUpdate = function(delta, version, callback) {
-    var packet, updateTimeout,
-      _this = this;
-    packet = {
-      delta: delta,
-      version: version
-    };
-    updateTimeout = setTimeout(function() {
-      warn('Update taking over 10s to respond');
-      return _this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, _this.health);
-    }, 10000);
-    return this.send(TandemFile.routes.UPDATE, packet, function(response) {
-      clearTimeout(updateTimeout);
-      if (_this.health !== TandemFile.health.HEALTHY) {
-        _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
-      }
-      if (response.resync) {
-        warn("Update requesting resync", _this.id, packet, response);
-        delta = Delta.makeDelta(response.head);
-        engineResync.call(_this, delta, response.version);
-        return _this.sendUpdate(_this.inFlight, _this.version, callback);
-      } else {
-        return callback.call(_this, response);
-      }
-    });
-  };
 
   return TandemFile;
 
