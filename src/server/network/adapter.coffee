@@ -21,7 +21,6 @@ class TandemNetworkAdapter extends EventEmitter
     CONNECT : 'network-connect'
     ERROR   : 'network-error'
   @routes:
-    BROADCAST : 'broadcast'
     RESYNC    : 'ot/resync'
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
@@ -50,8 +49,8 @@ class TandemNetworkAdapter extends EventEmitter
           broadcastPacket =
             delta   : delta
             fileId  : file.id
+            userId  : userId
             version : version
-          broadcastPacket['userId'] = userId
           this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket)
           file.lastUpdated = Date.now()
           callback(
@@ -59,10 +58,6 @@ class TandemNetworkAdapter extends EventEmitter
             version : version
           )
       )
-    ).listen(sessionId, TandemNetworkAdapter.routes.BROADCAST, (packet, callback) =>
-      packet['userId'] = userId
-      this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.BROADCAST, packet)
-      callback({}) if callback?
     )
 
   addClient: (sessionId, userId, file) ->

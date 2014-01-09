@@ -16,10 +16,6 @@ initAdapterListeners = ->
       unless this.remoteUpdate(packet.delta, packet.version)
         warn("Remote update failed, requesting resync")
         sendResync.call(this)
-  ).on(TandemFile.routes.BROADCAST, (packet) =>
-    type = packet.type
-    packet = _.omit(packet, 'type')
-    this.emit(type, packet)
   )
 
 initHealthListeners = ->

@@ -77,19 +77,6 @@ describe('Messaging', ->
     )
   )
 
-  it('should broadcast', (done) ->
-    file1 = client1.open('broadcast-test')
-    file2 = client2.open('broadcast-test')
-    message = { message: "Hello World!" }
-    file2.on(TandemClient.File.events.READY, ->
-      file1.broadcast('custom', message)
-    ).on('custom', (packet) ->
-      message.userId = packet.userId
-      expect(packet).to.deep.equal(message)
-      done()
-    )
-  )
-
   it('should update', (done) ->
     file1 = client1.open('update-test')
     file2 = client2.open('update-test')

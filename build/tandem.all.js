@@ -16953,11 +16953,6 @@ initAdapterListeners = function() {
         return sendResync.call(_this);
       }
     }
-  }).on(TandemFile.routes.BROADCAST, function(packet) {
-    var type;
-    type = packet.type;
-    packet = _.omit(packet, 'type');
-    return _this.emit(type, packet);
   });
 };
 

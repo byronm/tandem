@@ -31,7 +31,6 @@
     };
 
     TandemNetworkAdapter.routes = {
-      BROADCAST: 'broadcast',
       RESYNC: 'ot/resync',
       SYNC: 'ot/sync',
       UPDATE: 'ot/update'
@@ -64,9 +63,9 @@
             broadcastPacket = {
               delta: delta,
               fileId: file.id,
+              userId: userId,
               version: version
             };
-            broadcastPacket['userId'] = userId;
             _this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket);
             file.lastUpdated = Date.now();
             return callback({
@@ -75,12 +74,6 @@
             });
           }
         });
-      }).listen(sessionId, TandemNetworkAdapter.routes.BROADCAST, function(packet, callback) {
-        packet['userId'] = userId;
-        _this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.BROADCAST, packet);
-        if (callback != null) {
-          return callback({});
-        }
       });
     };
 
