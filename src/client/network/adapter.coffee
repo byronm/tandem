@@ -14,6 +14,10 @@ class TandemNetworkAdapter extends EventEmitter2
   close: ->
     this.removeAllListeners()
 
+  listen: (route, callback) ->
+    console.warn "Should be overwritten by descendant"
+    return this
+
   send: (route, packet, callback, priority = false) ->
     if @ready
       this._send(route, packet, callback, priority)

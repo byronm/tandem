@@ -1,4 +1,4 @@
-Delta         = require('tandem-core/delta')
+Delta = require('tandem-core/delta')
 
 
 warn = (args...) ->
@@ -9,13 +9,11 @@ warn = (args...) ->
     console.warn(args)
 
 initAdapterListeners = ->
-  @adapter.on(TandemFile.routes.UPDATE, (packet) =>
-    if packet.fileId != @fileId
-      warn("Got update for other file", packet.fileId)
-    else
-      unless this.remoteUpdate(packet.delta, packet.version)
-        warn("Remote update failed, requesting resync")
-        sendResync.call(this)
+  @adapter.listen(TandemFile.routes.UPDATE, (packet) =>
+    return warn("Got update for other file", packet.fileId) if packet.fileId != @fileId
+    if !this.remoteUpdate(packet.delta, packet.version)
+      warn("Remote update failed, requesting resync")
+      sendResync.call(this)
   )
 
 initHealthListeners = ->

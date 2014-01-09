@@ -87,19 +87,16 @@ class TandemSocketAdapter extends TandemAdapter
     @socket.removeAllListeners()
     @socketListeners = {}
 
-  on: (route, callback) ->
-    if _.indexOf(_.values(TandemAdapter.events), route) > -1
-      super
-    else
-      onSocketCallback = (packet) =>
-        info.call(this, "Got", route, packet)
-        track.call(this, TandemSocketAdapter.RECIEVE, route, packet)
-        callback.call(this, packet) if callback?
-      @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?
-      @socketListeners[route] = onSocketCallback
-      @socket.addListener(route, onSocketCallback)
+  listen: (route, callback) ->
+    onSocketCallback = (packet) =>
+      info.call(this, "Got", route, packet)
+      track.call(this, TandemSocketAdapter.RECIEVE, route, packet)
+      callback.call(this, packet) if callback?
+    @socket.removeListener(route, onSocketCallback) if @socketListeners[route]?
+    @socketListeners[route] = onSocketCallback
+    @socket.addListener(route, onSocketCallback)
     return this
-
+    
   _send: (route, packet, callback) ->
     track.call(this, TandemSocketAdapter.SEND, route, packet)
     setTimeout( =>

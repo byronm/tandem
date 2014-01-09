@@ -10278,14 +10278,13 @@ warn = function() {
 
 initAdapterListeners = function() {
   var _this = this;
-  return this.adapter.on(TandemFile.routes.UPDATE, function(packet) {
+  return this.adapter.listen(TandemFile.routes.UPDATE, function(packet) {
     if (packet.fileId !== _this.fileId) {
       return warn("Got update for other file", packet.fileId);
-    } else {
-      if (!_this.remoteUpdate(packet.delta, packet.version)) {
-        warn("Remote update failed, requesting resync");
-        return sendResync.call(_this);
-      }
+    }
+    if (!_this.remoteUpdate(packet.delta, packet.version)) {
+      warn("Remote update failed, requesting resync");
+      return sendResync.call(_this);
     }
   });
 };
@@ -10551,6 +10550,11 @@ TandemNetworkAdapter = (function(_super) {
     return this.removeAllListeners();
   };
 
+  TandemNetworkAdapter.prototype.listen = function(route, callback) {
+    console.warn("Should be overwritten by descendant");
+    return this;
+  };
+
   TandemNetworkAdapter.prototype.send = function(route, packet, callback, priority) {
     if (priority == null) {
       priority = false;
@@ -10741,25 +10745,21 @@ TandemSocketAdapter = (function(_super) {
     return this.socketListeners = {};
   };
 
-  TandemSocketAdapter.prototype.on = function(route, callback) {
+  TandemSocketAdapter.prototype.listen = function(route, callback) {
     var onSocketCallback,
       _this = this;
-    if (_.indexOf(_.values(TandemAdapter.events), route) > -1) {
-      TandemSocketAdapter.__super__.on.apply(this, arguments);
-    } else {
-      onSocketCallback = function(packet) {
-        info.call(_this, "Got", route, packet);
-        track.call(_this, TandemSocketAdapter.RECIEVE, route, packet);
-        if (callback != null) {
-          return callback.call(_this, packet);
-        }
-      };
-      if (this.socketListeners[route] != null) {
-        this.socket.removeListener(route, onSocketCallback);
+    onSocketCallback = function(packet) {
+      info.call(_this, "Got", route, packet);
+      track.call(_this, TandemSocketAdapter.RECIEVE, route, packet);
+      if (callback != null) {
+        return callback.call(_this, packet);
       }
-      this.socketListeners[route] = onSocketCallback;
-      this.socket.addListener(route, onSocketCallback);
+    };
+    if (this.socketListeners[route] != null) {
+      this.socket.removeListener(route, onSocketCallback);
     }
+    this.socketListeners[route] = onSocketCallback;
+    this.socket.addListener(route, onSocketCallback);
     return this;
   };
 
