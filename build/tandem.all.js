@@ -16922,7 +16922,7 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 }.call(this));
 
 },{}],14:[function(require,module,exports){
-var Delta, TandemFile, initAdapterListeners, initHealthListeners, initListeners, onResync, onUpdate, sendIfReady, sendResync, sendSync, sendUpdate, setReady, warn,
+var Delta, TandemFile, initAdapterListeners, initHealthListeners, initListeners, onResync, onUpdate, sendResync, sendSync, sendUpdate, setReady, warn,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -16999,14 +16999,6 @@ onUpdate = function(response) {
   return sendUpdateIfReady.call(this);
 };
 
-sendIfReady = function() {
-  if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
-    this.inFlight = this.inLine;
-    this.inLine = Delta.getIdentity(this.inFlight.endLength);
-    return sendUpdate.call(this);
-  }
-};
-
 sendResync = function(callback) {
   var _this = this;
   this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, this.health);
@@ -17062,7 +17054,7 @@ sendUpdate = function() {
       _this.version = response.version;
       _this.arrived = _this.arrived.compose(_this.inFlight);
       _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
-      return sendIfReady.call(_this);
+      return _this.sendIfReady();
     }
   });
 };
@@ -17150,7 +17142,7 @@ TandemFile = (function(_super) {
   TandemFile.prototype.update = function(delta) {
     if (this.inLine.canCompose(delta)) {
       this.inLine = this.inLine.compose(delta);
-      return sendIfReady.call(this);
+      return this.sendIfReady();
     } else {
       this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', this.inLine, delta);
       warn("Local update error, attempting resync", this.id, this.inLine, this.delta);
@@ -17179,6 +17171,16 @@ TandemFile = (function(_super) {
     } else {
       return this.adapter.send(route, packet);
     }
+  };
+
+  TandemFile.prototype.sendIfReady = function() {
+    if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
+      this.inFlight = this.inLine;
+      this.inLine = Delta.getIdentity(this.inFlight.endLength);
+      sendUpdate.call(this);
+      return true;
+    }
+    return false;
   };
 
   TandemFile.prototype.transform = function(indexes) {};

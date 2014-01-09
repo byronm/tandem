@@ -76,11 +76,9 @@ describe('Connection', ->
               writer.update(delta)
             else
               writerCallback(null)
-          writer.sendUpdate = _.wrap(writer.sendUpdate, (wrapper, delta, version, callback) ->
-            wrapper.call(writer, delta, version, (response) ->
-              callback(response)
-              _.defer(sendUpdate)
-            )
+          writer.sendIfReady = _.wrap(writer.sendIfReady, (wrapper) ->
+            ready = !wrapper.call(writer)
+            _.defer(sendUpdate) if ready
           )
           sendUpdate()
         , (err) ->
@@ -92,7 +90,7 @@ describe('Connection', ->
   it('writer to reader', (done) ->
     this.timeout(20000)
     fuzz(1, 1, 1, 100, done)
-  )
+  ) 
 
   it('two writers to reader', (done) ->
     this.timeout(40000)

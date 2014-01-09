@@ -50,12 +50,6 @@ onUpdate = (response) ->
   @inFlight = Delta.getIdentity(@arrived.endLength)
   sendUpdateIfReady.call(this)
 
-sendIfReady = ->
-  if @inFlight.isIdentity() and !@inLine.isIdentity()
-    @inFlight = @inLine
-    @inLine = Delta.getIdentity(@inFlight.endLength)
-    sendUpdate.call(this)
-
 sendResync = (callback) ->
   this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
   this.send(TandemFile.routes.RESYNC, {}, (response) =>
@@ -95,7 +89,7 @@ sendUpdate = ->
       @version = response.version
       @arrived = @arrived.compose(@inFlight)
       @inFlight = Delta.getIdentity(@arrived.endLength)
-      sendIfReady.call(this)
+      this.sendIfReady()
   )
 
 setReady = (delta, version, resend = false) ->
@@ -160,7 +154,7 @@ class TandemFile extends EventEmitter2
   update: (delta) ->
     if @inLine.canCompose(delta)
       @inLine = @inLine.compose(delta)
-      sendIfReady.call(this)
+      this.sendIfReady()
     else
       this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', @inLine, delta)
       warn("Local update error, attempting resync", @id, @inLine, @delta)
@@ -176,6 +170,14 @@ class TandemFile extends EventEmitter2
       , priority)
     else
       @adapter.send(route, packet)
+
+  sendIfReady: ->   # Exposed for fuzzer
+    if @inFlight.isIdentity() and !@inLine.isIdentity()
+      @inFlight = @inLine
+      @inLine = Delta.getIdentity(@inFlight.endLength)
+      sendUpdate.call(this)
+      return true
+    return false
 
   transform: (indexes) ->
 
