@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.11.6 - 2014-01-08
+/*! Tandem Realtime Coauthoring Engine - v0.12.0 - 2014-01-09
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
