@@ -17,7 +17,7 @@
       function(callback) {
         return _this.storage.authorize(packet, callback);
       }, function(callback) {
-        return _this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, packet.userId, callback);
+        return _this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, callback);
       }
     ], function(err) {
       if ((err != null) && _.isObject(err)) {
@@ -59,7 +59,7 @@
       });
     }
 
-    TandemSocket.prototype.addClient = function(sessionId, userId, file) {
+    TandemSocket.prototype.addClient = function(sessionId, file) {
       var socket,
         _this = this;
       socket = this.sockets[sessionId];
@@ -67,19 +67,19 @@
         return socket.removeAllListeners(route);
       });
       socket.on('disconnect', function() {
-        return _this.removeClient(sessionId, userId, file);
+        return _this.removeClient(sessionId, file);
       });
       return TandemSocket.__super__.addClient.apply(this, arguments);
-    };
-
-    TandemSocket.prototype.removeClient = function(sessionId, userId, file) {
-      return this.leave(sessionId, file.id);
     };
 
     TandemSocket.prototype.broadcast = function(sessionId, fileId, route, packet) {
       var socket;
       socket = this.sockets[sessionId];
       return socket.broadcast.to(fileId).emit(route, packet);
+    };
+
+    TandemSocket.prototype.checkOpen = function(fileId) {
+      return this.io.sockets.clients(fileId).length > 0;
     };
 
     TandemSocket.prototype.join = function(sessionId, fileId) {
@@ -99,6 +99,10 @@
       socket = this.sockets[sessionId];
       socket.on(route, callback);
       return this;
+    };
+
+    TandemSocket.prototype.removeClient = function(sessionId, file) {
+      return this.leave(sessionId, file.id);
     };
 
     return TandemSocket;

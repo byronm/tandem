@@ -20,23 +20,20 @@
       done = function() {};
     }
     return async.each(_.values(this.files), function(file, callback) {
-      var usersConnected;
+      var isClosed;
       if ((file == null) || _.isArray(file)) {
         return;
       }
-      usersConnected = _.any(file.users, function(online, userId) {
-        return online > 0;
-      });
-      if (force || !usersConnected || file.lastUpdated + _this.settings['inactive timeout'] < Date.now()) {
+      isClosed = !_this.network.checkOpen(file.id);
+      if (force || isClosed || file.lastUpdated + _this.settings['inactive timeout'] < Date.now()) {
         return _save.call(_this, file, function(err) {
           if (err != null) {
             return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
           }
-          if (usersConnected && !force) {
-            return callback(null);
-          } else {
+          if (isClosed) {
             return _close.call(_this, file, callback);
           }
+          return callback(null);
         });
       } else {
         return callback(null);
@@ -92,8 +89,9 @@
       'inactive timeout': 1000 * 60 * 15
     };
 
-    function TandemFileManager(storage, options) {
+    function TandemFileManager(network, storage, options) {
       var _this = this;
+      this.network = network;
       this.storage = storage;
       this.options = options != null ? options : {};
       this.settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS);

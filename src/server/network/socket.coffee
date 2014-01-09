@@ -9,7 +9,7 @@ _authenticate = (client, packet, callback) ->
     (callback) =>
       @storage.authorize(packet, callback)
     (callback) =>
-      this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, packet.userId, callback)
+      this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, callback)
   ], (err) =>
     err = err.message if err? and _.isObject(err)   # Filter error info passed to front end client
     callback({ error: err })
@@ -37,22 +37,22 @@ class TandemSocket extends TandemAdapter
       )
     )
 
-  addClient: (sessionId, userId, file) ->
+  addClient: (sessionId, file) ->
     socket = @sockets[sessionId]
     _.each(TandemAdapter.routes, (route, name) ->
       socket.removeAllListeners(route)
     )
     socket.on('disconnect', =>
-      this.removeClient(sessionId, userId, file)
+      this.removeClient(sessionId, file)
     )
     super
-
-  removeClient: (sessionId, userId, file) ->
-    this.leave(sessionId, file.id)
 
   broadcast: (sessionId, fileId, route, packet) ->
     socket = @sockets[sessionId]
     socket.broadcast.to(fileId).emit(route, packet)
+
+  checkOpen: (fileId) ->
+    return @io.sockets.clients(fileId).length > 0
 
   join: (sessionId, fileId) ->
     socket = @sockets[sessionId]
@@ -66,6 +66,9 @@ class TandemSocket extends TandemAdapter
     socket = @sockets[sessionId]
     socket.on(route, callback)
     return this
+
+  removeClient: (sessionId, file) ->
+    this.leave(sessionId, file.id)
 
 
 module.exports = TandemSocket

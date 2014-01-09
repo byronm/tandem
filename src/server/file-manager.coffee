@@ -8,14 +8,12 @@ TandemFile    = require('./file')
 _check = (force = false, done = ->) ->
   async.each(_.values(@files), (file, callback) =>
     return if !file? or _.isArray(file)
-    usersConnected = _.any(file.users, (online, userId) -> return online > 0 )
-    if force or !usersConnected or file.lastUpdated + @settings['inactive timeout'] < Date.now()
+    isClosed = !@network.checkOpen(file.id)
+    if force or isClosed or file.lastUpdated + @settings['inactive timeout'] < Date.now()
       _save.call(this, file, (err) =>
         return TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
-        if usersConnected and !force
-          callback(null)
-        else
-          _close.call(this, file, callback)
+        return _close.call(this, file, callback) if isClosed
+        callback(null)
       )
     else
       callback(null)
@@ -54,7 +52,7 @@ class TandemFileManager
     'check interval'   : 1000 * 60
     'inactive timeout' : 1000 * 60 * 15
 
-  constructor: (@storage, @options = {}) ->
+  constructor: (@network, @storage, @options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS)
     @files = {}
     setInterval( =>

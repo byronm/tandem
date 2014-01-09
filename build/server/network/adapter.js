@@ -15,9 +15,9 @@
     };
   };
 
-  _onMessageError = function(err, file, callback) {
+  _onMessageError = function(err, sessionId, file, callback) {
     err.fileId = file.id;
-    err.userId = userId;
+    err.sessionId = sessionId;
     TandemEmitter.emit(TandemEmitter.events.ERROR, err);
     return callback(_makeResyncPacket(file));
   };
@@ -38,14 +38,14 @@
 
     function TandemNetworkAdapter() {}
 
-    TandemNetworkAdapter.prototype.initListeners = function(sessionId, userId, file) {
+    TandemNetworkAdapter.prototype.initListeners = function(sessionId, file) {
       var _this = this;
       return this.listen(sessionId, TandemNetworkAdapter.routes.RESYNC, function(packet, callback) {
         return callback(_makeResyncPacket(file));
       }).listen(sessionId, TandemNetworkAdapter.routes.SYNC, function(packet, callback) {
         return file.sync(parseInt(packet.version), function(err, delta, version) {
           if (err != null) {
-            return _onMessageError(err, file, callback);
+            return _onMessageError(err, sessionId, file, callback);
           } else {
             _this.join(sessionId, file.id);
             return callback({
@@ -58,12 +58,11 @@
         return file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), function(err, delta, version) {
           var broadcastPacket;
           if (err != null) {
-            return _onMessageError(err, file, callback);
+            return _onMessageError(err, sessionId, file, callback);
           } else {
             broadcastPacket = {
               delta: delta,
               fileId: file.id,
-              userId: userId,
               version: version
             };
             _this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket);
@@ -77,11 +76,15 @@
       });
     };
 
-    TandemNetworkAdapter.prototype.addClient = function(sessionId, userId, file) {
-      return this.initListeners(sessionId, userId, file);
+    TandemNetworkAdapter.prototype.addClient = function(sessionId, file) {
+      return this.initListeners(sessionId, file);
     };
 
-    TandemNetworkAdapter.prototype.broadcast = function(sessionId, roomId, packet) {
+    TandemNetworkAdapter.prototype.broadcast = function(sessionId, fileId, packet) {
+      return console.warn("Should be overwritten by descendant");
+    };
+
+    TandemNetworkAdapter.prototype.checkOpen = function(fileId) {
       return console.warn("Should be overwritten by descendant");
     };
 

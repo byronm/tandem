@@ -9,9 +9,9 @@ _makeResyncPacket = (file) ->
     version : file.version
   }
 
-_onMessageError = (err, file, callback) ->
+_onMessageError = (err, sessionId, file, callback) ->
   err.fileId = file.id
-  err.userId = userId
+  err.sessionId = sessionId
   TandemEmitter.emit(TandemEmitter.events.ERROR, err)
   callback(_makeResyncPacket(file))
 
@@ -27,13 +27,13 @@ class TandemNetworkAdapter extends EventEmitter
 
   constructor: ->
 
-  initListeners: (sessionId, userId, file) ->
+  initListeners: (sessionId, file) ->
     this.listen(sessionId, TandemNetworkAdapter.routes.RESYNC, (packet, callback) =>
       callback(_makeResyncPacket(file))
     ).listen(sessionId, TandemNetworkAdapter.routes.SYNC, (packet, callback) =>
       file.sync(parseInt(packet.version), (err, delta, version) =>
         if err?
-          _onMessageError(err, file, callback)
+          _onMessageError(err, sessionId, file, callback)
         else
           this.join(sessionId, file.id)
           callback(
@@ -44,12 +44,11 @@ class TandemNetworkAdapter extends EventEmitter
     ).listen(sessionId, TandemNetworkAdapter.routes.UPDATE, (packet, callback) =>
       file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
         if err?
-          _onMessageError(err, file, callback)
+          _onMessageError(err, sessionId, file, callback)
         else 
           broadcastPacket =
             delta   : delta
             fileId  : file.id
-            userId  : userId
             version : version
           this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket)
           file.lastUpdated = Date.now()
@@ -60,10 +59,13 @@ class TandemNetworkAdapter extends EventEmitter
       )
     )
 
-  addClient: (sessionId, userId, file) ->
-    this.initListeners(sessionId, userId, file)
+  addClient: (sessionId, file) ->
+    this.initListeners(sessionId, file)
 
-  broadcast: (sessionId, roomId, packet) ->
+  broadcast: (sessionId, fileId, packet) ->
+    console.warn "Should be overwritten by descendant"
+
+  checkOpen: (fileId) ->
     console.warn "Should be overwritten by descendant"
 
   # Join room
