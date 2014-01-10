@@ -10,6 +10,7 @@ warn = (args...) ->
 
 initAdapterListeners = ->
   @adapter.listen(TandemFile.routes.UPDATE, (packet) =>
+    return unless @ready
     return warn("Got update for other file", packet.fileId) if packet.fileId != @fileId
     if !this.remoteUpdate(packet.delta, packet.version)
       warn("Remote update failed, requesting resync")
@@ -61,6 +62,7 @@ sendSync = ->
   this.send(TandemFile.routes.SYNC, { version: @version }, (response) =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     if response.resync
+      @ready = false
       warn("Sync requesting resync")
       onResync.call(this, response)
     else if this.remoteUpdate(response.delta, response.version)
@@ -93,6 +95,7 @@ sendUpdate = ->
   )
 
 setReady = (delta, version, resend = false) ->
+  @ready = true
   # May need to resend before emitting ready since listeners on ready might immediately 
   # send an update and thus if send is after it will duplicate the packet
   sendUpdate.call(this) if resend and !@inFlight.isIdentity()
@@ -120,6 +123,7 @@ class TandemFile extends EventEmitter2
   constructor: (@fileId, @adapter, initial = {}) ->
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
+    @ready = false
     @version = initial.version or 0
     @arrived = initial.head or Delta.getInitial('')
     @inFlight = Delta.getIdentity(@arrived.endLength)

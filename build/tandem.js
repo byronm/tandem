@@ -10279,6 +10279,9 @@ warn = function() {
 initAdapterListeners = function() {
   var _this = this;
   return this.adapter.listen(TandemFile.routes.UPDATE, function(packet) {
+    if (!_this.ready) {
+      return;
+    }
     if (packet.fileId !== _this.fileId) {
       return warn("Got update for other file", packet.fileId);
     }
@@ -10351,6 +10354,7 @@ sendSync = function() {
   }, function(response) {
     _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
     if (response.resync) {
+      _this.ready = false;
       warn("Sync requesting resync");
       return onResync.call(_this, response);
     } else if (_this.remoteUpdate(response.delta, response.version)) {
@@ -10397,6 +10401,7 @@ setReady = function(delta, version, resend) {
   if (resend == null) {
     resend = false;
   }
+  this.ready = true;
   if (resend && !this.inFlight.isIdentity()) {
     sendUpdate.call(this);
   }
@@ -10434,6 +10439,7 @@ TandemFile = (function(_super) {
     }
     this.id = _.uniqueId('file-');
     this.health = TandemFile.health.WARNING;
+    this.ready = false;
     this.version = initial.version || 0;
     this.arrived = initial.head || Delta.getInitial('');
     this.inFlight = Delta.getIdentity(this.arrived.endLength);

@@ -11,13 +11,14 @@
 
   TandemAdapter = require('./adapter');
 
-  _authenticate = function(client, packet, callback) {
+  _authenticate = function(socket, packet, callback) {
     var _this = this;
     return async.waterfall([
       function(callback) {
         return _this.storage.authorize(packet, callback);
       }, function(callback) {
-        return _this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, callback);
+        socket.join(packet.fileId);
+        return _this.emit(TandemAdapter.events.CONNECT, socket.id, packet.fileId, callback);
       }
     ], function(err) {
       if ((err != null) && _.isObject(err)) {
@@ -82,18 +83,6 @@
       return this.io.sockets.clients(fileId).length > 0;
     };
 
-    TandemSocket.prototype.join = function(sessionId, fileId) {
-      var socket;
-      socket = this.sockets[sessionId];
-      return socket.join(fileId);
-    };
-
-    TandemSocket.prototype.leave = function(sessionId, fileId) {
-      var socket;
-      socket = this.sockets[sessionId];
-      return socket.leave(fileId);
-    };
-
     TandemSocket.prototype.listen = function(sessionId, route, callback) {
       var socket;
       socket = this.sockets[sessionId];
@@ -102,7 +91,12 @@
     };
 
     TandemSocket.prototype.removeClient = function(sessionId, file) {
-      return this.leave(sessionId, file.id);
+      var socket;
+      socket = this.sockets[sessionId];
+      if (socket != null) {
+        socket.leave(file.id);
+      }
+      return delete this.sockets[sessionId];
     };
 
     return TandemSocket;

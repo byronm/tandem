@@ -4,12 +4,13 @@ socketio      = require('socket.io')
 TandemAdapter = require('./adapter')
 
 
-_authenticate = (client, packet, callback) ->
+_authenticate = (socket, packet, callback) ->
   async.waterfall([
     (callback) =>
       @storage.authorize(packet, callback)
     (callback) =>
-      this.emit(TandemAdapter.events.CONNECT, client.id, packet.fileId, callback)
+      socket.join(packet.fileId)
+      this.emit(TandemAdapter.events.CONNECT, socket.id, packet.fileId, callback)
   ], (err) =>
     err = err.message if err? and _.isObject(err)   # Filter error info passed to front end client
     callback({ error: err })
@@ -54,21 +55,15 @@ class TandemSocket extends TandemAdapter
   checkOpen: (fileId) ->
     return @io.sockets.clients(fileId).length > 0
 
-  join: (sessionId, fileId) ->
-    socket = @sockets[sessionId]
-    socket.join(fileId)
-
-  leave: (sessionId, fileId) ->
-    socket = @sockets[sessionId]
-    socket.leave(fileId)
-
   listen: (sessionId, route, callback) ->
     socket = @sockets[sessionId]
     socket.on(route, callback)
     return this
 
   removeClient: (sessionId, file) ->
-    this.leave(sessionId, file.id)
+    socket = @sockets[sessionId]
+    socket.leave(file.id) if socket?
+    delete @sockets[sessionId]
 
 
 module.exports = TandemSocket

@@ -47,7 +47,6 @@
           if (err != null) {
             return _onMessageError(err, sessionId, file, callback);
           } else {
-            _this.join(sessionId, file.id);
             return callback({
               delta: delta,
               version: version
@@ -81,23 +80,15 @@
     };
 
     TandemNetworkAdapter.prototype.broadcast = function(sessionId, fileId, packet) {
-      return console.warn("Should be overwritten by descendant");
+      return console.warn("broadcast should be overwritten by descendant");
     };
 
     TandemNetworkAdapter.prototype.checkOpen = function(fileId) {
-      return console.warn("Should be overwritten by descendant");
-    };
-
-    TandemNetworkAdapter.prototype.join = function(fileId) {
-      return console.warn("Should be overwritten by descendant");
-    };
-
-    TandemNetworkAdapter.prototype.leave = function(fileId) {
-      return console.warn("Should be overwritten by descendant");
+      return console.warn("checkOpen should be overwritten by descendant");
     };
 
     TandemNetworkAdapter.prototype.listen = function(fileId, route, callback) {
-      console.warn("Should be overwritten by descendant");
+      console.warn("listen should be overwritten by descendant");
       return this;
     };
 

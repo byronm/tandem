@@ -35,7 +35,6 @@ class TandemNetworkAdapter extends EventEmitter
         if err?
           _onMessageError(err, sessionId, file, callback)
         else
-          this.join(sessionId, file.id)
           callback(
             delta: delta
             version: version
@@ -63,22 +62,14 @@ class TandemNetworkAdapter extends EventEmitter
     this.initListeners(sessionId, file)
 
   broadcast: (sessionId, fileId, packet) ->
-    console.warn "Should be overwritten by descendant"
+    console.warn "broadcast should be overwritten by descendant"
 
   checkOpen: (fileId) ->
-    console.warn "Should be overwritten by descendant"
-
-  # Join room
-  join: (fileId) ->
-    console.warn "Should be overwritten by descendant"
-
-  # Leave room
-  leave: (fileId) ->
-    console.warn "Should be overwritten by descendant"
+    console.warn "checkOpen should be overwritten by descendant"
 
   # Listen on room messages
   listen: (fileId, route, callback) ->
-    console.warn "Should be overwritten by descendant"
+    console.warn "listen should be overwritten by descendant"
     return this
 
 
