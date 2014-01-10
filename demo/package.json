@@ -2,6 +2,6 @@
   "name": "tandem-demo",
   "version": "0.0.1",
   "dependencies": {
-    "tandem": "0.12.x"
+    "tandem": "git+ssh://git@github.com:stypi/tandem.git#master"
   }
 }

@@ -1,4 +1,3 @@
-_             = require('lodash')._
 TandemFile    = require('./file')
 TandemSocket  = require('./network/socket')
 
