@@ -58,12 +58,6 @@ class TandemFileManager
     setInterval( =>
       _check.call(this)
     , @settings['check interval'])
-    process.on('SIGTERM', =>
-      _check.call(this, true, (err) =>
-        TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
-        process.exit(if err? then 1 else 0) 
-      )
-    )
 
   find: (id, callback) ->
     if @files[id]?
@@ -88,6 +82,9 @@ class TandemFileManager
           callback(err, file)
         )
       )
+
+  stop: (callback) ->
+    _check.call(this, true, callback)
       
 
 module.exports = TandemFileManager

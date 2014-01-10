@@ -58,6 +58,10 @@
       });
     }
 
+    TandemServer.prototype.stop = function(callback) {
+      return this.fileManager.stop(callback);
+    };
+
     return TandemServer;
 
   })(EventEmitter);

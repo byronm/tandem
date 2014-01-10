@@ -99,14 +99,6 @@
       setInterval(function() {
         return _check.call(_this);
       }, this.settings['check interval']);
-      process.on('SIGTERM', function() {
-        return _check.call(_this, true, function(err) {
-          if (err != null) {
-            TandemEmitter.emit(TandemEmitter.events.ERROR, err);
-          }
-          return process.exit(err != null ? 1 : 0);
-        });
-      });
     }
 
     TandemFileManager.prototype.find = function(id, callback) {
@@ -138,6 +130,10 @@
           });
         });
       }
+    };
+
+    TandemFileManager.prototype.stop = function(callback) {
+      return _check.call(this, true, callback);
     };
 
     return TandemFileManager;

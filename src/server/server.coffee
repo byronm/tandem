@@ -34,5 +34,8 @@ class TandemServer extends EventEmitter
       this.emit(TandemServer.events.ERROR, args...)
     )
 
+  stop: (callback) ->
+    @fileManager.stop(callback)
+
 
 module.exports = TandemServer
