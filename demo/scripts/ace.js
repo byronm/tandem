@@ -84,7 +84,7 @@ editor.setTheme("ace/theme/monokai");
 session.setMode("ace/mode/javascript");
 session.doc.setNewLineMode("unix");
 
-var tandem = new Tandem.Client('http://localhost:8000');
+var tandem = new Tandem.Client('http://localhost:8008');
 var file = tandem.open('42');
 file.on('file-update', function(delta) {
   enabled = false;

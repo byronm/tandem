@@ -18,7 +18,7 @@ textToDelta = function(oldText, newText) {
 
 
 $(document).ready(function () {
-  var tandem = new Tandem.Client('http://localhost:8000');
+  var tandem = new Tandem.Client('http://localhost:8008');
   var file = tandem.open('1337');
   var text = '';
 

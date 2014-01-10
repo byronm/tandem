@@ -1,4 +1,4 @@
-var tandem = new Tandem.Client('http://localhost:8000');
+var tandem = new Tandem.Client('http://localhost:8008');
 var file = tandem.open('1234');
 var editor = new Scribe.Editor('editor');
 

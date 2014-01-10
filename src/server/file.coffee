@@ -1,4 +1,5 @@
 _             = require('lodash')._
+async         = require('async')
 EventEmitter  = require('events').EventEmitter
 Tandem        = require('tandem-core')
 
