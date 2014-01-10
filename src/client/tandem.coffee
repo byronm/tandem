@@ -1,5 +1,6 @@
-TandemFile      = require('./file')
-TandemSocket    = require('./network/socket')
+_             = require('lodash')._
+TandemFile    = require('./file')
+TandemSocket  = require('./network/socket')
 
 
 class TandemClient

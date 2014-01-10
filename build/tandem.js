@@ -10789,7 +10789,9 @@ module.exports = TandemSocketAdapter;
 
 
 },{"./adapter":15}],17:[function(require,module,exports){
-var TandemClient, TandemFile, TandemSocket;
+var TandemClient, TandemFile, TandemSocket, _;
+
+_ = require('lodash')._;
 
 TandemFile = require('./file');
 
@@ -10822,6 +10824,6 @@ TandemClient = (function() {
 module.exports = TandemClient;
 
 
-},{"./file":14,"./network/socket":16}]},{},[1])
+},{"./file":14,"./network/socket":16,"lodash":2}]},{},[1])
 (1)
 });
