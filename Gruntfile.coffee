@@ -42,7 +42,7 @@ module.exports = (grunt) ->
       'build/tandem.all.js': [
         'node_modules/async/lib/async.js'
         'node_modules/socket.io-client/dist/socket.io.js'
-        'node_modules/underscore/underscore.js'
+        'node_modules/lodash/lodash.js'
         'vendor/assets/javascripts/eventemitter2.js'
         'build/tandem.js'
       ]

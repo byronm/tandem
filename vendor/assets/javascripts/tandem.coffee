@@ -1,5 +1,5 @@
 #= require async
-#= require underscore
+#= require lodash
 #= require socket.io
 #= require eventemitter2
 #= require tandem-core

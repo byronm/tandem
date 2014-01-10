@@ -1,4 +1,4 @@
-_ = require('underscore')._
+_ = require('lodash')._
 
 class TandemCache
   @OPERATIONS: ['del', 'get', 'push', 'range', 'set']

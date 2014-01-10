@@ -1,4 +1,4 @@
-_             = require('underscore')._
+_             = require('lodash')._
 EventEmitter  = require('events').EventEmitter
 Tandem        = require('tandem-core')
 

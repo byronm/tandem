@@ -1,4 +1,4 @@
-_             = require('underscore')._
+_             = require('lodash')._
 async         = require('async')
 Tandem        = require('tandem-core')
 TandemEmitter = require('./emitter')

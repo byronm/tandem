@@ -1,7 +1,7 @@
 (function() {
   var Tandem, TandemEmitter, TandemFile, TandemFileManager, async, _, _check, _close, _save;
 
-  _ = require('underscore')._;
+  _ = require('lodash')._;
 
   async = require('async');
 

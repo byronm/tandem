@@ -1,4 +1,4 @@
-GLOBAL._ = require('underscore')._
+GLOBAL._ = require('lodash')._
 GLOBAL.EventEmitter2 = require('events').EventEmitter
 GLOBAL.async = require('async')
 GLOBAL.io = require('socket.io-client')
