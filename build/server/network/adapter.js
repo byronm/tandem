@@ -1,7 +1,5 @@
 (function() {
-  var EventEmitter, Tandem, TandemEmitter, TandemNetworkAdapter, _makeResyncPacket, _onMessageError,
-    __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  var EventEmitter, Tandem, TandemEmitter, TandemNetworkAdapter, _makeResyncPacket, _onMessageError;
 
   EventEmitter = require('events').EventEmitter;
 
@@ -24,14 +22,7 @@
     return callback(_makeResyncPacket(file));
   };
 
-  TandemNetworkAdapter = (function(_super) {
-    __extends(TandemNetworkAdapter, _super);
-
-    TandemNetworkAdapter.events = {
-      CONNECT: 'network-connect',
-      ERROR: 'network-error'
-    };
-
+  TandemNetworkAdapter = (function() {
     TandemNetworkAdapter.routes = {
       RESYNC: 'ot/resync',
       SYNC: 'ot/sync',
@@ -116,7 +107,7 @@
 
     return TandemNetworkAdapter;
 
-  })(EventEmitter);
+  })();
 
   module.exports = TandemNetworkAdapter;
 

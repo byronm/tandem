@@ -79,14 +79,11 @@
     };
 
     function TandemFileManager(storage, options) {
-      var _this = this;
       this.storage = storage;
       this.options = options != null ? options : {};
       this.settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS);
       this._files = {};
-      setInterval(function() {
-        return _check.call(_this);
-      }, this.settings['check interval']);
+      setInterval(_check.bind(this), this.settings['check interval']);
     }
 
     TandemFileManager.prototype.find = function(id, callback) {

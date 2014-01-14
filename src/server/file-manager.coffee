@@ -12,7 +12,7 @@ _check = (force = false, done = ->) ->
         _save.bind(this, file),
         _close.bind(this, file)
       ], (err) =>
-        callback(null)  # Do no pass error since it will stop each loop
+        callback(null)  # Do not stop async.each loop so other files can be saved
       )
     else
       callback(null)
@@ -52,9 +52,7 @@ class TandemFileManager
   constructor: (@storage, @options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS)
     @_files = {}
-    setInterval( =>
-      _check.call(this)
-    , @settings['check interval'])
+    setInterval(_check.bind(this), @settings['check interval'])
 
   find: (id, callback) ->
     return callback(null, @_files[id]) if @_files[id]?

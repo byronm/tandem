@@ -17,10 +17,7 @@ _onMessageError = (err, sessionId, file, callback) ->
   callback(_makeResyncPacket(file))
 
 
-class TandemNetworkAdapter extends EventEmitter
-  @events:
-    CONNECT : 'network-connect'
-    ERROR   : 'network-error'
+class TandemNetworkAdapter
   @routes:
     RESYNC    : 'ot/resync'
     SYNC      : 'ot/sync'

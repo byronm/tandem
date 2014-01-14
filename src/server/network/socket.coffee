@@ -5,15 +5,11 @@ TandemAdapter = require('./adapter')
 
 
 _authenticate = (socket, packet, callback) ->
-  async.waterfall([
-    (callback) =>
-      @storage.authorize(packet, callback)
-    (callback) =>
-      socket.join(packet.fileId)
-      this.emit(TandemAdapter.events.CONNECT, socket.id, packet.fileId)
-      callback(null)
-  ], (err) =>
-    err = err.message if err? and _.isObject(err)   # Filter error info passed to front end client
+  @storage.authorize(packet, (err) =>
+    if err?
+      err = err.message if _.isObject(err)
+    else
+      this.join(socket.id, packet.fileId)
     callback({ error: err })
   )
 
@@ -47,6 +43,7 @@ class TandemSocket extends TandemAdapter
     socket.on('disconnect', =>
       this.leave(sessionId, fileId)
     )
+    socket.join(fileId)
     super
 
   broadcast: (sessionId, fileId, route, packet) ->

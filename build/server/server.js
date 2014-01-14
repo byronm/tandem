@@ -40,9 +40,6 @@
       this.storage = _.isFunction(this.settings.storage) ? new this.settings.storage : this.settings.storage;
       this.fileManager = new TandemFileManager(this.storage, this.settings);
       this.network = _.isFunction(this.settings.network) ? new this.settings.network(server, this.fileManager, this.storage, this.settings) : this.settings.network;
-      this.network.on(TandemSocket.events.CONNECT, function(sessionId, fileId) {
-        return _this.network.join(sessionId, fileId);
-      });
       TandemEmitter.on(TandemEmitter.events.ERROR, function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];

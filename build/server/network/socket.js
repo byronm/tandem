@@ -13,17 +13,13 @@
 
   _authenticate = function(socket, packet, callback) {
     var _this = this;
-    return async.waterfall([
-      function(callback) {
-        return _this.storage.authorize(packet, callback);
-      }, function(callback) {
-        socket.join(packet.fileId);
-        _this.emit(TandemAdapter.events.CONNECT, socket.id, packet.fileId);
-        return callback(null);
-      }
-    ], function(err) {
-      if ((err != null) && _.isObject(err)) {
-        err = err.message;
+    return this.storage.authorize(packet, function(err) {
+      if (err != null) {
+        if (_.isObject(err)) {
+          err = err.message;
+        }
+      } else {
+        _this.join(socket.id, packet.fileId);
       }
       return callback({
         error: err
@@ -72,6 +68,7 @@
       socket.on('disconnect', function() {
         return _this.leave(sessionId, fileId);
       });
+      socket.join(fileId);
       return TandemSocket.__super__.join.apply(this, arguments);
     };
 
