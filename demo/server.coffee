@@ -1,4 +1,4 @@
-Tandem = require('tandem')
+Tandem = require('../index')
 
 server = require('http').Server()
 server.listen(8008)
