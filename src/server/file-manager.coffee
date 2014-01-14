@@ -6,13 +6,13 @@ TandemFile    = require('./file')
 
 _check = (force = false, done = ->) ->
   async.each(_.values(@_files), (file, callback) =>
-    return if !file? or _.isArray(file)
-    isClosed = !@network.checkOpen(file.id)
-    if force or isClosed or file.lastUpdated + @settings['inactive timeout'] < Date.now()
-      _save.call(this, file, (err) =>
-        return TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
-        return _close.call(this, file, callback) if isClosed
-        callback(null)
+    return unless file?
+    if force or file.lastUpdated + @settings['inactive timeout'] < Date.now()
+      async.waterfall([
+        _save.bind(this, file),
+        _close.bind(this, file)
+      ], (err) =>
+        callback(null)  # Do no pass error since it will stop each loop
       )
     else
       callback(null)
@@ -22,10 +22,8 @@ _check = (force = false, done = ->) ->
 
 _close = (file, callback) ->
   file.close((err) =>
-    if err?
-      TandemEmitter.emit(TandemEmitter.events.ERROR, err)
-    else
-      delete @_files[file.id]
+    return TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
+    delete @_files[file.id]
     callback(err)
   )
 

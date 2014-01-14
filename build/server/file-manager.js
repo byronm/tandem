@@ -18,19 +18,11 @@
       done = function() {};
     }
     return async.each(_.values(this._files), function(file, callback) {
-      var isClosed;
-      if ((file == null) || _.isArray(file)) {
+      if (file == null) {
         return;
       }
-      isClosed = !_this.network.checkOpen(file.id);
-      if (force || isClosed || file.lastUpdated + _this.settings['inactive timeout'] < Date.now()) {
-        return _save.call(_this, file, function(err) {
-          if (err != null) {
-            return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
-          }
-          if (isClosed) {
-            return _close.call(_this, file, callback);
-          }
+      if (force || file.lastUpdated + _this.settings['inactive timeout'] < Date.now()) {
+        return async.waterfall([_save.bind(_this, file), _close.bind(_this, file)], function(err) {
           return callback(null);
         });
       } else {
@@ -44,11 +36,11 @@
   _close = function(file, callback) {
     var _this = this;
     return file.close(function(err) {
+      console.log('closing!');
       if (err != null) {
-        TandemEmitter.emit(TandemEmitter.events.ERROR, err);
-      } else {
-        delete _this._files[file.id];
+        return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
       }
+      delete _this._files[file.id];
       return callback(err);
     });
   };

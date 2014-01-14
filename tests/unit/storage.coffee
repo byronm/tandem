@@ -21,7 +21,7 @@ describe('Storage', ->
         find: (fileId, callback) ->
           switch fileId
             when 'basic-auth-file' then callback(null, helloDelta, 10)
-            when 'persistence-file' then callback(null, helloDelta, 10)
+            when 'close-file' then callback(null, helloDelta, 10)
             else callback('File not found')
         update: (fileId, head, version, deltas, callback) ->
           eventEmitter.emit('update', head, version, deltas)
@@ -101,11 +101,11 @@ describe('Storage', ->
     )
   )
 
-  it('should garbage collect file', (done) ->
-    file = client.open('persistence-file', { secret: 1337 })
+  it('should close file', (done) ->
+    file = client.open('close-file', { secret: 1337 })
     file.on(TandemClient.File.events.UPDATE, (delta) ->
       insertDelta = TandemServer.Delta.makeInsertDelta(delta.endLength, 0, 'Oh ')
-      cache = server.fileManager._files['persistence-file'].cache
+      cache = server.fileManager._files['close-file'].cache
       async.waterfall([
         (callback) ->
           cache.get('history', callback)
@@ -119,8 +119,7 @@ describe('Storage', ->
           expect(history.length).to.equal(1)
           change = JSON.parse(history[0])
           expect(change.version).to.equal(11)
-          client.adapter.socket.disconnect()
-          setTimeout(callback, 500)
+          setTimeout(callback, server.fileManager.settings['inactive timeout'] + 500)
         (callback) ->
           cache.get('history', callback)
         (history, callback) ->
