@@ -1,6 +1,5 @@
 _             = require('lodash')._
 async         = require('async')
-Tandem        = require('tandem-core')
 TandemEmitter = require('./emitter')
 TandemFile    = require('./file')
 
@@ -60,28 +59,16 @@ class TandemFileManager
     , @settings['check interval'])
 
   find: (id, callback) ->
-    if @files[id]?
-      if _.isArray(@files[id])
-        @files[id].push(callback)
-      else
-        callback(null, @files[id])
-    else
-      @files[id] = [callback]
-      async.waterfall([
-        (callback) =>
-          if @storage?
-            @storage.find(id, callback)
-          else
-            callback(null, Tandem.Delta.getInitial(''), 0)
-        (head, version, callback) =>
-          new TandemFile(id, head, version, @options, callback)
-      ], (err, file) =>
-        callbacks = @files[id]
-        @files[id] = if err? then undefined else file
-        _.each(callbacks, (callback) =>
-          callback(err, file)
-        )
-      )
+    return callback(null, @files[id]) if @files[id]?
+    async.waterfall([
+      (callback) =>
+        @storage.find(id, callback)
+      (head, version, callback) =>
+        new TandemFile(id, head, version, @options, callback)
+    ], (err, file) =>
+      @files[id] = file unless @files[id]?  # Unless is to prevent race conditions
+      callback(err, @files[id])
+    )
 
   stop: (callback) ->
     _check.call(this, true, callback)

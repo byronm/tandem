@@ -1,11 +1,9 @@
 (function() {
-  var Tandem, TandemEmitter, TandemFile, TandemFileManager, async, _, _check, _close, _save;
+  var TandemEmitter, TandemFile, TandemFileManager, async, _, _check, _close, _save;
 
   _ = require('lodash')._;
 
   async = require('async');
-
-  Tandem = require('tandem-core');
 
   TandemEmitter = require('./emitter');
 
@@ -104,32 +102,20 @@
     TandemFileManager.prototype.find = function(id, callback) {
       var _this = this;
       if (this.files[id] != null) {
-        if (_.isArray(this.files[id])) {
-          return this.files[id].push(callback);
-        } else {
-          return callback(null, this.files[id]);
-        }
-      } else {
-        this.files[id] = [callback];
-        return async.waterfall([
-          function(callback) {
-            if (_this.storage != null) {
-              return _this.storage.find(id, callback);
-            } else {
-              return callback(null, Tandem.Delta.getInitial(''), 0);
-            }
-          }, function(head, version, callback) {
-            return new TandemFile(id, head, version, _this.options, callback);
-          }
-        ], function(err, file) {
-          var callbacks;
-          callbacks = _this.files[id];
-          _this.files[id] = err != null ? void 0 : file;
-          return _.each(callbacks, function(callback) {
-            return callback(err, file);
-          });
-        });
+        return callback(null, this.files[id]);
       }
+      return async.waterfall([
+        function(callback) {
+          return _this.storage.find(id, callback);
+        }, function(head, version, callback) {
+          return new TandemFile(id, head, version, _this.options, callback);
+        }
+      ], function(err, file) {
+        if (_this.files[id] == null) {
+          _this.files[id] = file;
+        }
+        return callback(err, _this.files[id]);
+      });
     };
 
     TandemFileManager.prototype.stop = function(callback) {
