@@ -17,7 +17,7 @@
     if (done == null) {
       done = function() {};
     }
-    return async.each(_.values(this.files), function(file, callback) {
+    return async.each(_.values(this._files), function(file, callback) {
       var isClosed;
       if ((file == null) || _.isArray(file)) {
         return;
@@ -47,7 +47,7 @@
       if (err != null) {
         TandemEmitter.emit(TandemEmitter.events.ERROR, err);
       } else {
-        delete _this.files[file.id];
+        delete _this._files[file.id];
       }
       return callback(err);
     });
@@ -93,7 +93,7 @@
       this.storage = storage;
       this.options = options != null ? options : {};
       this.settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS);
-      this.files = {};
+      this._files = {};
       setInterval(function() {
         return _check.call(_this);
       }, this.settings['check interval']);
@@ -101,8 +101,8 @@
 
     TandemFileManager.prototype.find = function(id, callback) {
       var _this = this;
-      if (this.files[id] != null) {
-        return callback(null, this.files[id]);
+      if (this._files[id] != null) {
+        return callback(null, this._files[id]);
       }
       return async.waterfall([
         function(callback) {
@@ -111,10 +111,10 @@
           return new TandemFile(id, head, version, _this.options, callback);
         }
       ], function(err, file) {
-        if (_this.files[id] == null) {
-          _this.files[id] = file;
+        if (_this._files[id] == null) {
+          _this._files[id] = file;
         }
-        return callback(err, _this.files[id]);
+        return callback(err, _this._files[id]);
       });
     };
 

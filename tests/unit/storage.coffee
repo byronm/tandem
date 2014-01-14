@@ -87,7 +87,7 @@ describe('Storage', ->
     file = client.open('basic-auth-file', { secret: 1337 })
     file.on(TandemClient.File.events.UPDATE, (delta) ->
       insertDelta = TandemServer.Delta.makeInsertDelta(delta.endLength, 0, 'Oh ')
-      expect(server.fileManager.files['basic-auth-file'].versionSaved).to.equal(10)
+      expect(server.fileManager._files['basic-auth-file'].versionSaved).to.equal(10)
       eventEmitter.on('update', (head, version, deltas) =>
         expect(version).to.equal(11)
         expect(head).to.deep.equal(helloDelta.compose(insertDelta))
@@ -105,7 +105,7 @@ describe('Storage', ->
     file = client.open('persistence-file', { secret: 1337 })
     file.on(TandemClient.File.events.UPDATE, (delta) ->
       insertDelta = TandemServer.Delta.makeInsertDelta(delta.endLength, 0, 'Oh ')
-      cache = server.fileManager.files['persistence-file'].cache
+      cache = server.fileManager._files['persistence-file'].cache
       async.waterfall([
         (callback) ->
           cache.get('history', callback)
