@@ -1,4 +1,4 @@
-_ = require('lodash')._
+_ = require('lodash')
 
 class TandemCache
   @OPERATIONS: ['del', 'get', 'push', 'range', 'set']

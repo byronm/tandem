@@ -1,4 +1,4 @@
-_             = require('lodash')._
+_             = require('lodash')
 async         = require('async')
 socketio      = require('socket.io')
 TandemAdapter = require('./adapter')

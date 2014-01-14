@@ -1,4 +1,4 @@
-_       = require('lodash')._
+_       = require('lodash')
 async   = require('async')
 expect  = require('chai').expect
 http    = require('http')

@@ -2,7 +2,7 @@
   var TandemCache, _,
     __slice = [].slice;
 
-  _ = require('lodash')._;
+  _ = require('lodash');
 
   TandemCache = (function() {
     TandemCache.OPERATIONS = ['del', 'get', 'push', 'range', 'set'];

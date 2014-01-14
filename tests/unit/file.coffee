@@ -1,4 +1,4 @@
-_       = require('lodash')._
+_       = require('lodash')
 expect  = require('chai').expect
 TandemServer = require('../../index')
 TandemFile = require('../../src/server/file')

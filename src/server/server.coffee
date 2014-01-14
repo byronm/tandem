@@ -1,4 +1,4 @@
-_                 = require('lodash')._
+_                 = require('lodash')
 EventEmitter      = require('events').EventEmitter
 TandemEmitter     = require('./emitter')
 TandemFileManager = require('./file-manager')
