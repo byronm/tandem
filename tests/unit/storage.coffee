@@ -69,7 +69,7 @@ describe('Storage', ->
     async.parallel({
       client: (callback) =>
         file.on(TandemClient.File.events.ERROR, (message) ->
-          expect(message).to.equal("Error retrieving document")
+          expect(message).to.equal("File not found")
           callback(null)
         )
       server: (callback) =>

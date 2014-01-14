@@ -1,5 +1,5 @@
 (function() {
-  var TandemAdapter, TandemSocket, async, socketio, _, _authenticate,
+  var TandemAdapter, TandemEmitter, TandemSocket, async, socketio, _, _authenticate,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -10,6 +10,8 @@
   socketio = require('socket.io');
 
   TandemAdapter = require('./adapter');
+
+  TandemEmitter = require('../emitter');
 
   _authenticate = function(socket, packet, callback) {
     var _this = this;
@@ -62,31 +64,22 @@
       var socket,
         _this = this;
       socket = this.sockets[sessionId];
+      socket.on('disconnect', this.leave.bind(this, sessionId, fileId));
       _.each(TandemAdapter.routes, function(route, name) {
-        return socket.removeAllListeners(route);
+        socket.removeAllListeners(route);
+        return socket.on(route, function(packet, callback) {
+          return _this.handle(route, fileId, packet, function(err, callbackPacket, broadcastPacket) {
+            if (err != null) {
+              TandemEmitter.emit(TandemEmitter.events.ERROR, err);
+            }
+            callback(callbackPacket);
+            if (broadcastPacket != null) {
+              return socket.broadcast.to(fileId).emit(route, broadcastPacket);
+            }
+          });
+        });
       });
-      socket.on('disconnect', function() {
-        return _this.leave(sessionId, fileId);
-      });
-      socket.join(fileId);
-      return TandemSocket.__super__.join.apply(this, arguments);
-    };
-
-    TandemSocket.prototype.broadcast = function(sessionId, fileId, route, packet) {
-      var socket;
-      socket = this.sockets[sessionId];
-      return socket.broadcast.to(fileId).emit(route, packet);
-    };
-
-    TandemSocket.prototype.checkOpen = function(fileId) {
-      return this.io.sockets.clients(fileId).length > 0;
-    };
-
-    TandemSocket.prototype.listen = function(sessionId, route, callback) {
-      var socket;
-      socket = this.sockets[sessionId];
-      socket.on(route, callback);
-      return this;
+      return socket.join(fileId);
     };
 
     TandemSocket.prototype.leave = function(sessionId, fileId) {

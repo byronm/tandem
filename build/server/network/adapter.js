@@ -1,11 +1,9 @@
 (function() {
-  var EventEmitter, Tandem, TandemEmitter, TandemNetworkAdapter, _makeResyncPacket, _onMessageError;
+  var EventEmitter, Tandem, TandemNetworkAdapter, _makeResyncPacket, _onMessageError;
 
   EventEmitter = require('events').EventEmitter;
 
   Tandem = require('tandem-core');
-
-  TandemEmitter = require('../emitter');
 
   _makeResyncPacket = function(file) {
     return {
@@ -37,72 +35,49 @@
       }
     }
 
-    TandemNetworkAdapter.prototype.initListeners = function(sessionId, fileId) {
+    TandemNetworkAdapter.prototype.handle = function(route, fileId, packet, callback) {
       var _this = this;
-      return this.listen(sessionId, TandemNetworkAdapter.routes.RESYNC, function(packet, callback) {
-        return _this.fileManager.find(fileId, function(err, file) {
-          return callback(_makeResyncPacket(file));
-        });
-      }).listen(sessionId, TandemNetworkAdapter.routes.SYNC, function(packet, callback) {
-        return _this.fileManager.find(fileId, function(err, file) {
-          if (err != null) {
+      return this.fileManager.find(fileId, function(err, file) {
+        var resyncHandler;
+        if (err != null) {
+          return callback(err, {
+            error: err
+          });
+        }
+        resyncHandler = function(err, file, callback) {
+          return callback(err, _makeResyncPacket(file));
+        };
+        switch (route) {
+          case TandemNetworkAdapter.routes.RESYNC:
+            return resyncHandler(null, file, callback);
+          case TandemNetworkAdapter.routes.SYNC:
             if (err != null) {
-              TandemEmitter.emit(TandemEmitter.events.ERROR, err);
+              return resyncHandler(err, file, callback);
             }
-            callback({
-              error: 'Error retrieving document'
+            return file.sync(parseInt(packet.version), function(err, delta, version) {
+              return callback(err, {
+                delta: delta,
+                version: version
+              });
             });
-            return;
-          }
-          return file.sync(parseInt(packet.version), function(err, delta, version) {
+          case TandemNetworkAdapter.routes.UPDATE:
             if (err != null) {
-              return _onMessageError(err, sessionId, file, callback);
-            } else {
-              return callback({
+              return resyncHandler(err, file, callback);
+            }
+            return file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), function(err, delta, version) {
+              return callback(err, {
+                fileId: fileId,
+                version: version
+              }, {
                 delta: delta,
+                fileId: fileId,
                 version: version
               });
-            }
-          });
-        });
-      }).listen(sessionId, TandemNetworkAdapter.routes.UPDATE, function(packet, callback) {
-        return _this.fileManager.find(fileId, function(err, file) {
-          return file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), function(err, delta, version) {
-            var broadcastPacket;
-            if (err != null) {
-              return _onMessageError(err, sessionId, file, callback);
-            } else {
-              broadcastPacket = {
-                delta: delta,
-                fileId: file.id,
-                version: version
-              };
-              _this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket);
-              return callback({
-                fileId: file.id,
-                version: version
-              });
-            }
-          });
-        });
+            });
+          default:
+            return callback(new Error('Unexpected network route'));
+        }
       });
-    };
-
-    TandemNetworkAdapter.prototype.join = function(sessionId, fileId) {
-      return this.initListeners(sessionId, fileId);
-    };
-
-    TandemNetworkAdapter.prototype.broadcast = function(sessionId, fileId, packet) {
-      return console.warn("broadcast should be overwritten by descendant");
-    };
-
-    TandemNetworkAdapter.prototype.checkOpen = function(fileId) {
-      return console.warn("checkOpen should be overwritten by descendant");
-    };
-
-    TandemNetworkAdapter.prototype.listen = function(fileId, route, callback) {
-      console.warn("listen should be overwritten by descendant");
-      return this;
     };
 
     return TandemNetworkAdapter;

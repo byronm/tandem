@@ -1,6 +1,5 @@
 EventEmitter  = require('events').EventEmitter
 Tandem        = require('tandem-core')
-TandemEmitter = require('../emitter')
 
 
 _makeResyncPacket = (file) ->
@@ -18,6 +17,7 @@ _onMessageError = (err, sessionId, file, callback) ->
 
 
 class TandemNetworkAdapter
+  # Descendants should listen on these message routes
   @routes:
     RESYNC    : 'ot/resync'
     SYNC      : 'ot/sync'
@@ -25,59 +25,37 @@ class TandemNetworkAdapter
 
   constructor: (httpServer, @fileManager, @storage, options = {}) ->
 
-  initListeners: (sessionId, fileId) ->
-    this.listen(sessionId, TandemNetworkAdapter.routes.RESYNC, (packet, callback) =>
-      @fileManager.find(fileId, (err, file) =>
-        callback(_makeResyncPacket(file))
-      )
-    ).listen(sessionId, TandemNetworkAdapter.routes.SYNC, (packet, callback) =>
-      @fileManager.find(fileId, (err, file) =>
-        if err?
-          TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
-          callback({ error: 'Error retrieving document' })
-          return
-        file.sync(parseInt(packet.version), (err, delta, version) =>
-          if err?
-            _onMessageError(err, sessionId, file, callback)
-          else
-            callback(
+  handle: (route, fileId, packet, callback) ->
+    @fileManager.find(fileId, (err, file) =>
+      return callback(err, { error: err }) if err?
+      resyncHandler = (err, file, callback) ->
+        callback(err, _makeResyncPacket(file))
+      switch route
+        when TandemNetworkAdapter.routes.RESYNC
+          resyncHandler(null, file, callback)
+        when TandemNetworkAdapter.routes.SYNC
+          return resyncHandler(err, file, callback) if err?
+          file.sync(parseInt(packet.version), (err, delta, version) =>
+            callback(err, {
               delta: delta
               version: version
-            )
-        )
-      )
-    ).listen(sessionId, TandemNetworkAdapter.routes.UPDATE, (packet, callback) =>
-      @fileManager.find(fileId, (err, file) =>
-        file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
-          if err?
-            _onMessageError(err, sessionId, file, callback)
-          else 
-            broadcastPacket =
+            })
+          )
+        when TandemNetworkAdapter.routes.UPDATE
+          return resyncHandler(err, file, callback) if err?
+          file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
+            callback(err, {
+              fileId  : fileId
+              version : version
+            }, {
               delta   : delta
-              fileId  : file.id
+              fileId  : fileId
               version : version
-            this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket)
-            callback(
-              fileId  : file.id
-              version : version
-            )
-        )
-      )
+            })
+          )
+        else
+          callback(new Error('Unexpected network route'))
     )
-
-  join: (sessionId, fileId) ->
-    this.initListeners(sessionId, fileId)
-
-  broadcast: (sessionId, fileId, packet) ->
-    console.warn "broadcast should be overwritten by descendant"
-
-  checkOpen: (fileId) ->
-    console.warn "checkOpen should be overwritten by descendant"
-
-  # Listen on room messages
-  listen: (fileId, route, callback) ->
-    console.warn "listen should be overwritten by descendant"
-    return this
 
 
 module.exports = TandemNetworkAdapter

@@ -2,6 +2,7 @@ _             = require('lodash')
 async         = require('async')
 socketio      = require('socket.io')
 TandemAdapter = require('./adapter')
+TandemEmitter = require('../emitter')
 
 
 _authenticate = (socket, packet, callback) ->
@@ -37,26 +38,18 @@ class TandemSocket extends TandemAdapter
 
   join: (sessionId, fileId) ->
     socket = @sockets[sessionId]
-    _.each(TandemAdapter.routes, (route, name) ->
+    socket.on('disconnect', this.leave.bind(this, sessionId, fileId))
+    _.each(TandemAdapter.routes, (route, name) =>
       socket.removeAllListeners(route)
-    )
-    socket.on('disconnect', =>
-      this.leave(sessionId, fileId)
+      socket.on(route, (packet, callback) =>
+        this.handle(route, fileId, packet, (err, callbackPacket, broadcastPacket) =>
+          TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
+          callback(callbackPacket)
+          socket.broadcast.to(fileId).emit(route, broadcastPacket) if broadcastPacket?
+        )
+      )
     )
     socket.join(fileId)
-    super
-
-  broadcast: (sessionId, fileId, route, packet) ->
-    socket = @sockets[sessionId]
-    socket.broadcast.to(fileId).emit(route, packet)
-
-  checkOpen: (fileId) ->
-    return @io.sockets.clients(fileId).length > 0
-
-  listen: (sessionId, route, callback) ->
-    socket = @sockets[sessionId]
-    socket.on(route, callback)
-    return this
 
   leave: (sessionId, fileId) ->
     socket = @sockets[sessionId]
