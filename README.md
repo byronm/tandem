@@ -77,10 +77,3 @@ All other files/directories are just supporting npm, build, demo, or documentati
     index.js - npm
     Makefile - define make commands
     package.json - npm
-
-### Version numbers
-
-Until we write a script, version numbers will have to be updated in the following files:
-
-- package.json
-- demo/package.json
