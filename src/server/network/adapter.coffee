@@ -1,5 +1,6 @@
-EventEmitter = require('events').EventEmitter
-Tandem       = require('tandem-core')
+EventEmitter  = require('events').EventEmitter
+Tandem        = require('tandem-core')
+TandemEmitter = require('../emitter')
 
 
 _makeResyncPacket = (file) ->
@@ -25,41 +26,50 @@ class TandemNetworkAdapter extends EventEmitter
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: ->
+  constructor: (httpServer, @fileManager, @storage, options = {}) ->
 
-  initListeners: (sessionId, file) ->
+  initListeners: (sessionId, fileId) ->
     this.listen(sessionId, TandemNetworkAdapter.routes.RESYNC, (packet, callback) =>
-      callback(_makeResyncPacket(file))
+      @fileManager.find(fileId, (err, file) =>
+        callback(_makeResyncPacket(file))
+      )
     ).listen(sessionId, TandemNetworkAdapter.routes.SYNC, (packet, callback) =>
-      file.sync(parseInt(packet.version), (err, delta, version) =>
+      @fileManager.find(fileId, (err, file) =>
         if err?
-          _onMessageError(err, sessionId, file, callback)
-        else
-          callback(
-            delta: delta
-            version: version
-          )
+          TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
+          callback({ error: 'Error retrieving document' })
+          return
+        file.sync(parseInt(packet.version), (err, delta, version) =>
+          if err?
+            _onMessageError(err, sessionId, file, callback)
+          else
+            callback(
+              delta: delta
+              version: version
+            )
+        )
       )
     ).listen(sessionId, TandemNetworkAdapter.routes.UPDATE, (packet, callback) =>
-      file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
-        if err?
-          _onMessageError(err, sessionId, file, callback)
-        else 
-          broadcastPacket =
-            delta   : delta
-            fileId  : file.id
-            version : version
-          this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket)
-          file.lastUpdated = Date.now()
-          callback(
-            fileId  : file.id
-            version : version
-          )
+      @fileManager.find(fileId, (err, file) =>
+        file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
+          if err?
+            _onMessageError(err, sessionId, file, callback)
+          else 
+            broadcastPacket =
+              delta   : delta
+              fileId  : file.id
+              version : version
+            this.broadcast(sessionId, file.id, TandemNetworkAdapter.routes.UPDATE, broadcastPacket)
+            callback(
+              fileId  : file.id
+              version : version
+            )
+        )
       )
     )
 
-  addClient: (sessionId, file) ->
-    this.initListeners(sessionId, file)
+  join: (sessionId, fileId) ->
+    this.initListeners(sessionId, fileId)
 
   broadcast: (sessionId, fileId, packet) ->
     console.warn "broadcast should be overwritten by descendant"

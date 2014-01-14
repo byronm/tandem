@@ -18,17 +18,10 @@ class TandemServer extends EventEmitter
   constructor: (server, options = {}) ->
     @settings = _.defaults(options, TandemServer.DEFAULTS)
     @storage = if _.isFunction(@settings.storage) then new @settings.storage else @settings.storage
-    @network = if _.isFunction(@settings.network) then new @settings.network(server, @storage, @settings) else @settings.network
-    @fileManager = new TandemFileManager(@network, @storage, @settings)
-    @network.on(TandemSocket.events.CONNECT, (sessionId, fileId, callback) =>
-      @fileManager.find(fileId, (err, file) =>
-        if err?
-          callback(new Error('Error retrieving document'))
-          TandemEmitter.emit(TandemEmitter.events.ERROR, err)
-        else
-          @network.addClient(sessionId, file)
-          callback(null)
-      )
+    @fileManager = new TandemFileManager(@storage, @settings)
+    @network = if _.isFunction(@settings.network) then new @settings.network(server, @fileManager, @storage, @settings) else @settings.network
+    @network.on(TandemSocket.events.CONNECT, (sessionId, fileId) =>
+      @network.join(sessionId, fileId)
     )
     TandemEmitter.on(TandemEmitter.events.ERROR, (args...) =>
       this.emit(TandemServer.events.ERROR, args...)

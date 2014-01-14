@@ -125,6 +125,7 @@ class TandemFile extends EventEmitter
           @version += 1
           callback(null)
       ], (err, delta, version) =>
+        @lastUpdated = Date.now()
         callback(err, changeset.delta, changeset.version)
         this.emit(TandemFile.events.UPDATE, changeset.delta, changeset.version)
         done()

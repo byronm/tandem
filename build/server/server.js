@@ -38,18 +38,10 @@
       }
       this.settings = _.defaults(options, TandemServer.DEFAULTS);
       this.storage = _.isFunction(this.settings.storage) ? new this.settings.storage : this.settings.storage;
-      this.network = _.isFunction(this.settings.network) ? new this.settings.network(server, this.storage, this.settings) : this.settings.network;
-      this.fileManager = new TandemFileManager(this.network, this.storage, this.settings);
-      this.network.on(TandemSocket.events.CONNECT, function(sessionId, fileId, callback) {
-        return _this.fileManager.find(fileId, function(err, file) {
-          if (err != null) {
-            callback(new Error('Error retrieving document'));
-            return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
-          } else {
-            _this.network.addClient(sessionId, file);
-            return callback(null);
-          }
-        });
+      this.fileManager = new TandemFileManager(this.storage, this.settings);
+      this.network = _.isFunction(this.settings.network) ? new this.settings.network(server, this.fileManager, this.storage, this.settings) : this.settings.network;
+      this.network.on(TandemSocket.events.CONNECT, function(sessionId, fileId) {
+        return _this.network.join(sessionId, fileId);
       });
       TandemEmitter.on(TandemEmitter.events.ERROR, function() {
         var args;

@@ -190,6 +190,7 @@
             return callback(null);
           }
         ], function(err, delta, version) {
+          _this.lastUpdated = Date.now();
           callback(err, changeset.delta, changeset.version);
           _this.emit(TandemFile.events.UPDATE, changeset.delta, changeset.version);
           return done();

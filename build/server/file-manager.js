@@ -36,7 +36,6 @@
   _close = function(file, callback) {
     var _this = this;
     return file.close(function(err) {
-      console.log('closing!');
       if (err != null) {
         return TandemEmitter.emit(TandemEmitter.events.ERROR, err);
       }
@@ -79,9 +78,8 @@
       'inactive timeout': 1000 * 60 * 15
     };
 
-    function TandemFileManager(network, storage, options) {
+    function TandemFileManager(storage, options) {
       var _this = this;
-      this.network = network;
       this.storage = storage;
       this.options = options != null ? options : {};
       this.settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS);

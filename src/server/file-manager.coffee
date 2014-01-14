@@ -49,7 +49,7 @@ class TandemFileManager
     'check interval'   : 1000 * 60
     'inactive timeout' : 1000 * 60 * 15
 
-  constructor: (@network, @storage, @options = {}) ->
+  constructor: (@storage, @options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemFileManager.DEFAULTS)), TandemFileManager.DEFAULTS)
     @_files = {}
     setInterval( =>

@@ -10,7 +10,8 @@ _authenticate = (socket, packet, callback) ->
       @storage.authorize(packet, callback)
     (callback) =>
       socket.join(packet.fileId)
-      this.emit(TandemAdapter.events.CONNECT, socket.id, packet.fileId, callback)
+      this.emit(TandemAdapter.events.CONNECT, socket.id, packet.fileId)
+      callback(null)
   ], (err) =>
     err = err.message if err? and _.isObject(err)   # Filter error info passed to front end client
     callback({ error: err })
@@ -23,7 +24,7 @@ class TandemSocket extends TandemAdapter
     'log level': 1
     'transports': ['websocket', 'xhr-polling']
 
-  constructor: (httpServer, @storage, options = {}) ->
+  constructor: (httpServer, @fileManager, @storage, options = {}) ->
     @settings = _.defaults(_.pick(options, _.keys(TandemSocket.DEFAULTS)), TandemSocket.DEFAULTS)
     @sockets = {}
     @io = socketio.listen(httpServer, @settings)
@@ -38,13 +39,13 @@ class TandemSocket extends TandemAdapter
       )
     )
 
-  addClient: (sessionId, file) ->
+  join: (sessionId, fileId) ->
     socket = @sockets[sessionId]
     _.each(TandemAdapter.routes, (route, name) ->
       socket.removeAllListeners(route)
     )
     socket.on('disconnect', =>
-      this.removeClient(sessionId, file)
+      this.leave(sessionId, fileId)
     )
     super
 
@@ -60,9 +61,9 @@ class TandemSocket extends TandemAdapter
     socket.on(route, callback)
     return this
 
-  removeClient: (sessionId, file) ->
+  leave: (sessionId, fileId) ->
     socket = @sockets[sessionId]
-    socket.leave(file.id) if socket?
+    socket.leave(fileId) if socket?
     delete @sockets[sessionId]
 
 
