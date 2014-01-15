@@ -45,6 +45,7 @@
       if (options == null) {
         options = {};
       }
+      TandemSocket.__super__.constructor.apply(this, arguments);
       this.settings = _.defaults(_.pick(options, _.keys(TandemSocket.DEFAULTS)), TandemSocket.DEFAULTS);
       this.sockets = {};
       this.io = socketio.listen(httpServer, this.settings);
@@ -63,12 +64,13 @@
     TandemSocket.prototype.join = function(sessionId, fileId) {
       var socket,
         _this = this;
+      TandemSocket.__super__.join.apply(this, arguments);
       socket = this.sockets[sessionId];
       socket.on('disconnect', this.leave.bind(this, sessionId, fileId));
       _.each(TandemAdapter.routes, function(route, name) {
         socket.removeAllListeners(route);
         return socket.on(route, function(packet, callback) {
-          return _this.handle(route, fileId, packet, function(err, callbackPacket, broadcastPacket) {
+          return _this.handle(route, socket.id, packet, function(err, callbackPacket, broadcastPacket) {
             if (err != null) {
               TandemEmitter.emit(TandemEmitter.events.ERROR, err);
             }
@@ -84,6 +86,7 @@
 
     TandemSocket.prototype.leave = function(sessionId, fileId) {
       var socket;
+      TandemSocket.__super__.leave.apply(this, arguments);
       socket = this.sockets[sessionId];
       if (socket != null) {
         socket.leave(fileId);

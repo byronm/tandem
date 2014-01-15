@@ -22,6 +22,7 @@ class TandemSocket extends TandemAdapter
     'transports': ['websocket', 'xhr-polling']
 
   constructor: (httpServer, @fileManager, @storage, options = {}) ->
+    super
     @settings = _.defaults(_.pick(options, _.keys(TandemSocket.DEFAULTS)), TandemSocket.DEFAULTS)
     @sockets = {}
     @io = socketio.listen(httpServer, @settings)
@@ -37,12 +38,13 @@ class TandemSocket extends TandemAdapter
     )
 
   join: (sessionId, fileId) ->
+    super
     socket = @sockets[sessionId]
     socket.on('disconnect', this.leave.bind(this, sessionId, fileId))
     _.each(TandemAdapter.routes, (route, name) =>
       socket.removeAllListeners(route)
       socket.on(route, (packet, callback) =>
-        this.handle(route, fileId, packet, (err, callbackPacket, broadcastPacket) =>
+        this.handle(route, socket.id, packet, (err, callbackPacket, broadcastPacket) =>
           TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
           callback(callbackPacket)
           socket.broadcast.to(fileId).emit(route, broadcastPacket) if broadcastPacket?
@@ -52,6 +54,7 @@ class TandemSocket extends TandemAdapter
     socket.join(fileId)
 
   leave: (sessionId, fileId) ->
+    super
     socket = @sockets[sessionId]
     socket.leave(fileId) if socket?
     delete @sockets[sessionId]
