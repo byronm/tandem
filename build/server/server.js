@@ -27,6 +27,8 @@
       ERROR: 'tandem-error'
     };
 
+    TandemServer.routes = TandemNetworkAdapter.routes;
+
     TandemServer.DEFAULTS = {
       cache: TandemMemoryCache,
       network: TandemSocket,

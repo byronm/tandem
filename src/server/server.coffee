@@ -11,6 +11,7 @@ TandemStorage         = require('./storage')
 class TandemServer extends EventEmitter
   @events:
     ERROR  : 'tandem-error'
+  @routes: TandemNetworkAdapter.routes
   @DEFAULTS:
     cache   : TandemMemoryCache
     network : TandemSocket
