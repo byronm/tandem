@@ -1,5 +1,5 @@
 (function() {
-  var EventEmitter, TandemEmitter, TandemFileManager, TandemMemoryCache, TandemServer, TandemSocket, TandemStorage, _,
+  var EventEmitter, TandemEmitter, TandemFileManager, TandemMemoryCache, TandemNetworkAdapter, TandemServer, TandemSocket, TandemStorage, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
     __slice = [].slice;
@@ -7,6 +7,8 @@
   _ = require('lodash');
 
   EventEmitter = require('events').EventEmitter;
+
+  TandemNetworkAdapter = require('./network/adapter');
 
   TandemEmitter = require('./emitter');
 
@@ -39,6 +41,9 @@
       this.settings = _.defaults(options, TandemServer.DEFAULTS);
       this.storage = _.isFunction(this.settings.storage) ? new this.settings.storage : this.settings.storage;
       this.fileManager = new TandemFileManager(this.storage, this.settings);
+      if (this.settings.network === 'base') {
+        this.settings.network = TandemNetworkAdapter;
+      }
       this.network = _.isFunction(this.settings.network) ? new this.settings.network(server, this.fileManager, this.storage, this.settings) : this.settings.network;
       TandemEmitter.on(TandemEmitter.events.ERROR, function() {
         var args;

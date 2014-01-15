@@ -1,10 +1,11 @@
-_                 = require('lodash')
-EventEmitter      = require('events').EventEmitter
-TandemEmitter     = require('./emitter')
-TandemFileManager = require('./file-manager')
-TandemMemoryCache = require('./cache/memory')
-TandemSocket      = require('./network/socket')
-TandemStorage     = require('./storage')
+_                     = require('lodash')
+EventEmitter          = require('events').EventEmitter
+TandemNetworkAdapter  = require('./network/adapter')
+TandemEmitter         = require('./emitter')
+TandemFileManager     = require('./file-manager')
+TandemMemoryCache     = require('./cache/memory')
+TandemSocket          = require('./network/socket')
+TandemStorage         = require('./storage')
 
 
 class TandemServer extends EventEmitter
@@ -19,6 +20,7 @@ class TandemServer extends EventEmitter
     @settings = _.defaults(options, TandemServer.DEFAULTS)
     @storage = if _.isFunction(@settings.storage) then new @settings.storage else @settings.storage
     @fileManager = new TandemFileManager(@storage, @settings)
+    @settings.network = TandemNetworkAdapter if @settings.network == 'base'
     @network = if _.isFunction(@settings.network) then new @settings.network(server, @fileManager, @storage, @settings) else @settings.network
     TandemEmitter.on(TandemEmitter.events.ERROR, (args...) =>
       this.emit(TandemServer.events.ERROR, args...)
