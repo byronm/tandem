@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.2 - 2014-01-15
+/*! Tandem Realtime Coauthoring Engine - v0.12.2 - 2014-01-21
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
@@ -23015,6 +23015,10 @@ TandemFile = (function(_super) {
     this.arrived = initial.head || Delta.getInitial('');
     this.inFlight = Delta.getIdentity(this.arrived.endLength);
     this.inLine = Delta.getIdentity(this.arrived.endLength);
+    if (this.adapter.ready) {
+      this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, this.health);
+      sendSync.call(this);
+    }
     initListeners.call(this);
   }
 

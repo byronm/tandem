@@ -40,7 +40,7 @@ class TandemNetworkAdapter extends EventEmitter2
       )
     , (err) =>
       @ready = true
-    ) 
+    )
 
   _send: (route, packet, callback) ->
     console.warn "Should be overwritten by descendant"

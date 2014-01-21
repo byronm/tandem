@@ -110,7 +110,7 @@ class TandemFile extends EventEmitter2
     UPDATE  : 'file-update'
 
   @health:
-    HEALTHY : 'healthy' 
+    HEALTHY : 'healthy'
     WARNING : 'warning'
     ERROR   : 'error'
 
@@ -128,6 +128,9 @@ class TandemFile extends EventEmitter2
     @arrived = initial.head or Delta.getInitial('')
     @inFlight = Delta.getIdentity(@arrived.endLength)
     @inLine = Delta.getIdentity(@arrived.endLength)
+    if @adapter.ready
+      this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
+      sendSync.call(this)
     initListeners.call(this)
 
   broadcast: (type, packet, callback) ->
