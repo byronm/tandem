@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.3 - 2014-01-21
+/*! Tandem Realtime Coauthoring Engine - v0.12.3 - 2014-01-22
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
@@ -10365,10 +10365,10 @@ sendSync = function() {
         return setReady.call(_this, response.delta, response.version, true);
       });
     }
-  }, true);
+  }, null, true);
 };
 
-sendUpdate = function() {
+sendUpdate = function(callback) {
   var packet, updateTimeout,
     _this = this;
   packet = {
@@ -10394,7 +10394,7 @@ sendUpdate = function() {
       _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
       return _this.sendIfReady();
     }
-  });
+  }, callback);
 };
 
 setReady = function(delta, version, resend) {
@@ -10483,10 +10483,10 @@ TandemFile = (function(_super) {
     }
   };
 
-  TandemFile.prototype.update = function(delta) {
+  TandemFile.prototype.update = function(delta, callback) {
     if (this.inLine.canCompose(delta)) {
       this.inLine = this.inLine.compose(delta);
-      return this.sendIfReady();
+      return this.sendIfReady(callback);
     } else {
       this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', this.inLine, delta);
       warn("Local update error, attempting resync", this.id, this.inLine, this.delta);
@@ -10494,10 +10494,13 @@ TandemFile = (function(_super) {
     }
   };
 
-  TandemFile.prototype.send = function(route, packet, callback, priority) {
+  TandemFile.prototype.send = function(route, packet, callback, clientCallback, priority) {
     var _this = this;
     if (callback == null) {
       callback = null;
+    }
+    if (clientCallback == null) {
+      clientCallback = null;
     }
     if (priority == null) {
       priority = false;
@@ -10511,17 +10514,17 @@ TandemFile = (function(_super) {
         } else {
           return _this.emit(TandemFile.events.ERROR, response.error);
         }
-      }, priority);
+      }, clientCallback, priority);
     } else {
-      return this.adapter.send(route, packet);
+      return this.adapter.send(route, packet, null, clientCallback);
     }
   };
 
-  TandemFile.prototype.sendIfReady = function() {
+  TandemFile.prototype.sendIfReady = function(callback) {
     if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
       this.inFlight = this.inLine;
       this.inLine = Delta.getIdentity(this.inFlight.endLength);
-      sendUpdate.call(this);
+      sendUpdate.call(this, callback);
       return true;
     }
     return false;
@@ -10567,17 +10570,17 @@ TandemNetworkAdapter = (function(_super) {
     return this;
   };
 
-  TandemNetworkAdapter.prototype.send = function(route, packet, callback, priority) {
+  TandemNetworkAdapter.prototype.send = function(route, packet, callback, clientCallback, priority) {
     if (priority == null) {
       priority = false;
     }
     if (this.ready) {
-      return this._send(route, packet, callback, priority);
+      return this._send(route, packet, callback, clientCallback, priority);
     } else {
       if (priority) {
-        return this.sendQueue.unshift([route, packet, callback]);
+        return this.sendQueue.unshift([route, packet, callback, clientCallback]);
       } else {
-        return this.sendQueue.push([route, packet, callback]);
+        return this.sendQueue.push([route, packet, callback, clientCallback]);
       }
     }
   };
@@ -10604,7 +10607,7 @@ TandemNetworkAdapter = (function(_super) {
     });
   };
 
-  TandemNetworkAdapter.prototype._send = function(route, packet, callback) {
+  TandemNetworkAdapter.prototype._send = function(route, packet, callback, clientCallback) {
     return console.warn("Should be overwritten by descendant");
   };
 
