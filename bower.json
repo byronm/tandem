@@ -1,0 +1,30 @@
+{
+  "name": "tandem",
+  "main": "build/tandem.all.js",
+  "version": "0.12.4",
+  "homepage": "https://github.com/stypi/tandem",
+  "dependencies": {
+    "async"         : "0.2.x",
+    "eventemitter2" : "0.4.x",
+    "lodash"        : "2.4.x",
+    "socket.io"     : "0.9.x",
+    "tandem-core"   : "0.6.x"
+  },
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "build/server",
+    "demo",
+    "doc",
+    "node_modules",
+    "src",
+    "tests",
+    "browser.js",
+    "client.coffee",
+    "Gruntfile.coffee",
+    "index.js",
+    "Makefile",
+    "package.json"
+  ],
+  "license": "BSD"
+}

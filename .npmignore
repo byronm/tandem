@@ -1,10 +1,9 @@
+bower_components
 demo
-lib
 node_modules
 src
 tests
-vendor
-tandem-rails.gemspec
+bower.json
 browser.js
 client.coffee
 Gruntfile.coffee

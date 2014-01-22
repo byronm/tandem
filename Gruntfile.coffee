@@ -40,10 +40,10 @@ module.exports = (grunt) ->
           ' *  Byron Milligan, Salesforce.com\n' + 
           ' */\n\n'
       'build/tandem.all.js': [
-        'node_modules/async/lib/async.js'
-        'node_modules/eventemitter2/lib/eventemitter2.js'
-        'node_modules/lodash/lodash.js'
-        'node_modules/socket.io-client/dist/socket.io.js'
+        'bower_components/async/lib/async.js'
+        'bower_components/eventemitter2/lib/eventemitter2.js'
+        'bower_components/lodash/lodash.js'
+        'bower_components/socket.io-client/dist/socket.io.js'
         'build/tandem.js'
       ]
       'build/tandem.js': ['build/tandem.js']
