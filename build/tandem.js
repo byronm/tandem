@@ -10368,7 +10368,7 @@ sendSync = function() {
   }, null, true);
 };
 
-sendUpdate = function(callback) {
+sendUpdate = function() {
   var packet, updateTimeout,
     _this = this;
   packet = {
@@ -10394,7 +10394,7 @@ sendUpdate = function(callback) {
       _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
       return _this.sendIfReady();
     }
-  }, callback);
+  });
 };
 
 setReady = function(delta, version, resend) {
@@ -10444,6 +10444,7 @@ TandemFile = (function(_super) {
     this.arrived = initial.head || Delta.getInitial('');
     this.inFlight = Delta.getIdentity(this.arrived.endLength);
     this.inLine = Delta.getIdentity(this.arrived.endLength);
+    this.clientCallbacks = [];
     if (this.adapter.ready) {
       this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, this.health);
       sendSync.call(this);
@@ -10486,7 +10487,8 @@ TandemFile = (function(_super) {
   TandemFile.prototype.update = function(delta, callback) {
     if (this.inLine.canCompose(delta)) {
       this.inLine = this.inLine.compose(delta);
-      return this.sendIfReady(callback);
+      this.clientCallbacks.push(callback);
+      return this.sendIfReady();
     } else {
       this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', this.inLine, delta);
       warn("Local update error, attempting resync", this.id, this.inLine, this.delta);
@@ -10494,19 +10496,16 @@ TandemFile = (function(_super) {
     }
   };
 
-  TandemFile.prototype.send = function(route, packet, callback, clientCallback, priority) {
+  TandemFile.prototype.send = function(route, packet, callback, priority) {
     var _this = this;
     if (callback == null) {
       callback = null;
-    }
-    if (clientCallback == null) {
-      clientCallback = null;
     }
     if (priority == null) {
       priority = false;
     }
     if (callback != null) {
-      return this.adapter.send(route, packet, function(response) {
+      this.adapter.send(route, packet, function(response) {
         if (response.error == null) {
           if (callback != null) {
             return callback(response);
@@ -10514,17 +10513,18 @@ TandemFile = (function(_super) {
         } else {
           return _this.emit(TandemFile.events.ERROR, response.error);
         }
-      }, clientCallback, priority);
+      }, this.clientCallbacks, priority);
     } else {
-      return this.adapter.send(route, packet, null, clientCallback);
+      this.adapter.send(route, packet, null, this.clientCallbacks);
     }
+    return this.clientCallbacks = [];
   };
 
-  TandemFile.prototype.sendIfReady = function(callback) {
+  TandemFile.prototype.sendIfReady = function() {
     if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
       this.inFlight = this.inLine;
       this.inLine = Delta.getIdentity(this.inFlight.endLength);
-      sendUpdate.call(this, callback);
+      sendUpdate.call(this);
       return true;
     }
     return false;
@@ -10570,17 +10570,17 @@ TandemNetworkAdapter = (function(_super) {
     return this;
   };
 
-  TandemNetworkAdapter.prototype.send = function(route, packet, callback, clientCallback, priority) {
+  TandemNetworkAdapter.prototype.send = function(route, packet, callback, clientCallbacks, priority) {
     if (priority == null) {
       priority = false;
     }
     if (this.ready) {
-      return this._send(route, packet, callback, clientCallback, priority);
+      return this._send(route, packet, callback, clientCallbacks, priority);
     } else {
       if (priority) {
-        return this.sendQueue.unshift([route, packet, callback, clientCallback]);
+        return this.sendQueue.unshift([route, packet, callback, clientCallbacks]);
       } else {
-        return this.sendQueue.push([route, packet, callback, clientCallback]);
+        return this.sendQueue.push([route, packet, callback, clientCallbacks]);
       }
     }
   };
@@ -10591,9 +10591,9 @@ TandemNetworkAdapter = (function(_super) {
     return async.until(function() {
       return _this.sendQueue.length === 0;
     }, function(callback) {
-      var elem, packet, route, sendCallback;
+      var clientCallbacks, elem, packet, route, sendCallback;
       elem = _this.sendQueue.shift();
-      route = elem[0], packet = elem[1], sendCallback = elem[2];
+      route = elem[0], packet = elem[1], sendCallback = elem[2], clientCallbacks = elem[3];
       return _this._send(route, packet, function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
@@ -10601,13 +10601,13 @@ TandemNetworkAdapter = (function(_super) {
           sendCallback.apply(_this, args);
         }
         return callback();
-      });
+      }, clientCallbacks);
     }, function(err) {
       return _this.ready = true;
     });
   };
 
-  TandemNetworkAdapter.prototype._send = function(route, packet, callback, clientCallback) {
+  TandemNetworkAdapter.prototype._send = function(route, packet, callback, clientCallbacks) {
     return console.warn("Should be overwritten by descendant");
   };
 

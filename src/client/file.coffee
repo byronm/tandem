@@ -74,7 +74,7 @@ sendSync = ->
       )
   , null, true)
 
-sendUpdate = (callback) ->
+sendUpdate = () ->
   packet = { delta: @inFlight, version: @version }
   updateTimeout = setTimeout( =>
     warn('Update taking over 10s to respond')
@@ -92,7 +92,7 @@ sendUpdate = (callback) ->
       @arrived = @arrived.compose(@inFlight)
       @inFlight = Delta.getIdentity(@arrived.endLength)
       this.sendIfReady()
-  , callback)
+  )
 
 setReady = (delta, version, resend = false) ->
   @ready = true
@@ -128,6 +128,7 @@ class TandemFile extends EventEmitter2
     @arrived = initial.head or Delta.getInitial('')
     @inFlight = Delta.getIdentity(@arrived.endLength)
     @inLine = Delta.getIdentity(@arrived.endLength)
+    @clientCallbacks = []
     if @adapter.ready
       this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
       sendSync.call(this)
@@ -161,35 +162,30 @@ class TandemFile extends EventEmitter2
   update: (delta, callback) ->
     if @inLine.canCompose(delta)
       @inLine = @inLine.compose(delta)
-      # XXX: Need some kind of callback queue. Otherwise, if we're not ready,
-      # _callback_ will never get called. I *think* it should be sufficient to
-      # just push the callback onto a queue, and then when sendUpdate is finally
-      # called, callback into each of them with the same results. The only
-      # downside/slightly weird side effect is all of the client's file#update
-      # callbacks that have been queueud will get called at once. But if things
-      # are running well, the queue should never get too long...
-      this.sendIfReady(callback)
+      @clientCallbacks.push(callback)
+      this.sendIfReady()
     else
       this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', @inLine, delta)
       warn("Local update error, attempting resync", @id, @inLine, @delta)
       sendResync.call(this)
 
-  send: (route, packet, callback = null, clientCallback = null, priority = false) ->
+  send: (route, packet, callback = null, priority = false) ->
     if callback?
       @adapter.send(route, packet, (response) =>
         unless response.error?
           callback(response) if callback?
         else
           this.emit(TandemFile.events.ERROR, response.error)
-      , clientCallback, priority)
+      , @clientCallbacks, priority)
     else
-      @adapter.send(route, packet, null, clientCallback)
+      @adapter.send(route, packet, null, @clientCallbacks)
+    @clientCallbacks = []
 
-  sendIfReady: (callback) ->   # Exposed for fuzzer
+  sendIfReady: () ->   # Exposed for fuzzer
     if @inFlight.isIdentity() and !@inLine.isIdentity()
       @inFlight = @inLine
       @inLine = Delta.getIdentity(@inFlight.endLength)
-      sendUpdate.call(this, callback)
+      sendUpdate.call(this)
       return true
     return false
 
