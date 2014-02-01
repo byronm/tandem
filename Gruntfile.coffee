@@ -54,3 +54,14 @@ module.exports = (grunt) ->
   )
 
   grunt.registerTask('default', ['clean', 'coffee', 'browserify', 'concat'])
+
+  grunt.registerTask 'requirejsify', 'wrap tandem.all w/ requirejs', ->
+
+    grunt.file.write 'build/transform.js', [
+      'define(function(){'
+      grunt.file.read 'build/tandem.all.js'
+      '})'
+    ].join '\n\n'
+
+  grunt.registerTask 'build:transform', ['default', 'requirejsify']
+

@@ -1,23 +1,23 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.4 - 2014-01-21
+/*! Tandem Realtime Coauthoring Engine - v0.12.4 - 2014-01-31
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
  *  Byron Milligan, Salesforce.com
  */
 
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-Tandem         = require('tandem-core');
-Tandem.Client  = require('./src/client/tandem');
-Tandem.File    = require('./src/client/file');
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+Tandem         = _dereq_('tandem-core');
+Tandem.Client  = _dereq_('./src/client/tandem');
+Tandem.File    = _dereq_('./src/client/file');
 Tandem.Network = {
-  Adapter : require('./src/client/network/adapter'),
-  Socket  : require('./src/client/network/socket')
+  Adapter : _dereq_('./src/client/network/adapter'),
+  Socket  : _dereq_('./src/client/network/socket')
 };
 
 module.exports = Tandem
 
-},{"./src/client/file":14,"./src/client/network/adapter":15,"./src/client/network/socket":16,"./src/client/tandem":17,"tandem-core":11}],2:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};/**
+},{"./src/client/file":14,"./src/client/network/adapter":15,"./src/client/network/socket":16,"./src/client/tandem":17,"tandem-core":11}],2:[function(_dereq_,module,exports){
+(function (global){/**
  * @license
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
  * Build: `lodash modern -o ./dist/lodash.js`
@@ -6802,20 +6802,20 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
     root._ = _;
   }
 }.call(this));
-
-},{}],3:[function(require,module,exports){
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],3:[function(_dereq_,module,exports){
 (function() {
   var Delta, InsertOp, Op, RetainOp, diff_match_patch, dmp, _;
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  diff_match_patch = require('./diff_match_patch');
+  diff_match_patch = _dereq_('./diff_match_patch');
 
-  Op = require('./op');
+  Op = _dereq_('./op');
 
-  InsertOp = require('./insert');
+  InsertOp = _dereq_('./insert');
 
-  RetainOp = require('./retain');
+  RetainOp = _dereq_('./retain');
 
   dmp = new diff_match_patch();
 
@@ -7469,17 +7469,17 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 }).call(this);
 
-},{"./diff_match_patch":5,"./insert":6,"./op":7,"./retain":8,"lodash":2}],4:[function(require,module,exports){
+},{"./diff_match_patch":5,"./insert":6,"./op":7,"./retain":8,"lodash":2}],4:[function(_dereq_,module,exports){
 (function() {
   var Delta, DeltaGenerator, InsertOp, RetainOp, getUtils, setDomain, _, _domain;
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  Delta = require('./delta');
+  Delta = _dereq_('./delta');
 
-  InsertOp = require('./insert');
+  InsertOp = _dereq_('./insert');
 
-  RetainOp = require('./retain');
+  RetainOp = _dereq_('./retain');
 
   _domain = {
     alphabet: "abcdefghijklmnopqrstuvwxyz\n\n\n\n  ",
@@ -7826,11 +7826,11 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 }).call(this);
 
-},{"./delta":3,"./insert":6,"./retain":8,"lodash":2}],5:[function(require,module,exports){
+},{"./delta":3,"./insert":6,"./retain":8,"lodash":2}],5:[function(_dereq_,module,exports){
 (function() {
   var googlediff;
 
-  googlediff = require('googlediff');
+  googlediff = _dereq_('googlediff');
 
   googlediff.DIFF_DELETE = -1;
 
@@ -7842,15 +7842,15 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 }).call(this);
 
-},{"googlediff":12}],6:[function(require,module,exports){
+},{"googlediff":12}],6:[function(_dereq_,module,exports){
 (function() {
   var InsertOp, Op, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  Op = require('./op');
+  Op = _dereq_('./op');
 
   InsertOp = (function(_super) {
     __extends(InsertOp, _super);
@@ -7902,11 +7902,11 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 }).call(this);
 
-},{"./op":7,"lodash":2}],7:[function(require,module,exports){
+},{"./op":7,"lodash":2}],7:[function(_dereq_,module,exports){
 (function() {
   var Op, _;
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
   Op = (function() {
     Op.isInsert = function(i) {
@@ -7986,15 +7986,15 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 }).call(this);
 
-},{"lodash":2}],8:[function(require,module,exports){
+},{"lodash":2}],8:[function(_dereq_,module,exports){
 (function() {
   var Op, RetainOp, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  Op = require('./op');
+  Op = _dereq_('./op');
 
   RetainOp = (function(_super) {
     __extends(RetainOp, _super);
@@ -8039,28 +8039,28 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 }).call(this);
 
-},{"./op":7,"lodash":2}],9:[function(require,module,exports){
+},{"./op":7,"lodash":2}],9:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    Delta: require('./delta'),
-    DeltaGen: require('./delta_generator'),
-    Op: require('./op'),
-    InsertOp: require('./insert'),
-    RetainOp: require('./retain')
+    Delta: _dereq_('./delta'),
+    DeltaGen: _dereq_('./delta_generator'),
+    Op: _dereq_('./op'),
+    InsertOp: _dereq_('./insert'),
+    RetainOp: _dereq_('./retain')
   };
 
 }).call(this);
 
-},{"./delta":3,"./delta_generator":4,"./insert":6,"./op":7,"./retain":8}],10:[function(require,module,exports){
-module.exports = require('./build/delta.js')
+},{"./delta":3,"./delta_generator":4,"./insert":6,"./op":7,"./retain":8}],10:[function(_dereq_,module,exports){
+module.exports = _dereq_('./build/delta.js')
 
-},{"./build/delta.js":3}],11:[function(require,module,exports){
-module.exports = require('./build/tandem-core')
+},{"./build/delta.js":3}],11:[function(_dereq_,module,exports){
+module.exports = _dereq_('./build/tandem-core')
 
-},{"./build/tandem-core":9}],12:[function(require,module,exports){
-module.exports = require('./javascript/diff_match_patch_uncompressed.js').diff_match_patch;
+},{"./build/tandem-core":9}],12:[function(_dereq_,module,exports){
+module.exports = _dereq_('./javascript/diff_match_patch_uncompressed.js').diff_match_patch;
 
-},{"./javascript/diff_match_patch_uncompressed.js":13}],13:[function(require,module,exports){
+},{"./javascript/diff_match_patch_uncompressed.js":13}],13:[function(_dereq_,module,exports){
 /**
  * Diff Match and Patch
  *
@@ -10255,13 +10255,13 @@ this['DIFF_DELETE'] = DIFF_DELETE;
 this['DIFF_INSERT'] = DIFF_INSERT;
 this['DIFF_EQUAL'] = DIFF_EQUAL;
 
-},{}],14:[function(require,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 var Delta, TandemFile, initAdapterListeners, initHealthListeners, initListeners, onResync, onUpdate, sendResync, sendSync, sendUpdate, setReady, warn,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-Delta = require('tandem-core/delta');
+Delta = _dereq_('tandem-core/delta');
 
 warn = function() {
   var args;
@@ -10536,7 +10536,7 @@ TandemFile = (function(_super) {
 module.exports = TandemFile;
 
 
-},{"tandem-core/delta":10}],15:[function(require,module,exports){
+},{"tandem-core/delta":10}],15:[function(_dereq_,module,exports){
 var TandemNetworkAdapter,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -10615,13 +10615,13 @@ TandemNetworkAdapter = (function(_super) {
 module.exports = TandemNetworkAdapter;
 
 
-},{}],16:[function(require,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 var TandemAdapter, TandemSocketAdapter, authenticate, info, track,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-TandemAdapter = require('./adapter');
+TandemAdapter = _dereq_('./adapter');
 
 authenticate = function() {
   var authPacket,
@@ -10798,12 +10798,12 @@ TandemSocketAdapter = (function(_super) {
 module.exports = TandemSocketAdapter;
 
 
-},{"./adapter":15}],17:[function(require,module,exports){
+},{"./adapter":15}],17:[function(_dereq_,module,exports){
 var TandemClient, TandemFile, TandemSocket;
 
-TandemFile = require('./file');
+TandemFile = _dereq_('./file');
 
-TandemSocket = require('./network/socket');
+TandemSocket = _dereq_('./network/socket');
 
 TandemClient = (function() {
   TandemClient.DEFAULTS = {
