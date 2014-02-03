@@ -21,13 +21,15 @@
   };
 
   TandemNetworkAdapter = (function() {
-    function TandemNetworkAdapter() {}
-
     TandemNetworkAdapter.routes = {
       RESYNC: 'ot/resync',
       SYNC: 'ot/sync',
       UPDATE: 'ot/update'
     };
+
+    function TandemNetworkAdapter(httpServer, fileManager) {
+      this.fileManager = fileManager;
+    }
 
     TandemNetworkAdapter.prototype.handle = function(route, fileId, packet, callback) {
       var _this = this;
