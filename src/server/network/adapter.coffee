@@ -23,6 +23,8 @@ class TandemNetworkAdapter
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
+  constructor: (httpServer, @fileManager) ->
+
   handle: (route, fileId, packet, callback) ->
     return callback('Undefined fileId') unless fileId?
     @fileManager.find(fileId, (err, file) =>
