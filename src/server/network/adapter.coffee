@@ -23,11 +23,8 @@ class TandemNetworkAdapter
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (httpServer, @fileManager, @storage, options = {}) ->
-    @files = {}
-
-  handle: (route, sessionId, packet, callback) ->
-    fileId = @files[sessionId]
+  handle: (route, fileId, packet, callback) ->
+    return callback('Undefined fileId') unless fileId?
     @fileManager.find(fileId, (err, file) =>
       return callback(err, { error: err }) if err?
       resyncHandler = (err, file, callback) ->
@@ -58,11 +55,5 @@ class TandemNetworkAdapter
         else
           callback(new Error('Unexpected network route'))
     )
-
-  join: (sessionId, fileId) ->
-    @files[sessionId] = fileId
-
-  leave: (sessionId, fileId) ->
-    delete @files[sessionId]
 
 module.exports = TandemNetworkAdapter

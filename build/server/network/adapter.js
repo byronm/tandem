@@ -21,25 +21,19 @@
   };
 
   TandemNetworkAdapter = (function() {
+    function TandemNetworkAdapter() {}
+
     TandemNetworkAdapter.routes = {
       RESYNC: 'ot/resync',
       SYNC: 'ot/sync',
       UPDATE: 'ot/update'
     };
 
-    function TandemNetworkAdapter(httpServer, fileManager, storage, options) {
-      this.fileManager = fileManager;
-      this.storage = storage;
-      if (options == null) {
-        options = {};
+    TandemNetworkAdapter.prototype.handle = function(route, fileId, packet, callback) {
+      var _this = this;
+      if (fileId == null) {
+        return callback('Undefined fileId');
       }
-      this.files = {};
-    }
-
-    TandemNetworkAdapter.prototype.handle = function(route, sessionId, packet, callback) {
-      var fileId,
-        _this = this;
-      fileId = this.files[sessionId];
       return this.fileManager.find(fileId, function(err, file) {
         var resyncHandler;
         if (err != null) {
@@ -81,14 +75,6 @@
             return callback(new Error('Unexpected network route'));
         }
       });
-    };
-
-    TandemNetworkAdapter.prototype.join = function(sessionId, fileId) {
-      return this.files[sessionId] = fileId;
-    };
-
-    TandemNetworkAdapter.prototype.leave = function(sessionId, fileId) {
-      return delete this.files[sessionId];
     };
 
     return TandemNetworkAdapter;

@@ -23,6 +23,7 @@ class TandemSocket extends TandemAdapter
 
   constructor: (httpServer, @fileManager, @storage, options = {}) ->
     super
+    @files = {}
     @settings = _.defaults(_.pick(options, _.keys(TandemSocket.DEFAULTS)), TandemSocket.DEFAULTS)
     @sockets = {}
     @io = socketio.listen(httpServer, @settings)
@@ -38,13 +39,13 @@ class TandemSocket extends TandemAdapter
     )
 
   join: (sessionId, fileId) ->
-    super
     socket = @sockets[sessionId]
+    @files[sessionId] = fileId
     socket.on('disconnect', this.leave.bind(this, sessionId, fileId))
     _.each(TandemAdapter.routes, (route, name) =>
       socket.removeAllListeners(route)
       socket.on(route, (packet, callback) =>
-        this.handle(route, socket.id, packet, (err, callbackPacket, broadcastPacket) =>
+        this.handle(route, @files[sessionId], packet, (err, callbackPacket, broadcastPacket) =>
           TandemEmitter.emit(TandemEmitter.events.ERROR, err) if err?
           callback(callbackPacket)
           socket.broadcast.to(fileId).emit(route, broadcastPacket) if broadcastPacket?
@@ -54,10 +55,10 @@ class TandemSocket extends TandemAdapter
     socket.join(fileId)
 
   leave: (sessionId, fileId) ->
-    super
     socket = @sockets[sessionId]
     socket.leave(fileId) if socket?
     delete @sockets[sessionId]
+    delete @files[sessionId]
 
 
 module.exports = TandemSocket
