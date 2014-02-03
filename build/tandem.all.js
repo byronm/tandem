@@ -11910,7 +11910,13 @@ sendUpdate = function() {
       _this.version = response.version;
       _this.arrived = _this.arrived.compose(_this.inFlight);
       _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
-      return _this.sendIfReady();
+      _.each(_this.updateCallbacks, function(callback) {
+        return callback.call(_this, null, _this.arrived);
+      });
+      _this.updateCallbacks = [];
+      return _.defer(function() {
+        return _this.sendIfReady();
+      });
     }
   });
 };
@@ -11962,6 +11968,7 @@ TandemFile = (function(_super) {
     this.arrived = initial.head || Delta.getInitial('');
     this.inFlight = Delta.getIdentity(this.arrived.endLength);
     this.inLine = Delta.getIdentity(this.arrived.endLength);
+    this.updateCallbacks = [];
     if (this.adapter.ready) {
       this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, this.health);
       sendSync.call(this);
@@ -12001,10 +12008,10 @@ TandemFile = (function(_super) {
     }
   };
 
-  TandemFile.prototype.update = function(delta) {
+  TandemFile.prototype.update = function(delta, callback) {
     if (this.inLine.canCompose(delta)) {
       this.inLine = this.inLine.compose(delta);
-      return this.sendIfReady();
+      return this.sendIfReady(callback);
     } else {
       this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', this.inLine, delta);
       warn("Local update error, attempting resync", this.id, this.inLine, this.delta);
@@ -12035,7 +12042,10 @@ TandemFile = (function(_super) {
     }
   };
 
-  TandemFile.prototype.sendIfReady = function() {
+  TandemFile.prototype.sendIfReady = function(callback) {
+    if (callback != null) {
+      this.updateCallbacks.push(callback);
+    }
     if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
       this.inFlight = this.inLine;
       this.inLine = Delta.getIdentity(this.inFlight.endLength);
