@@ -4,11 +4,11 @@
   "version": "0.12.4",
   "homepage": "https://github.com/stypi/tandem",
   "dependencies": {
-    "async"         : "0.2.x",
-    "eventemitter2" : "0.4.x",
-    "lodash"        : "2.4.x",
-    "socket.io"     : "0.9.x",
-    "tandem-core"   : "0.6.x"
+    "async"             : "0.2.x",
+    "eventemitter2"     : "0.4.x",
+    "lodash"            : "2.4.x",
+    "socket.io-client"  : "0.9.x",
+    "tandem-core"       : "0.6.x"
   },
   "ignore": [
     "**/.*",

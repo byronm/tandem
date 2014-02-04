@@ -42,7 +42,7 @@ module.exports = (grunt) ->
       'build/tandem.all.js': [
         'bower_components/async/lib/async.js'
         'bower_components/eventemitter2/lib/eventemitter2.js'
-        'bower_components/lodash/lodash.js'
+        'bower_components/lodash/dist/lodash.js'
         'bower_components/socket.io-client/dist/socket.io.js'
         'build/tandem.js'
       ]
