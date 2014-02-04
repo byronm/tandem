@@ -1,6 +1,6 @@
-define(function(){
+define(function(require, exports, module){
 
-/*! Tandem Realtime Coauthoring Engine - v0.12.4 - 2014-01-31
+/*! Tandem Realtime Coauthoring Engine - v0.12.4 - 2014-02-04
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
