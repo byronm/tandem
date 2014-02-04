@@ -3,10 +3,10 @@ async   = require('async')
 expect  = require('chai').expect
 http    = require('http')
 EventEmitter = require('events').EventEmitter
-TandemClient = require('../../client')
-TandemServer = require('../../index')
+TandemClient = require('../../../client')
+TandemServer = require('../../../index')
 
-describe('Storage', ->
+describe('Server Storage', ->
   httpServer = server = client = null
   helloDelta = TandemServer.Delta.getInitial('Hello World!')
   eventEmitter = new EventEmitter()

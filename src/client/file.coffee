@@ -80,6 +80,8 @@ sendUpdate = ->
     warn('Update taking over 10s to respond')
     this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
   , 10000)
+  callbacks = @updateCallbacks
+  @updateCallbacks = []
   this.send(TandemFile.routes.UPDATE, packet, (response) =>
     clearTimeout(updateTimeout)
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health) unless @health == TandemFile.health.HEALTHY
@@ -91,13 +93,10 @@ sendUpdate = ->
       @version = response.version
       @arrived = @arrived.compose(@inFlight)
       @inFlight = Delta.getIdentity(@arrived.endLength)
-      _.each(@updateCallbacks, (callback) =>
+      _.each(callbacks, (callback) =>
         callback.call(this, null, @arrived)
       )
-      @updateCallbacks = []
-      _.defer( =>
-        this.sendIfReady()
-      )
+      this.sendIfReady()
   )
 
 setReady = (delta, version, resend = false) ->
