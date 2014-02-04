@@ -1,11 +1,11 @@
 _       = require('lodash')
 expect  = require('chai').expect
-TandemServer = require('../../index')
-TandemFile = require('../../src/server/file')
-TandemMemoryCache = require('../../src/server/cache/memory')
+TandemServer = require('../../../index')
+TandemFile = require('../../../src/server/file')
+TandemMemoryCache = require('../../../src/server/cache/memory')
 
 
-describe('File', ->
+describe('Server File', ->
   deltas = [
     TandemServer.Delta.makeInsertDelta(0, 0, 'g')
     TandemServer.Delta.makeInsertDelta(1, 1, 'o')

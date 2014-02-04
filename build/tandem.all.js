@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.4 - 2014-02-04
+/*! Tandem Realtime Coauthoring Engine - v0.12.6 - 2014-02-04
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
@@ -10369,7 +10369,7 @@ sendSync = function() {
 };
 
 sendUpdate = function() {
-  var packet, updateTimeout,
+  var callbacks, packet, updateTimeout,
     _this = this;
   packet = {
     delta: this.inFlight,
@@ -10379,6 +10379,8 @@ sendUpdate = function() {
     warn('Update taking over 10s to respond');
     return _this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, _this.health);
   }, 10000);
+  callbacks = this.updateCallbacks;
+  this.updateCallbacks = [];
   return this.send(TandemFile.routes.UPDATE, packet, function(response) {
     clearTimeout(updateTimeout);
     if (_this.health !== TandemFile.health.HEALTHY) {
@@ -10392,6 +10394,9 @@ sendUpdate = function() {
       _this.version = response.version;
       _this.arrived = _this.arrived.compose(_this.inFlight);
       _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
+      _.each(callbacks, function(callback) {
+        return callback.call(_this, null, _this.arrived);
+      });
       return _this.sendIfReady();
     }
   });
@@ -10444,6 +10449,7 @@ TandemFile = (function(_super) {
     this.arrived = initial.head || Delta.getInitial('');
     this.inFlight = Delta.getIdentity(this.arrived.endLength);
     this.inLine = Delta.getIdentity(this.arrived.endLength);
+    this.updateCallbacks = [];
     if (this.adapter.ready) {
       this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, this.health);
       sendSync.call(this);
@@ -10483,10 +10489,10 @@ TandemFile = (function(_super) {
     }
   };
 
-  TandemFile.prototype.update = function(delta) {
+  TandemFile.prototype.update = function(delta, callback) {
     if (this.inLine.canCompose(delta)) {
       this.inLine = this.inLine.compose(delta);
-      return this.sendIfReady();
+      return this.sendIfReady(callback);
     } else {
       this.emit(TandemFile.events.ERROR, 'Cannot compose inLine with local delta', this.inLine, delta);
       warn("Local update error, attempting resync", this.id, this.inLine, this.delta);
@@ -10517,7 +10523,10 @@ TandemFile = (function(_super) {
     }
   };
 
-  TandemFile.prototype.sendIfReady = function() {
+  TandemFile.prototype.sendIfReady = function(callback) {
+    if (callback != null) {
+      this.updateCallbacks.push(callback);
+    }
     if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
       this.inFlight = this.inLine;
       this.inLine = Delta.getIdentity(this.inFlight.endLength);
