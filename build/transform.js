@@ -1,4 +1,4 @@
-define("tandem", ["eventemitter2", "async", "module", "exports"], function(EventEmitter2, async, module, exports){
+define("tandem", ["eventemitter2", "async", "lodash", "module", "exports"], function(EventEmitter2, async, _, module, exports){
 
 EventEmitter2 = require("eventemitter2");
 
