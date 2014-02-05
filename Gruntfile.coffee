@@ -59,7 +59,7 @@ module.exports = (grunt) ->
 
     grunt.file.write 'build/transform.js', [
       #'define("tandem", function(require, exports, module){'
-      'define("tandem", ["eventemitter2", "exports"], function(EventEmitter2, exports){'
+      'define("tandem", ["eventemitter2", "module", "exports"], function(EventEmitter2, module, exports){'
       'EventEmitter2 = require("eventemitter2");'
       grunt.file.read 'build/tandem.all.js'
       '})'
