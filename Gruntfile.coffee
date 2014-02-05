@@ -58,7 +58,7 @@ module.exports = (grunt) ->
   grunt.registerTask 'requirejsify', 'wrap tandem.all w/ requirejs', ->
 
     grunt.file.write 'build/transform.js', [
-      'define(function(require, exports, module){'
+      'define("tandem", function(require, exports, module){'
       grunt.file.read 'build/tandem.all.js'
       '})'
     ].join '\n\n'

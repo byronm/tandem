@@ -1,4 +1,4 @@
-define(function(require, exports, module){
+define("tandem", function(require, exports, module){
 
 /*! Tandem Realtime Coauthoring Engine - v0.12.6 - 2014-02-04
  *  https://www.stypi.com/
