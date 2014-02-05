@@ -1,6 +1,8 @@
-define("tandem", function(require, exports, module){
+define("tandem", ["eventemitter2", "exports"], function(EventEmitter2, exports){
 
-/*! Tandem Realtime Coauthoring Engine - v0.12.6 - 2014-02-04
+EventEmitter2 = require("eventemitter2");
+
+/*! Tandem Realtime Coauthoring Engine - v0.12.6 - 2014-02-05
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
