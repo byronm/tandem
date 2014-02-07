@@ -53,10 +53,9 @@ module.exports = (grunt) ->
       tasks: ['default']
   )
 
-  grunt.registerTask('default', ['clean', 'coffee', 'browserify', 'concat'])
+  grunt.registerTask('default', ['clean', 'coffee', 'browserify', 'concat', 'requirejsify'])
 
   grunt.registerTask 'requirejsify', 'wrap tandem.all w/ requirejs', ->
-
     grunt.file.write 'build/transform.js', [
       #'define("tandem", function(require, exports, module){'
       'define("tandem", ["eventemitter2", "async", "lodash", "module", "exports"], function(EventEmitter2, async, _, module, exports){'
@@ -64,6 +63,4 @@ module.exports = (grunt) ->
       grunt.file.read 'build/tandem.all.js'
       '})'
     ].join '\n\n'
-
-  grunt.registerTask 'build:transform', ['default', 'requirejsify']
 
