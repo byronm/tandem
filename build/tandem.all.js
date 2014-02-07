@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.7 - 2014-02-06
+/*! Tandem Realtime Coauthoring Engine - v0.12.8 - 2014-02-06
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
@@ -1529,9 +1529,7 @@ var process=require("__browserify_process");;!function(exports, undefined) {
 
 }(typeof process !== 'undefined' && typeof process.title !== 'undefined' && typeof exports !== 'undefined' ? exports : window);
 
-},{"__browserify_process":11}],"lodash":[function(require,module,exports){
-module.exports=require('EYh8i8');
-},{}],"EYh8i8":[function(require,module,exports){
+},{"__browserify_process":11}],"EYh8i8":[function(require,module,exports){
 var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};/**
  * @license
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -8318,6 +8316,8 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
   }
 }.call(this));
 
+},{}],"lodash":[function(require,module,exports){
+module.exports=require('EYh8i8');
 },{}],"socket.io-client":[function(require,module,exports){
 module.exports=require('477PwR');
 },{}],"477PwR":[function(require,module,exports){
