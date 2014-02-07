@@ -26,12 +26,18 @@ module.exports = (grunt) ->
       options:
         extensions: ['.js', '.coffee']
         transform: ['coffeeify']
-      tandem:
+      standard:
+        options:
+          alias: ['bower_components/eventemitter2/lib/eventemitter2.js:eventemitter2']
+          external: ['async', 'lodash']
+          standalone: 'Tandem'
+        files: [{ dest: 'build/tandem.js', src: ['browser.js'] }]
+      bare:
         options:
           alias: ['bower_components/eventemitter2/lib/eventemitter2.js:eventemitter2']
           external: ['async', 'lodash', 'socket.io-client']
           standalone: 'Tandem'
-        files: [{ dest: 'build/tandem.js', src: ['browser.js'] }]
+        files: [{ dest: 'build/tandem.bare.js', src: ['browser.bare.js'] }]
       all:
         options:
           alias: [
@@ -41,7 +47,7 @@ module.exports = (grunt) ->
             'bower_components/socket.io-client/dist/socket.io.js:socket.io-client'
           ]
           standalone: 'Tandem'
-        files: [{ dest: 'build/tandem.all.js', src: ['browser.all.js'] }]
+        files: [{ dest: 'build/tandem.all.js', src: ['browser.js'] }]
 
     concat:
       options:
@@ -52,7 +58,8 @@ module.exports = (grunt) ->
           ' *  Jason Chen, Salesforce.com\n' +
           ' *  Byron Milligan, Salesforce.com\n' + 
           ' */\n\n'
-      'build/tandem.all.js': [ 'build/tandem.all.js' ]
+      'build/tandem.all.js': ['build/tandem.all.js']
+      'build/tandem.bare.js': ['build/tandem.bare.js']
       'build/tandem.js': ['build/tandem.js']
 
     watch:

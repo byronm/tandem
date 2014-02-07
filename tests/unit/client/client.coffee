@@ -1,4 +1,5 @@
 _       = require('lodash')
+async   = require('async')
 expect  = require('chai').expect
 http    = require('http')
 TandemClient = require('../../client')

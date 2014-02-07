@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.8 - 2014-02-06
+/*! Tandem Realtime Coauthoring Engine - v0.12.7 - 2014-02-06
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
@@ -1529,7 +1529,9 @@ var process=require("__browserify_process");;!function(exports, undefined) {
 
 }(typeof process !== 'undefined' && typeof process.title !== 'undefined' && typeof exports !== 'undefined' ? exports : window);
 
-},{"__browserify_process":11}],"EYh8i8":[function(require,module,exports){
+},{"__browserify_process":11}],"lodash":[function(require,module,exports){
+module.exports=require('EYh8i8');
+},{}],"EYh8i8":[function(require,module,exports){
 var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};/**
  * @license
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -8316,8 +8318,6 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
   }
 }.call(this));
 
-},{}],"lodash":[function(require,module,exports){
-module.exports=require('EYh8i8');
 },{}],"socket.io-client":[function(require,module,exports){
 module.exports=require('477PwR');
 },{}],"477PwR":[function(require,module,exports){
@@ -12195,14 +12195,6 @@ if (typeof define === "function" && define.amd) {
 }
 })();
 },{}],9:[function(require,module,exports){
-Tandem = require('./browser')
-TandemSocket = require('./src/client/network/socket')
-
-Tandem.Client.DEFAULTS.network = TandemSocket
-
-module.exports = Tandem
-
-},{"./browser":10,"./src/client/network/socket":25}],10:[function(require,module,exports){
 Tandem         = require('tandem-core');
 Tandem.Client  = require('./src/client/tandem');
 Tandem.File    = require('./src/client/file');
@@ -12212,7 +12204,16 @@ Tandem.Network = {
 
 module.exports = Tandem
 
-},{"./src/client/file":23,"./src/client/network/adapter":24,"./src/client/tandem":26,"tandem-core":20}],11:[function(require,module,exports){
+},{"./src/client/file":23,"./src/client/network/adapter":24,"./src/client/tandem":26,"tandem-core":20}],10:[function(require,module,exports){
+Tandem = require('./browser.bare')
+TandemSocket = require('./src/client/network/socket')
+
+Tandem.Network.Socket = TandemSocket
+Tandem.Client.DEFAULTS.network = TandemSocket
+
+module.exports = Tandem
+
+},{"./browser.bare":9,"./src/client/network/socket":25}],11:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -16320,6 +16321,6 @@ TandemClient = (function() {
 module.exports = TandemClient;
 
 
-},{"./file":23,"./network/adapter":24,"lodash":"EYh8i8"}]},{},[9])
-(9)
+},{"./file":23,"./network/adapter":24,"lodash":"EYh8i8"}]},{},[10])
+(10)
 });

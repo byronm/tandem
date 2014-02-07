@@ -1,6 +1,6 @@
 {
   "name": "tandem",
-  "version": "0.12.8",
+  "version": "0.12.7",
   "dependencies": {
     "async"         : "0.2.x",
     "commander"     : "1.1.x",
@@ -12,6 +12,7 @@
     "chai"                 : "1.6.x",
     "coffee-script"        : "1.6.x",
     "coffeeify"            : "0.5.x",
+    "eventemitter2"        : "0.4.x",
     "grunt"                : "0.4.x",
     "grunt-browserify"     : "1.2.x",
     "grunt-contrib-clean"  : "0.5.x",
