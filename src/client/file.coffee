@@ -1,3 +1,5 @@
+_ = require('lodash')
+EventEmitter2 = require('eventemitter2').EventEmitter2
 Delta = require('tandem-core/delta')
 
 

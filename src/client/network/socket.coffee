@@ -1,3 +1,5 @@
+_ = require('lodash')
+io = require('socket.io-client')
 TandemAdapter = require('./adapter')
 
 

@@ -1,3 +1,7 @@
+async = require('async')
+EventEmitter2 = require('eventemitter2').EventEmitter2
+
+
 class TandemNetworkAdapter extends EventEmitter2
   @events:
     DISCONNECT   : 'adapter-disconnect'
