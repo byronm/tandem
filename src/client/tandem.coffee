@@ -1,12 +1,12 @@
 _ = require('lodash')
 TandemFile    = require('./file')
-TandemSocket  = require('./network/socket')
+TandemAdapter = require('./network/adapter')
 
 
 class TandemClient
   @DEFAULTS:
     userId: null
-    network: TandemSocket
+    network: TandemAdapter
 
   constructor: (@endpointUrl, @options = {}) ->
     options = _.pick(@options, _.keys(TandemClient.DEFAULTS))

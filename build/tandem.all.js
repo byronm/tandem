@@ -5,7 +5,7 @@
  *  Byron Milligan, Salesforce.com
  */
 
-require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/ZJ4gQ":[function(require,module,exports){
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/ZJ4gQ":[function(require,module,exports){
 var process=require("__browserify_process");/*global setImmediate: false, setTimeout: false, console: false */
 (function () {
 
@@ -962,8 +962,10 @@ var process=require("__browserify_process");/*global setImmediate: false, setTim
 
 }());
 
-},{"__browserify_process":10}],"async":[function(require,module,exports){
+},{"__browserify_process":11}],"async":[function(require,module,exports){
 module.exports=require('/ZJ4gQ');
+},{}],"eventemitter2":[function(require,module,exports){
+module.exports=require('ZXAIQa');
 },{}],"ZXAIQa":[function(require,module,exports){
 var process=require("__browserify_process");;!function(exports, undefined) {
 
@@ -1527,9 +1529,7 @@ var process=require("__browserify_process");;!function(exports, undefined) {
 
 }(typeof process !== 'undefined' && typeof process.title !== 'undefined' && typeof exports !== 'undefined' ? exports : window);
 
-},{"__browserify_process":10}],"eventemitter2":[function(require,module,exports){
-module.exports=require('ZXAIQa');
-},{}],"EYh8i8":[function(require,module,exports){
+},{"__browserify_process":11}],"EYh8i8":[function(require,module,exports){
 var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};/**
  * @license
  * Lo-Dash 2.4.1 (Custom Build) <http://lodash.com/>
@@ -8318,6 +8318,8 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 },{}],"lodash":[function(require,module,exports){
 module.exports=require('EYh8i8');
+},{}],"socket.io-client":[function(require,module,exports){
+module.exports=require('477PwR');
 },{}],"477PwR":[function(require,module,exports){
 /*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
@@ -12192,15 +12194,25 @@ if (typeof define === "function" && define.amd) {
   define([], function () { return io; });
 }
 })();
-},{}],"socket.io-client":[function(require,module,exports){
-module.exports=require('477PwR');
 },{}],9:[function(require,module,exports){
-Tandem         = require('tandem-core');
-Tandem.Client  = require('./src/client/tandem');
+Tandem = require('./browser')
+TandemSocket = require('./src/client/network/socket')
+
+Tandem.Client.DEFAULTS.network = TandemSocket
 
 module.exports = Tandem
 
-},{"./src/client/tandem":25,"tandem-core":19}],10:[function(require,module,exports){
+},{"./browser":10,"./src/client/network/socket":25}],10:[function(require,module,exports){
+Tandem         = require('tandem-core');
+Tandem.Client  = require('./src/client/tandem');
+Tandem.File    = require('./src/client/file');
+Tandem.Network = {
+  Adapter: require('./src/client/network/adapter')
+};
+
+module.exports = Tandem
+
+},{"./src/client/file":23,"./src/client/network/adapter":24,"./src/client/tandem":26,"tandem-core":20}],11:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -12255,7 +12267,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function() {
   var Delta, InsertOp, Op, RetainOp, diff_match_patch, dmp, _;
 
@@ -12921,7 +12933,7 @@ process.chdir = function (dir) {
 
 }).call(this);
 
-},{"./diff_match_patch":13,"./insert":14,"./op":15,"./retain":16,"lodash":"EYh8i8"}],12:[function(require,module,exports){
+},{"./diff_match_patch":14,"./insert":15,"./op":16,"./retain":17,"lodash":"EYh8i8"}],13:[function(require,module,exports){
 (function() {
   var Delta, DeltaGenerator, InsertOp, RetainOp, getUtils, setDomain, _, _domain;
 
@@ -13278,7 +13290,7 @@ process.chdir = function (dir) {
 
 }).call(this);
 
-},{"./delta":11,"./insert":14,"./retain":16,"lodash":"EYh8i8"}],13:[function(require,module,exports){
+},{"./delta":12,"./insert":15,"./retain":17,"lodash":"EYh8i8"}],14:[function(require,module,exports){
 (function() {
   var googlediff;
 
@@ -13294,7 +13306,7 @@ process.chdir = function (dir) {
 
 }).call(this);
 
-},{"googlediff":20}],14:[function(require,module,exports){
+},{"googlediff":21}],15:[function(require,module,exports){
 (function() {
   var InsertOp, Op, _,
     __hasProp = {}.hasOwnProperty,
@@ -13354,7 +13366,7 @@ process.chdir = function (dir) {
 
 }).call(this);
 
-},{"./op":15,"lodash":"EYh8i8"}],15:[function(require,module,exports){
+},{"./op":16,"lodash":"EYh8i8"}],16:[function(require,module,exports){
 (function() {
   var Op, _;
 
@@ -13438,7 +13450,7 @@ process.chdir = function (dir) {
 
 }).call(this);
 
-},{"lodash":"EYh8i8"}],16:[function(require,module,exports){
+},{"lodash":"EYh8i8"}],17:[function(require,module,exports){
 (function() {
   var Op, RetainOp, _,
     __hasProp = {}.hasOwnProperty,
@@ -13491,7 +13503,7 @@ process.chdir = function (dir) {
 
 }).call(this);
 
-},{"./op":15,"lodash":"EYh8i8"}],17:[function(require,module,exports){
+},{"./op":16,"lodash":"EYh8i8"}],18:[function(require,module,exports){
 (function() {
   module.exports = {
     Delta: require('./delta'),
@@ -13503,16 +13515,16 @@ process.chdir = function (dir) {
 
 }).call(this);
 
-},{"./delta":11,"./delta_generator":12,"./insert":14,"./op":15,"./retain":16}],18:[function(require,module,exports){
+},{"./delta":12,"./delta_generator":13,"./insert":15,"./op":16,"./retain":17}],19:[function(require,module,exports){
 module.exports = require('./build/delta.js')
 
-},{"./build/delta.js":11}],19:[function(require,module,exports){
+},{"./build/delta.js":12}],20:[function(require,module,exports){
 module.exports = require('./build/tandem-core')
 
-},{"./build/tandem-core":17}],20:[function(require,module,exports){
+},{"./build/tandem-core":18}],21:[function(require,module,exports){
 module.exports = require('./javascript/diff_match_patch_uncompressed.js').diff_match_patch;
 
-},{"./javascript/diff_match_patch_uncompressed.js":21}],21:[function(require,module,exports){
+},{"./javascript/diff_match_patch_uncompressed.js":22}],22:[function(require,module,exports){
 /**
  * Diff Match and Patch
  *
@@ -15707,7 +15719,7 @@ this['DIFF_DELETE'] = DIFF_DELETE;
 this['DIFF_INSERT'] = DIFF_INSERT;
 this['DIFF_EQUAL'] = DIFF_EQUAL;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 var Delta, EventEmitter2, TandemFile, initAdapterListeners, initHealthListeners, initListeners, onResync, onUpdate, sendResync, sendSync, sendUpdate, setReady, warn, _,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
@@ -16001,7 +16013,7 @@ TandemFile = (function(_super) {
 module.exports = TandemFile;
 
 
-},{"eventemitter2":"ZXAIQa","lodash":"EYh8i8","tandem-core/delta":18}],23:[function(require,module,exports){
+},{"eventemitter2":"ZXAIQa","lodash":"EYh8i8","tandem-core/delta":19}],24:[function(require,module,exports){
 var EventEmitter2, TandemNetworkAdapter, async,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
@@ -16084,7 +16096,7 @@ TandemNetworkAdapter = (function(_super) {
 module.exports = TandemNetworkAdapter;
 
 
-},{"async":"/ZJ4gQ","eventemitter2":"ZXAIQa"}],24:[function(require,module,exports){
+},{"async":"/ZJ4gQ","eventemitter2":"ZXAIQa"}],25:[function(require,module,exports){
 var TandemAdapter, TandemSocketAdapter, authenticate, info, io, track, _,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
@@ -16271,19 +16283,19 @@ TandemSocketAdapter = (function(_super) {
 module.exports = TandemSocketAdapter;
 
 
-},{"./adapter":23,"lodash":"EYh8i8","socket.io-client":"477PwR"}],25:[function(require,module,exports){
-var TandemClient, TandemFile, TandemSocket, _;
+},{"./adapter":24,"lodash":"EYh8i8","socket.io-client":"477PwR"}],26:[function(require,module,exports){
+var TandemAdapter, TandemClient, TandemFile, _;
 
 _ = require('lodash');
 
 TandemFile = require('./file');
 
-TandemSocket = require('./network/socket');
+TandemAdapter = require('./network/adapter');
 
 TandemClient = (function() {
   TandemClient.DEFAULTS = {
     userId: null,
-    network: TandemSocket
+    network: TandemAdapter
   };
 
   function TandemClient(endpointUrl, options) {
@@ -16308,4 +16320,6 @@ TandemClient = (function() {
 module.exports = TandemClient;
 
 
-},{"./file":22,"./network/socket":24,"lodash":"EYh8i8"}]},{},[9])
+},{"./file":23,"./network/adapter":24,"lodash":"EYh8i8"}]},{},[9])
+(9)
+});
