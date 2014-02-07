@@ -6,7 +6,7 @@ GLOBAL.io = require('socket.io-client')
 url = require('url')
 
 Tandem = require('tandem-core')
-base = if process.env.TANDEM_COV? then './build' else './src'
+base = if process.env.TANDEM_COV? then '../build' else '../src'
 Tandem.Client = require("#{base}/client/tandem")
 Tandem.File   = require("#{base}/client/file")
 Tandem.Network = 

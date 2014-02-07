@@ -3,7 +3,7 @@ async   = require('async')
 expect  = require('chai').expect
 http    = require('http')
 EventEmitter = require('events').EventEmitter
-TandemClient = require('../../../client')
+TandemClient = require('../../client')
 TandemServer = require('../../../index')
 
 describe('Server Storage', ->

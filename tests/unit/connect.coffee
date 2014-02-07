@@ -1,7 +1,7 @@
 _       = require('lodash')
 expect  = require('chai').expect
 http    = require('http')
-TandemClient = require('../../client')
+TandemClient = require('../client')
 TandemServer = require('../../index')
 
 describe('Connection', ->
