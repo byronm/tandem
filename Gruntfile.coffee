@@ -28,9 +28,7 @@ module.exports = (grunt) ->
         transform: ['coffeeify']
       tandem:
         options:
-          alias: [
-            'bower_components/eventemitter2/lib/eventemitter2.js:eventemitter2'
-          ]
+          alias: ['bower_components/eventemitter2/lib/eventemitter2.js:eventemitter2']
           external: ['async', 'lodash', 'socket.io-client']
           standalone: 'Tandem'
         files: [{ dest: 'build/tandem.js', src: ['browser.js'] }]
@@ -62,14 +60,4 @@ module.exports = (grunt) ->
       tasks: ['default']
   )
 
-  grunt.registerTask('default', ['clean', 'coffee', 'browserify', 'concat', 'requirejsify'])
-
-  grunt.registerTask 'requirejsify', 'wrap tandem.all w/ requirejs', ->
-    grunt.file.write 'build/transform.js', [
-      #'define("tandem", function(require, exports, module){'
-      'define("tandem", ["eventemitter2", "async", "lodash", "module", "exports"], function(EventEmitter2, async, _, module, exports){'
-      'EventEmitter2 = require("eventemitter2");'
-      grunt.file.read 'build/tandem.all.js'
-      '})'
-    ].join '\n\n'
-
+  grunt.registerTask('default', ['clean', 'coffee', 'browserify', 'concat'])
