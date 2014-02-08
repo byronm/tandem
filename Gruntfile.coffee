@@ -28,14 +28,12 @@ module.exports = (grunt) ->
         transform: ['coffeeify']
       standard:
         options:
-          alias: ['bower_components/eventemitter2/lib/eventemitter2.js:eventemitter2']
-          external: ['async', 'lodash']
+          external: ['async', 'eventemitter2', 'lodash']
           standalone: 'Tandem'
         files: [{ dest: 'build/tandem.js', src: ['browser.js'] }]
       bare:
         options:
-          alias: ['bower_components/eventemitter2/lib/eventemitter2.js:eventemitter2']
-          external: ['async', 'lodash', 'socket.io-client']
+          external: ['async', 'lodash', 'eventemitter2', 'socket.io-client']
           standalone: 'Tandem'
         files: [{ dest: 'build/tandem.bare.js', src: ['browser.bare.js'] }]
       all:

@@ -1,11 +1,13 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.9 - 2014-02-06
+/*! Tandem Realtime Coauthoring Engine - v0.12.9 - 2014-02-07
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
  *  Byron Milligan, Salesforce.com
  */
 
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"/ZJ4gQ":[function(require,module,exports){
+!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.Tandem=e():"undefined"!=typeof global?global.Tandem=e():"undefined"!=typeof self&&(self.Tandem=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"async":[function(require,module,exports){
+module.exports=require('/ZJ4gQ');
+},{}],"/ZJ4gQ":[function(require,module,exports){
 var process=require("__browserify_process");/*global setImmediate: false, setTimeout: false, console: false */
 (function () {
 
@@ -962,9 +964,7 @@ var process=require("__browserify_process");/*global setImmediate: false, setTim
 
 }());
 
-},{"__browserify_process":11}],"async":[function(require,module,exports){
-module.exports=require('/ZJ4gQ');
-},{}],"eventemitter2":[function(require,module,exports){
+},{"__browserify_process":11}],"eventemitter2":[function(require,module,exports){
 module.exports=require('ZXAIQa');
 },{}],"ZXAIQa":[function(require,module,exports){
 var process=require("__browserify_process");;!function(exports, undefined) {
@@ -8318,8 +8318,6 @@ var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? 
 
 },{}],"lodash":[function(require,module,exports){
 module.exports=require('EYh8i8');
-},{}],"socket.io-client":[function(require,module,exports){
-module.exports=require('477PwR');
 },{}],"477PwR":[function(require,module,exports){
 /*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
@@ -12194,6 +12192,8 @@ if (typeof define === "function" && define.amd) {
   define([], function () { return io; });
 }
 })();
+},{}],"socket.io-client":[function(require,module,exports){
+module.exports=require('477PwR');
 },{}],9:[function(require,module,exports){
 Tandem         = require('tandem-core');
 Tandem.Client  = require('./src/client/tandem');
@@ -15728,9 +15728,13 @@ var Delta, EventEmitter2, TandemFile, initAdapterListeners, initHealthListeners,
 
 _ = require('lodash');
 
-EventEmitter2 = require('eventemitter2').EventEmitter2;
+EventEmitter2 = require('eventemitter2');
 
 Delta = require('tandem-core/delta');
+
+if (EventEmitter2.EventEmitter2 != null) {
+  EventEmitter2 = EventEmitter2.EventEmitter2;
+}
 
 warn = function() {
   var args;
@@ -16022,7 +16026,11 @@ var EventEmitter2, TandemNetworkAdapter, async,
 
 async = require('async');
 
-EventEmitter2 = require('eventemitter2').EventEmitter2;
+EventEmitter2 = require('eventemitter2');
+
+if (EventEmitter2.EventEmitter2 != null) {
+  EventEmitter2 = EventEmitter2.EventEmitter2;
+}
 
 TandemNetworkAdapter = (function(_super) {
   __extends(TandemNetworkAdapter, _super);
@@ -16324,3 +16332,4 @@ module.exports = TandemClient;
 },{"./file":23,"./network/adapter":24,"lodash":"EYh8i8"}]},{},[10])
 (10)
 });
+;

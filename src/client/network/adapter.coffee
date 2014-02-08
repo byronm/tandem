@@ -1,6 +1,9 @@
 async = require('async')
-EventEmitter2 = require('eventemitter2').EventEmitter2
+EventEmitter2 = require('eventemitter2')
 
+# Client may include a different EventEmitter2
+if EventEmitter2.EventEmitter2?
+  EventEmitter2 = EventEmitter2.EventEmitter2
 
 class TandemNetworkAdapter extends EventEmitter2
   @events:

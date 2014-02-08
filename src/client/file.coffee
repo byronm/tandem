@@ -1,7 +1,10 @@
 _ = require('lodash')
-EventEmitter2 = require('eventemitter2').EventEmitter2
+EventEmitter2 = require('eventemitter2')
 Delta = require('tandem-core/delta')
 
+# Client may include a different EventEmitter2
+if EventEmitter2.EventEmitter2?
+  EventEmitter2 = EventEmitter2.EventEmitter2
 
 warn = (args...) ->
   return unless console?.warn?
