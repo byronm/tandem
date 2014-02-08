@@ -26,6 +26,12 @@ module.exports = (grunt) ->
       options:
         extensions: ['.js', '.coffee']
         transform: ['coffeeify']
+        # Browserify for some reason passes in false into a (which is really require minified)
+        # This breaks require.js's (at least the almond implementation) attempt to be 
+        # compatible with commonjs
+        postBundleCB: (err, src, next) ->
+          src = src.replace('a(o,!0);', 'a(o);')
+          next(err, src)
       standard:
         options:
           external: ['async', 'eventemitter2', 'lodash']
