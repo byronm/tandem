@@ -180,14 +180,14 @@ class TandemFile extends EventEmitter2
 
   send: (route, packet, callback = null, priority = false) ->
     if callback?
-      @adapter.send(route, packet, (response) =>
+      @adapter.queue(route, packet, (response) =>
         unless response.error?
           callback(response) if callback?
         else
           this.emit(TandemFile.events.ERROR, response.error)
       , priority)
     else
-      @adapter.send(route, packet)
+      @adapter.queue(route, packet)
 
   sendIfReady: (callback) ->   # Exposed for fuzzer
     @updateCallbacks.push(callback) if callback?

@@ -99,7 +99,7 @@ class TandemSocketAdapter extends TandemAdapter
     @socket.addListener(route, onSocketCallback)
     return this
 
-  _send: (route, packet, callback) ->
+  send: (route, packet, callback) ->
     track.call(this, TandemSocketAdapter.SEND, route, packet)
     setTimeout( =>
       if callback?

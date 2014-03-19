@@ -25,14 +25,17 @@ class TandemNetworkAdapter extends EventEmitter2
     console.warn "Should be overwritten by descendant"
     return this
 
-  send: (route, packet, callback, priority = false) ->
+  queue: (route, packet, callback, priority = false) ->
     if @ready
-      this._send(route, packet, callback, priority)
+      this.send(route, packet, callback, priority)
     else
       if priority
         @sendQueue.unshift([route, packet, callback])
       else
         @sendQueue.push([route, packet, callback])
+
+  send: (route, packet, callback) ->
+    console.warn "Should be overwritten by descendant"
 
   setReady: ->
     this.emit(TandemNetworkAdapter.events.READY)
@@ -41,16 +44,13 @@ class TandemNetworkAdapter extends EventEmitter2
     , (callback) =>
       elem = @sendQueue.shift()
       [route, packet, sendCallback] = elem
-      this._send(route, packet, (args...) =>
+      this.send(route, packet, (args...) =>
         sendCallback.apply(this, args) if sendCallback?
         callback()
       )
     , (err) =>
       @ready = true
     )
-
-  _send: (route, packet, callback) ->
-    console.warn "Should be overwritten by descendant"
 
 
 module.exports = TandemNetworkAdapter
