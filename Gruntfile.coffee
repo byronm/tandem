@@ -57,7 +57,6 @@ module.exports = (grunt) ->
       options:
         banner: 
           '/*! Tandem Realtime Coauthoring Engine - v<%= meta.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n' +
-          ' *  https://www.stypi.com/\n' +
           ' *  Copyright (c) <%= grunt.template.today("yyyy") %>\n' +
           ' *  Jason Chen, Salesforce.com\n' +
           ' *  Byron Milligan, Salesforce.com\n' + 

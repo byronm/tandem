@@ -2,7 +2,7 @@
   "name": "tandem",
   "main": "build/tandem.all.js",
   "version": "0.12.4",
-  "homepage": "https://github.com/stypi/tandem",
+  "homepage": "https://github.com/tandem/tandem",
   "dependencies": {
     "async"             : "0.2.x",
     "eventemitter2"     : "0.4.x",

@@ -3,7 +3,7 @@ REPORTER = list
 cov:
 	@mv src src-back
 	@./node_modules/.bin/coffee -co src/ src-back/
-	@TANDEM_COV=1 istanbul cover ./node_modules/.bin/_mocha tests/unit/*.coffee --root build/ -- --compilers coffee:coffee-script
+	@TANDEM_COV=1 ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha tests/unit/*.coffee --root build/ -- --compilers coffee:coffee-script/register
 	@rm -rf src/
 	@mv src-back src
 

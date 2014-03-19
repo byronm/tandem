@@ -6,7 +6,7 @@ Please do not publicize this repository in any way. There are a few known docume
 Tandem Realtime Coauthoring Engine
 ===
 
-[![Build Status](https://secure.travis-ci.org/stypi/tandem.png?branch=master)](http://travis-ci.org/stypi/tandem)
+[![Build Status](https://secure.travis-ci.org/tandem/tandem.png?branch=master)](http://travis-ci.org/tandem/tandem)
 
 How to Use
 ---
@@ -14,7 +14,7 @@ How to Use
 ### Client
 
 ```javascript
-var tandem = new Tandem.Client('https://node.stypi.com');
+var tandem = new Tandem.Client('http://localhost:8008');
 var file = tandem.open(fileId);
 file.on('file-update', function(delta) {
     // ...
