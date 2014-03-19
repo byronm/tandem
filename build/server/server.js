@@ -36,7 +36,6 @@
     };
 
     function TandemServer(server, options) {
-      var _this = this;
       if (options == null) {
         options = {};
       }
@@ -47,11 +46,13 @@
         this.settings.network = TandemNetworkAdapter;
       }
       this.network = _.isFunction(this.settings.network) ? new this.settings.network(server, this.fileManager, this.storage, this.settings) : this.settings.network;
-      TandemEmitter.on(TandemEmitter.events.ERROR, function() {
-        var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        return _this.emit.apply(_this, [TandemServer.events.ERROR].concat(__slice.call(args)));
-      });
+      TandemEmitter.on(TandemEmitter.events.ERROR, (function(_this) {
+        return function() {
+          var args;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          return _this.emit.apply(_this, [TandemServer.events.ERROR].concat(__slice.call(args)));
+        };
+      })(this));
     }
 
     TandemServer.prototype.stop = function(callback) {

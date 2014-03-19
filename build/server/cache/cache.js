@@ -8,15 +8,16 @@
     TandemCache.OPERATIONS = ['del', 'get', 'push', 'range', 'set'];
 
     function TandemCache(id) {
-      var _this = this;
       this.id = id;
-      _.each(TandemCache.OPERATIONS, function(fnName) {
-        return _this[fnName] = _.wrap(_this[fnName], function() {
-          var args, fn, key;
-          fn = arguments[0], key = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
-          return fn.call.apply(fn, [_this, "" + _this.id + "-" + key].concat(__slice.call(args)));
-        });
-      });
+      _.each(TandemCache.OPERATIONS, (function(_this) {
+        return function(fnName) {
+          return _this[fnName] = _.wrap(_this[fnName], function() {
+            var args, fn, key;
+            fn = arguments[0], key = arguments[1], args = 3 <= arguments.length ? __slice.call(arguments, 2) : [];
+            return fn.call.apply(fn, [_this, "" + _this.id + "-" + key].concat(__slice.call(args)));
+          });
+        };
+      })(this));
     }
 
     TandemCache.prototype.del = function(key, callback) {

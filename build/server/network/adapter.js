@@ -32,51 +32,52 @@
     }
 
     TandemNetworkAdapter.prototype.handle = function(route, fileId, packet, callback) {
-      var _this = this;
       if (fileId == null) {
         return callback('Undefined fileId');
       }
-      return this.fileManager.find(fileId, function(err, file) {
-        var resyncHandler;
-        if (err != null) {
-          return callback(err, {
-            error: err
-          });
-        }
-        resyncHandler = function(err, file, callback) {
-          return callback(err, _makeResyncPacket(file));
+      return this.fileManager.find(fileId, (function(_this) {
+        return function(err, file) {
+          var resyncHandler;
+          if (err != null) {
+            return callback(err, {
+              error: err
+            });
+          }
+          resyncHandler = function(err, file, callback) {
+            return callback(err, _makeResyncPacket(file));
+          };
+          switch (route) {
+            case TandemNetworkAdapter.routes.RESYNC:
+              return resyncHandler(null, file, callback);
+            case TandemNetworkAdapter.routes.SYNC:
+              if (err != null) {
+                return resyncHandler(err, file, callback);
+              }
+              return file.sync(parseInt(packet.version), function(err, delta, version) {
+                return callback(err, {
+                  delta: delta,
+                  version: version
+                });
+              });
+            case TandemNetworkAdapter.routes.UPDATE:
+              if (err != null) {
+                return resyncHandler(err, file, callback);
+              }
+              return file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), function(err, delta, version) {
+                return callback(err, {
+                  fileId: fileId,
+                  version: version
+                }, {
+                  delta: delta,
+                  fileId: fileId,
+                  version: version
+                });
+              });
+            default:
+              return callback(new Error('Unexpected network route'));
+          }
         };
-        switch (route) {
-          case TandemNetworkAdapter.routes.RESYNC:
-            return resyncHandler(null, file, callback);
-          case TandemNetworkAdapter.routes.SYNC:
-            if (err != null) {
-              return resyncHandler(err, file, callback);
-            }
-            return file.sync(parseInt(packet.version), function(err, delta, version) {
-              return callback(err, {
-                delta: delta,
-                version: version
-              });
-            });
-          case TandemNetworkAdapter.routes.UPDATE:
-            if (err != null) {
-              return resyncHandler(err, file, callback);
-            }
-            return file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), function(err, delta, version) {
-              return callback(err, {
-                fileId: fileId,
-                version: version
-              }, {
-                delta: delta,
-                fileId: fileId,
-                version: version
-              });
-            });
-          default:
-            return callback(new Error('Unexpected network route'));
-        }
-      });
+      })(this));
     };
 
     return TandemNetworkAdapter;

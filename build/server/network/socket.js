@@ -14,19 +14,20 @@
   TandemEmitter = require('../emitter');
 
   _authenticate = function(socket, packet, callback) {
-    var _this = this;
-    return this.storage.authorize(packet, function(err) {
-      if (err != null) {
-        if (_.isObject(err)) {
-          err = err.message;
+    return this.storage.authorize(packet, (function(_this) {
+      return function(err) {
+        if (err != null) {
+          if (_.isObject(err)) {
+            err = err.message;
+          }
+        } else {
+          _this.join(socket.id, packet.fileId);
         }
-      } else {
-        _this.join(socket.id, packet.fileId);
-      }
-      return callback({
-        error: err
-      });
-    });
+        return callback({
+          error: err
+        });
+      };
+    })(this));
   };
 
   TandemSocket = (function(_super) {
@@ -39,7 +40,6 @@
     };
 
     function TandemSocket(httpServer, fileManager, storage, options) {
-      var _this = this;
       this.fileManager = fileManager;
       this.storage = storage;
       if (options == null) {
@@ -50,38 +50,43 @@
       this.settings = _.defaults(_.pick(options, _.keys(TandemSocket.DEFAULTS)), TandemSocket.DEFAULTS);
       this.sockets = {};
       this.io = socketio.listen(httpServer, this.settings);
-      this.io.configure('production', function() {
-        _this.io.enable('browser client minification');
-        return _this.io.enable('browser client etag');
-      });
-      this.io.sockets.on('connection', function(socket) {
-        _this.sockets[socket.id] = socket;
-        return socket.on('auth', function(packet, callback) {
-          return _authenticate.call(_this, socket, packet, callback);
-        });
-      });
+      this.io.configure('production', (function(_this) {
+        return function() {
+          _this.io.enable('browser client minification');
+          return _this.io.enable('browser client etag');
+        };
+      })(this));
+      this.io.sockets.on('connection', (function(_this) {
+        return function(socket) {
+          _this.sockets[socket.id] = socket;
+          return socket.on('auth', function(packet, callback) {
+            return _authenticate.call(_this, socket, packet, callback);
+          });
+        };
+      })(this));
     }
 
     TandemSocket.prototype.join = function(sessionId, fileId) {
-      var socket,
-        _this = this;
+      var socket;
       socket = this.sockets[sessionId];
       this.files[sessionId] = fileId;
       socket.on('disconnect', this.leave.bind(this, sessionId, fileId));
-      _.each(TandemAdapter.routes, function(route, name) {
-        socket.removeAllListeners(route);
-        return socket.on(route, function(packet, callback) {
-          return _this.handle(route, _this.files[sessionId], packet, function(err, callbackPacket, broadcastPacket) {
-            if (err != null) {
-              TandemEmitter.emit(TandemEmitter.events.ERROR, err);
-            }
-            callback(callbackPacket);
-            if (broadcastPacket != null) {
-              return socket.broadcast.to(fileId).emit(route, broadcastPacket);
-            }
+      _.each(TandemAdapter.routes, (function(_this) {
+        return function(route, name) {
+          socket.removeAllListeners(route);
+          return socket.on(route, function(packet, callback) {
+            return _this.handle(route, _this.files[sessionId], packet, function(err, callbackPacket, broadcastPacket) {
+              if (err != null) {
+                TandemEmitter.emit(TandemEmitter.events.ERROR, err);
+              }
+              callback(callbackPacket);
+              if (broadcastPacket != null) {
+                return socket.broadcast.to(fileId).emit(route, broadcastPacket);
+              }
+            });
           });
-        });
-      });
+        };
+      })(this));
       return socket.join(fileId);
     };
 

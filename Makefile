@@ -11,4 +11,4 @@ fuzzer:
 	@./node_modules/.bin/mocha tests/fuzzer.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
 
 test:
-	@./node_modules/.bin/mocha tests/unit/*.coffee tests/unit/*/*.coffee --reporter $(REPORTER) --compilers coffee:coffee-script
+	@./node_modules/.bin/mocha tests/unit/*.coffee tests/unit/*/*.coffee --reporter $(REPORTER) --compilers coffee:coffee-script/register

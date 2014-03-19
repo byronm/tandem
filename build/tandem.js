@@ -1,30 +1,30 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.10 - 2014-02-07
+/*! Tandem Realtime Coauthoring Engine - v0.12.10 - 2014-03-18
  *  https://www.stypi.com/
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
  *  Byron Milligan, Salesforce.com
  */
 
-!function(e){"object"==typeof exports?module.exports=e():"function"==typeof define&&define.amd?define(e):"undefined"!=typeof window?window.Tandem=e():"undefined"!=typeof global?global.Tandem=e():"undefined"!=typeof self&&(self.Tandem=e())}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-Tandem         = require('tandem-core');
-Tandem.Client  = require('./src/client/tandem');
-Tandem.File    = require('./src/client/file');
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+Tandem         = _dereq_('tandem-core');
+Tandem.Client  = _dereq_('./src/client/tandem');
+Tandem.File    = _dereq_('./src/client/file');
 Tandem.Network = {
-  Adapter: require('./src/client/network/adapter')
+  Adapter: _dereq_('./src/client/network/adapter')
 };
 
 module.exports = Tandem
 
-},{"./src/client/file":15,"./src/client/network/adapter":16,"./src/client/tandem":18,"tandem-core":12}],2:[function(require,module,exports){
-Tandem = require('./browser.bare')
-TandemSocket = require('./src/client/network/socket')
+},{"./src/client/file":15,"./src/client/network/adapter":16,"./src/client/tandem":18,"tandem-core":12}],2:[function(_dereq_,module,exports){
+Tandem = _dereq_('./browser.bare')
+TandemSocket = _dereq_('./src/client/network/socket')
 
 Tandem.Network.Socket = TandemSocket
 Tandem.Client.DEFAULTS.network = TandemSocket
 
 module.exports = Tandem
 
-},{"./browser.bare":1,"./src/client/network/socket":17}],3:[function(require,module,exports){
+},{"./browser.bare":1,"./src/client/network/socket":17}],3:[function(_dereq_,module,exports){
 /*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
 var io = ('undefined' === typeof module ? {} : module.exports);
@@ -3898,19 +3898,19 @@ if (typeof define === "function" && define.amd) {
   define([], function () { return io; });
 }
 })();
-},{}],4:[function(require,module,exports){
+},{}],4:[function(_dereq_,module,exports){
 (function() {
   var Delta, InsertOp, Op, RetainOp, diff_match_patch, dmp, _;
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  diff_match_patch = require('./diff_match_patch');
+  diff_match_patch = _dereq_('./diff_match_patch');
 
-  Op = require('./op');
+  Op = _dereq_('./op');
 
-  InsertOp = require('./insert');
+  InsertOp = _dereq_('./insert');
 
-  RetainOp = require('./retain');
+  RetainOp = _dereq_('./retain');
 
   dmp = new diff_match_patch();
 
@@ -4564,17 +4564,17 @@ if (typeof define === "function" && define.amd) {
 
 }).call(this);
 
-},{"./diff_match_patch":6,"./insert":7,"./op":8,"./retain":9,"lodash":false}],5:[function(require,module,exports){
+},{"./diff_match_patch":6,"./insert":7,"./op":8,"./retain":9,"lodash":false}],5:[function(_dereq_,module,exports){
 (function() {
   var Delta, DeltaGenerator, InsertOp, RetainOp, getUtils, setDomain, _, _domain;
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  Delta = require('./delta');
+  Delta = _dereq_('./delta');
 
-  InsertOp = require('./insert');
+  InsertOp = _dereq_('./insert');
 
-  RetainOp = require('./retain');
+  RetainOp = _dereq_('./retain');
 
   _domain = {
     alphabet: "abcdefghijklmnopqrstuvwxyz\n\n\n\n  ",
@@ -4921,11 +4921,11 @@ if (typeof define === "function" && define.amd) {
 
 }).call(this);
 
-},{"./delta":4,"./insert":7,"./retain":9,"lodash":false}],6:[function(require,module,exports){
+},{"./delta":4,"./insert":7,"./retain":9,"lodash":false}],6:[function(_dereq_,module,exports){
 (function() {
   var googlediff;
 
-  googlediff = require('googlediff');
+  googlediff = _dereq_('googlediff');
 
   googlediff.DIFF_DELETE = -1;
 
@@ -4937,15 +4937,15 @@ if (typeof define === "function" && define.amd) {
 
 }).call(this);
 
-},{"googlediff":13}],7:[function(require,module,exports){
+},{"googlediff":13}],7:[function(_dereq_,module,exports){
 (function() {
   var InsertOp, Op, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  Op = require('./op');
+  Op = _dereq_('./op');
 
   InsertOp = (function(_super) {
     __extends(InsertOp, _super);
@@ -4997,11 +4997,11 @@ if (typeof define === "function" && define.amd) {
 
 }).call(this);
 
-},{"./op":8,"lodash":false}],8:[function(require,module,exports){
+},{"./op":8,"lodash":false}],8:[function(_dereq_,module,exports){
 (function() {
   var Op, _;
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
   Op = (function() {
     Op.isInsert = function(i) {
@@ -5081,15 +5081,15 @@ if (typeof define === "function" && define.amd) {
 
 }).call(this);
 
-},{"lodash":false}],9:[function(require,module,exports){
+},{"lodash":false}],9:[function(_dereq_,module,exports){
 (function() {
   var Op, RetainOp, _,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  _ = require('lodash');
+  _ = _dereq_('lodash');
 
-  Op = require('./op');
+  Op = _dereq_('./op');
 
   RetainOp = (function(_super) {
     __extends(RetainOp, _super);
@@ -5134,28 +5134,28 @@ if (typeof define === "function" && define.amd) {
 
 }).call(this);
 
-},{"./op":8,"lodash":false}],10:[function(require,module,exports){
+},{"./op":8,"lodash":false}],10:[function(_dereq_,module,exports){
 (function() {
   module.exports = {
-    Delta: require('./delta'),
-    DeltaGen: require('./delta_generator'),
-    Op: require('./op'),
-    InsertOp: require('./insert'),
-    RetainOp: require('./retain')
+    Delta: _dereq_('./delta'),
+    DeltaGen: _dereq_('./delta_generator'),
+    Op: _dereq_('./op'),
+    InsertOp: _dereq_('./insert'),
+    RetainOp: _dereq_('./retain')
   };
 
 }).call(this);
 
-},{"./delta":4,"./delta_generator":5,"./insert":7,"./op":8,"./retain":9}],11:[function(require,module,exports){
-module.exports = require('./build/delta.js')
+},{"./delta":4,"./delta_generator":5,"./insert":7,"./op":8,"./retain":9}],11:[function(_dereq_,module,exports){
+module.exports = _dereq_('./build/delta.js')
 
-},{"./build/delta.js":4}],12:[function(require,module,exports){
-module.exports = require('./build/tandem-core')
+},{"./build/delta.js":4}],12:[function(_dereq_,module,exports){
+module.exports = _dereq_('./build/tandem-core')
 
-},{"./build/tandem-core":10}],13:[function(require,module,exports){
-module.exports = require('./javascript/diff_match_patch_uncompressed.js').diff_match_patch;
+},{"./build/tandem-core":10}],13:[function(_dereq_,module,exports){
+module.exports = _dereq_('./javascript/diff_match_patch_uncompressed.js').diff_match_patch;
 
-},{"./javascript/diff_match_patch_uncompressed.js":14}],14:[function(require,module,exports){
+},{"./javascript/diff_match_patch_uncompressed.js":14}],14:[function(_dereq_,module,exports){
 /**
  * Diff Match and Patch
  *
@@ -7350,17 +7350,17 @@ this['DIFF_DELETE'] = DIFF_DELETE;
 this['DIFF_INSERT'] = DIFF_INSERT;
 this['DIFF_EQUAL'] = DIFF_EQUAL;
 
-},{}],15:[function(require,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 var Delta, EventEmitter2, TandemFile, initAdapterListeners, initHealthListeners, initListeners, onResync, onUpdate, sendResync, sendSync, sendUpdate, setReady, warn, _,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-_ = require('lodash');
+_ = _dereq_('lodash');
 
-EventEmitter2 = require('eventemitter2');
+EventEmitter2 = _dereq_('eventemitter2');
 
-Delta = require('tandem-core/delta');
+Delta = _dereq_('tandem-core/delta');
 
 if (EventEmitter2.EventEmitter2 != null) {
   EventEmitter2 = EventEmitter2.EventEmitter2;
@@ -7380,43 +7380,55 @@ warn = function() {
 };
 
 initAdapterListeners = function() {
-  var _this = this;
-  return this.adapter.listen(TandemFile.routes.UPDATE, function(packet) {
-    if (!_this.ready) {
-      return;
-    }
-    if (packet.fileId !== _this.fileId) {
-      return warn("Got update for other file", packet.fileId);
-    }
-    if (!_this.remoteUpdate(packet.delta, packet.version)) {
-      warn("Remote update failed, requesting resync");
-      return sendResync.call(_this);
-    }
-  });
+  return this.adapter.listen(TandemFile.routes.UPDATE, (function(_this) {
+    return function(packet) {
+      if (!_this.ready) {
+        return;
+      }
+      if (packet.fileId !== _this.fileId) {
+        return warn("Got update for other file", packet.fileId);
+      }
+      if (!_this.remoteUpdate(packet.delta, packet.version)) {
+        warn("Remote update failed, requesting resync");
+        return sendResync.call(_this);
+      }
+    };
+  })(this));
 };
 
 initHealthListeners = function() {
-  var _this = this;
-  this.adapter.on(this.adapter.constructor.events.READY, function() {
-    _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
-    return sendSync.call(_this);
-  }).on(this.adapter.constructor.events.RECONNECT, function(transport, attempts) {
-    return sendSync.call(_this);
-  }).on(this.adapter.constructor.events.RECONNECTING, function(timeout, attempts) {
-    if (attempts === 1) {
+  this.adapter.on(this.adapter.constructor.events.READY, (function(_this) {
+    return function() {
+      _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
+      return sendSync.call(_this);
+    };
+  })(this)).on(this.adapter.constructor.events.RECONNECT, (function(_this) {
+    return function(transport, attempts) {
+      return sendSync.call(_this);
+    };
+  })(this)).on(this.adapter.constructor.events.RECONNECTING, (function(_this) {
+    return function(timeout, attempts) {
+      if (attempts === 1) {
+        return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
+      }
+    };
+  })(this)).on(this.adapter.constructor.events.DISCONNECT, (function(_this) {
+    return function() {
       return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
-    }
-  }).on(this.adapter.constructor.events.DISCONNECT, function() {
-    return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
-  }).on(this.adapter.constructor.events.ERROR, function() {
-    var args;
-    args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-    _this.emit.apply(_this, [TandemFile.events.ERROR].concat(__slice.call(args)));
-    return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
-  });
-  return this.on(TandemFile.events.HEALTH, function(newHealth, oldHealth) {
-    return _this.health = newHealth;
-  });
+    };
+  })(this)).on(this.adapter.constructor.events.ERROR, (function(_this) {
+    return function() {
+      var args;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      _this.emit.apply(_this, [TandemFile.events.ERROR].concat(__slice.call(args)));
+      return _this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, _this.health);
+    };
+  })(this));
+  return this.on(TandemFile.events.HEALTH, (function(_this) {
+    return function(newHealth, oldHealth) {
+      return _this.health = newHealth;
+    };
+  })(this));
 };
 
 initListeners = function() {
@@ -7440,69 +7452,74 @@ onUpdate = function(response) {
 };
 
 sendResync = function(callback) {
-  var _this = this;
   this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, this.health);
-  return this.send(TandemFile.routes.RESYNC, {}, function(response) {
-    onResync.call(_this, response);
-    if (callback != null) {
-      return callback();
-    }
-  });
+  return this.send(TandemFile.routes.RESYNC, {}, (function(_this) {
+    return function(response) {
+      onResync.call(_this, response);
+      if (callback != null) {
+        return callback();
+      }
+    };
+  })(this));
 };
 
 sendSync = function() {
-  var _this = this;
   return this.send(TandemFile.routes.SYNC, {
     version: this.version
-  }, function(response) {
-    _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
-    if (response.resync) {
-      _this.ready = false;
-      warn("Sync requesting resync");
-      return onResync.call(_this, response);
-    } else if (_this.remoteUpdate(response.delta, response.version)) {
-      return setReady.call(_this, response.delta, response.version, false);
-    } else {
-      warn("Remote update failed on sync, requesting resync");
-      return sendResync.call(_this, function() {
-        return setReady.call(_this, response.delta, response.version, true);
-      });
-    }
-  }, true);
+  }, (function(_this) {
+    return function(response) {
+      _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
+      if (response.resync) {
+        _this.ready = false;
+        warn("Sync requesting resync");
+        return onResync.call(_this, response);
+      } else if (_this.remoteUpdate(response.delta, response.version)) {
+        return setReady.call(_this, response.delta, response.version, false);
+      } else {
+        warn("Remote update failed on sync, requesting resync");
+        return sendResync.call(_this, function() {
+          return setReady.call(_this, response.delta, response.version, true);
+        });
+      }
+    };
+  })(this), true);
 };
 
 sendUpdate = function() {
-  var callbacks, packet, updateTimeout,
-    _this = this;
+  var callbacks, packet, updateTimeout;
   packet = {
     delta: this.inFlight,
     version: this.version
   };
-  updateTimeout = setTimeout(function() {
-    warn('Update taking over 10s to respond');
-    return _this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, _this.health);
-  }, 10000);
+  updateTimeout = setTimeout((function(_this) {
+    return function() {
+      warn('Update taking over 10s to respond');
+      return _this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, _this.health);
+    };
+  })(this), 10000);
   callbacks = this.updateCallbacks;
   this.updateCallbacks = [];
-  return this.send(TandemFile.routes.UPDATE, packet, function(response) {
-    clearTimeout(updateTimeout);
-    if (_this.health !== TandemFile.health.HEALTHY) {
-      _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
-    }
-    if (response.resync) {
-      warn("Update requesting resync", _this.id, packet, response);
-      onResync.call(_this, response);
-      return sendUpdate.call(_this);
-    } else {
-      _this.version = response.version;
-      _this.arrived = _this.arrived.compose(_this.inFlight);
-      _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
-      _.each(callbacks, function(callback) {
-        return callback.call(_this, null, _this.arrived);
-      });
-      return _this.sendIfReady();
-    }
-  });
+  return this.send(TandemFile.routes.UPDATE, packet, (function(_this) {
+    return function(response) {
+      clearTimeout(updateTimeout);
+      if (_this.health !== TandemFile.health.HEALTHY) {
+        _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
+      }
+      if (response.resync) {
+        warn("Update requesting resync", _this.id, packet, response);
+        onResync.call(_this, response);
+        return sendUpdate.call(_this);
+      } else {
+        _this.version = response.version;
+        _this.arrived = _this.arrived.compose(_this.inFlight);
+        _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
+        _.each(callbacks, function(callback) {
+          return callback.call(_this, null, _this.arrived);
+        });
+        return _this.sendIfReady();
+      }
+    };
+  })(this));
 };
 
 setReady = function(delta, version, resend) {
@@ -7604,7 +7621,6 @@ TandemFile = (function(_super) {
   };
 
   TandemFile.prototype.send = function(route, packet, callback, priority) {
-    var _this = this;
     if (callback == null) {
       callback = null;
     }
@@ -7612,15 +7628,17 @@ TandemFile = (function(_super) {
       priority = false;
     }
     if (callback != null) {
-      return this.adapter.send(route, packet, function(response) {
-        if (response.error == null) {
-          if (callback != null) {
-            return callback(response);
+      return this.adapter.send(route, packet, (function(_this) {
+        return function(response) {
+          if (response.error == null) {
+            if (callback != null) {
+              return callback(response);
+            }
+          } else {
+            return _this.emit(TandemFile.events.ERROR, response.error);
           }
-        } else {
-          return _this.emit(TandemFile.events.ERROR, response.error);
-        }
-      }, priority);
+        };
+      })(this), priority);
     } else {
       return this.adapter.send(route, packet);
     }
@@ -7648,15 +7666,15 @@ TandemFile = (function(_super) {
 module.exports = TandemFile;
 
 
-},{"eventemitter2":false,"lodash":false,"tandem-core/delta":11}],16:[function(require,module,exports){
+},{"eventemitter2":false,"lodash":false,"tandem-core/delta":11}],16:[function(_dereq_,module,exports){
 var EventEmitter2, TandemNetworkAdapter, async,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __slice = [].slice;
 
-async = require('async');
+async = _dereq_('async');
 
-EventEmitter2 = require('eventemitter2');
+EventEmitter2 = _dereq_('eventemitter2');
 
 if (EventEmitter2.EventEmitter2 != null) {
   EventEmitter2 = EventEmitter2.EventEmitter2;
@@ -7703,25 +7721,30 @@ TandemNetworkAdapter = (function(_super) {
   };
 
   TandemNetworkAdapter.prototype.setReady = function() {
-    var _this = this;
     this.emit(TandemNetworkAdapter.events.READY);
-    return async.until(function() {
-      return _this.sendQueue.length === 0;
-    }, function(callback) {
-      var elem, packet, route, sendCallback;
-      elem = _this.sendQueue.shift();
-      route = elem[0], packet = elem[1], sendCallback = elem[2];
-      return _this._send(route, packet, function() {
-        var args;
-        args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        if (sendCallback != null) {
-          sendCallback.apply(_this, args);
-        }
-        return callback();
-      });
-    }, function(err) {
-      return _this.ready = true;
-    });
+    return async.until((function(_this) {
+      return function() {
+        return _this.sendQueue.length === 0;
+      };
+    })(this), (function(_this) {
+      return function(callback) {
+        var elem, packet, route, sendCallback;
+        elem = _this.sendQueue.shift();
+        route = elem[0], packet = elem[1], sendCallback = elem[2];
+        return _this._send(route, packet, function() {
+          var args;
+          args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+          if (sendCallback != null) {
+            sendCallback.apply(_this, args);
+          }
+          return callback();
+        });
+      };
+    })(this), (function(_this) {
+      return function(err) {
+        return _this.ready = true;
+      };
+    })(this));
   };
 
   TandemNetworkAdapter.prototype._send = function(route, packet, callback) {
@@ -7735,37 +7758,38 @@ TandemNetworkAdapter = (function(_super) {
 module.exports = TandemNetworkAdapter;
 
 
-},{"async":false,"eventemitter2":false}],17:[function(require,module,exports){
+},{"async":false,"eventemitter2":false}],17:[function(_dereq_,module,exports){
 var TandemAdapter, TandemSocketAdapter, authenticate, info, io, track, _,
   __slice = [].slice,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-_ = require('lodash');
+_ = _dereq_('lodash');
 
-io = require('socket.io-client');
+io = _dereq_('socket.io-client');
 
-TandemAdapter = require('./adapter');
+TandemAdapter = _dereq_('./adapter');
 
 authenticate = function() {
-  var authPacket,
-    _this = this;
+  var authPacket;
   authPacket = {
     auth: this.authObj,
     fileId: this.fileId,
     userId: this.userId
   };
   info.call(this, "Attempting auth to", this.fileId, authPacket);
-  return this.socket.emit('auth', authPacket, function(response) {
-    if (response.error == null) {
-      info.call(_this, "Connected!", response);
-      if (_this.ready === false) {
-        return _this.setReady();
+  return this.socket.emit('auth', authPacket, (function(_this) {
+    return function(response) {
+      if (response.error == null) {
+        info.call(_this, "Connected!", response);
+        if (_this.ready === false) {
+          return _this.setReady();
+        }
+      } else {
+        return _this.emit(TandemAdapter.events.ERROR, response.error);
       }
-    } else {
-      return _this.emit(TandemAdapter.events.ERROR, response.error);
-    }
-  });
+    };
+  })(this));
 };
 
 info = function() {
@@ -7832,8 +7856,7 @@ TandemSocketAdapter = (function(_super) {
   };
 
   function TandemSocketAdapter(endpointUrl, fileId, userId, authObj, options) {
-    var socketOptions, url,
-      _this = this;
+    var socketOptions, url;
     this.fileId = fileId;
     this.userId = userId;
     this.authObj = authObj;
@@ -7861,17 +7884,23 @@ TandemSocketAdapter = (function(_super) {
     }
     socketOptions['query'] = "fileId=" + this.fileId;
     this.socket = io.connect("" + url.protocol + "//" + url.hostname, socketOptions);
-    this.socket.on('reconnecting', function() {
-      _this.emit(TandemAdapter.events.RECONNECTING);
-      return _this.ready = false;
-    }).on('reconnect', function() {
-      _this.emit(TandemAdapter.events.RECONNECT);
-      if (_this.ready === false) {
-        return authenticate.call(_this);
-      }
-    }).on('disconnect', function() {
-      return _this.emit(TandemAdapter.events.DISCONNECT);
-    });
+    this.socket.on('reconnecting', (function(_this) {
+      return function() {
+        _this.emit(TandemAdapter.events.RECONNECTING);
+        return _this.ready = false;
+      };
+    })(this)).on('reconnect', (function(_this) {
+      return function() {
+        _this.emit(TandemAdapter.events.RECONNECT);
+        if (_this.ready === false) {
+          return authenticate.call(_this);
+        }
+      };
+    })(this)).on('disconnect', (function(_this) {
+      return function() {
+        return _this.emit(TandemAdapter.events.DISCONNECT);
+      };
+    })(this));
     authenticate.call(this);
   }
 
@@ -7882,15 +7911,16 @@ TandemSocketAdapter = (function(_super) {
   };
 
   TandemSocketAdapter.prototype.listen = function(route, callback) {
-    var onSocketCallback,
-      _this = this;
-    onSocketCallback = function(packet) {
-      info.call(_this, "Got", route, packet);
-      track.call(_this, TandemSocketAdapter.RECIEVE, route, packet);
-      if (callback != null) {
-        return callback.call(_this, packet);
-      }
-    };
+    var onSocketCallback;
+    onSocketCallback = (function(_this) {
+      return function(packet) {
+        info.call(_this, "Got", route, packet);
+        track.call(_this, TandemSocketAdapter.RECIEVE, route, packet);
+        if (callback != null) {
+          return callback.call(_this, packet);
+        }
+      };
+    })(this);
     if (this.socketListeners[route] != null) {
       this.socket.removeListener(route, onSocketCallback);
     }
@@ -7900,19 +7930,20 @@ TandemSocketAdapter = (function(_super) {
   };
 
   TandemSocketAdapter.prototype._send = function(route, packet, callback) {
-    var _this = this;
     track.call(this, TandemSocketAdapter.SEND, route, packet);
-    return setTimeout(function() {
-      if (callback != null) {
-        return _this.socket.emit(route, packet, function(response) {
-          track.call(_this, TandemSocketAdapter.CALLBACK, route, response);
-          info.call(_this, 'Callback:', response);
-          return callback.call(_this, response);
-        });
-      } else {
-        return _this.socket.emit(route, packet);
-      }
-    }, this.settings.latency);
+    return setTimeout((function(_this) {
+      return function() {
+        if (callback != null) {
+          return _this.socket.emit(route, packet, function(response) {
+            track.call(_this, TandemSocketAdapter.CALLBACK, route, response);
+            info.call(_this, 'Callback:', response);
+            return callback.call(_this, response);
+          });
+        } else {
+          return _this.socket.emit(route, packet);
+        }
+      };
+    })(this), this.settings.latency);
   };
 
   return TandemSocketAdapter;
@@ -7922,14 +7953,14 @@ TandemSocketAdapter = (function(_super) {
 module.exports = TandemSocketAdapter;
 
 
-},{"./adapter":16,"lodash":false,"socket.io-client":3}],18:[function(require,module,exports){
+},{"./adapter":16,"lodash":false,"socket.io-client":3}],18:[function(_dereq_,module,exports){
 var TandemAdapter, TandemClient, TandemFile, _;
 
-_ = require('lodash');
+_ = _dereq_('lodash');
 
-TandemFile = require('./file');
+TandemFile = _dereq_('./file');
 
-TandemAdapter = require('./network/adapter');
+TandemAdapter = _dereq_('./network/adapter');
 
 TandemClient = (function() {
   TandemClient.DEFAULTS = {
@@ -7962,4 +7993,3 @@ module.exports = TandemClient;
 },{"./file":15,"./network/adapter":16,"lodash":false}]},{},[2])
 (2)
 });
-;
