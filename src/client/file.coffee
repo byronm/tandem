@@ -55,7 +55,10 @@ sendResync = (callback) ->
 
 sendSync = (callback) ->
   this.send(TandemFile.routes.SYNC, { version: @version }, (response) =>
-    callback(response.error, this) if _.isFunction(callback)
+    if _.isFunction(callback)
+      callback(response.error, this)
+      # Callback is defined only when we sendSync from the constructor
+      this.emit(TandemFile.events.OPEN, response.error, this)
     return if response.error?
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     if response.resync
@@ -121,6 +124,7 @@ class TandemFile extends EventEmitter2
   @events:
     ERROR   : 'file-error'
     HEALTH  : 'file-health'
+    OPEN    : 'file-open'
     READY   : 'file-ready'
     UPDATE  : 'file-update'
 
