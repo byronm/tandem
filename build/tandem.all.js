@@ -1,10 +1,12 @@
-/*! Tandem Realtime Coauthoring Engine - v0.12.10 - 2014-03-18
+/*! Tandem Realtime Coauthoring Engine - v0.13.0 - 2014-03-20
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
  *  Byron Milligan, Salesforce.com
  */
 
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"N9Ybct":[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"async":[function(_dereq_,module,exports){
+module.exports=_dereq_('N9Ybct');
+},{}],"N9Ybct":[function(_dereq_,module,exports){
 (function (process){
 /*global setImmediate: false, setTimeout: false, console: false */
 (function () {
@@ -966,9 +968,7 @@
 }());
 
 }).call(this,_dereq_("/Users/jason.chen/Dropbox/jetcode/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"/Users/jason.chen/Dropbox/jetcode/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":11}],"async":[function(_dereq_,module,exports){
-module.exports=_dereq_('N9Ybct');
-},{}],"NXkH85":[function(_dereq_,module,exports){
+},{"/Users/jason.chen/Dropbox/jetcode/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":11}],"NXkH85":[function(_dereq_,module,exports){
 (function (process){
 ;!function(exports, undefined) {
 
@@ -1535,8 +1535,6 @@ module.exports=_dereq_('N9Ybct');
 }).call(this,_dereq_("/Users/jason.chen/Dropbox/jetcode/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
 },{"/Users/jason.chen/Dropbox/jetcode/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":11}],"eventemitter2":[function(_dereq_,module,exports){
 module.exports=_dereq_('NXkH85');
-},{}],"lodash":[function(_dereq_,module,exports){
-module.exports=_dereq_('uXtNMH');
 },{}],"uXtNMH":[function(_dereq_,module,exports){
 (function (global){
 /**
@@ -8326,6 +8324,10 @@ module.exports=_dereq_('uXtNMH');
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],"lodash":[function(_dereq_,module,exports){
+module.exports=_dereq_('uXtNMH');
+},{}],"socket.io-client":[function(_dereq_,module,exports){
+module.exports=_dereq_('An1XJG');
 },{}],"An1XJG":[function(_dereq_,module,exports){
 /*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
@@ -12200,8 +12202,6 @@ if (typeof define === "function" && define.amd) {
   define([], function () { return io; });
 }
 })();
-},{}],"socket.io-client":[function(_dereq_,module,exports){
-module.exports=_dereq_('An1XJG');
 },{}],9:[function(_dereq_,module,exports){
 Tandem         = _dereq_('tandem-core');
 Tandem.Client  = _dereq_('./src/client/tandem');
@@ -15750,19 +15750,6 @@ if (EventEmitter2.EventEmitter2 != null) {
   EventEmitter2 = EventEmitter2.EventEmitter2;
 }
 
-warn = function() {
-  var args;
-  args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-  if ((typeof console !== "undefined" && console !== null ? console.warn : void 0) == null) {
-    return;
-  }
-  if (_.isFunction(console.warn.apply)) {
-    return console.warn.apply(console, args);
-  } else {
-    return console.warn(args);
-  }
-};
-
 initAdapterListeners = function() {
   return this.adapter.listen(TandemFile.routes.UPDATE, (function(_this) {
     return function(packet) {
@@ -15781,12 +15768,7 @@ initAdapterListeners = function() {
 };
 
 initHealthListeners = function() {
-  this.adapter.on(this.adapter.constructor.events.READY, (function(_this) {
-    return function() {
-      _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
-      return sendSync.call(_this);
-    };
-  })(this)).on(this.adapter.constructor.events.RECONNECT, (function(_this) {
+  this.adapter.on(this.adapter.constructor.events.RECONNECT, (function(_this) {
     return function(transport, attempts) {
       return sendSync.call(_this);
     };
@@ -15847,11 +15829,18 @@ sendResync = function(callback) {
   })(this));
 };
 
-sendSync = function() {
+sendSync = function(callback) {
   return this.send(TandemFile.routes.SYNC, {
     version: this.version
   }, (function(_this) {
     return function(response) {
+      if (_.isFunction(callback)) {
+        callback(response.error, _this);
+        _this.emit(TandemFile.events.OPEN, response.error, _this);
+      }
+      if (response.error != null) {
+        return;
+      }
       _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
       if (response.resync) {
         _this.ready = false;
@@ -15886,6 +15875,13 @@ sendUpdate = function() {
   return this.send(TandemFile.routes.UPDATE, packet, (function(_this) {
     return function(response) {
       clearTimeout(updateTimeout);
+      if (response.error) {
+        _.each(callbacks, function(callback) {
+          return callback.call(_this, response.error);
+        });
+        _this.sendIfReady();
+        return;
+      }
       if (_this.health !== TandemFile.health.HEALTHY) {
         _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
       }
@@ -15917,12 +15913,26 @@ setReady = function(delta, version, resend) {
   return this.emit(TandemFile.events.READY, delta, version);
 };
 
+warn = function() {
+  var args;
+  args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+  if ((typeof console !== "undefined" && console !== null ? console.warn : void 0) == null) {
+    return;
+  }
+  if (_.isFunction(console.warn.apply)) {
+    return console.warn.apply(console, args);
+  } else {
+    return console.warn(args);
+  }
+};
+
 TandemFile = (function(_super) {
   __extends(TandemFile, _super);
 
   TandemFile.events = {
     ERROR: 'file-error',
     HEALTH: 'file-health',
+    OPEN: 'file-open',
     READY: 'file-ready',
     UPDATE: 'file-update'
   };
@@ -15940,9 +15950,13 @@ TandemFile = (function(_super) {
     UPDATE: 'ot/update'
   };
 
-  function TandemFile(fileId, adapter, initial) {
+  function TandemFile(fileId, adapter, initial, callback) {
     this.fileId = fileId;
     this.adapter = adapter;
+    if ((callback == null) && _.isFunction(initial)) {
+      callback = initial;
+      initial = {};
+    }
     if (initial == null) {
       initial = {};
     }
@@ -15956,7 +15970,14 @@ TandemFile = (function(_super) {
     this.updateCallbacks = [];
     if (this.adapter.ready) {
       this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, this.health);
-      sendSync.call(this);
+      sendSync.call(this, callback);
+    } else {
+      this.adapter.once(this.adapter.constructor.events.READY, (function(_this) {
+        return function() {
+          _this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, _this.health);
+          return sendSync.call(_this, callback);
+        };
+      })(this));
     }
     initListeners.call(this);
   }
@@ -16011,21 +16032,16 @@ TandemFile = (function(_super) {
     if (priority == null) {
       priority = false;
     }
-    if (callback != null) {
-      return this.adapter.send(route, packet, (function(_this) {
-        return function(response) {
-          if (response.error == null) {
-            if (callback != null) {
-              return callback(response);
-            }
-          } else {
-            return _this.emit(TandemFile.events.ERROR, response.error);
-          }
-        };
-      })(this), priority);
-    } else {
-      return this.adapter.send(route, packet);
-    }
+    return this.adapter.queue(route, packet, (function(_this) {
+      return function(response) {
+        if (response.error != null) {
+          _this.emit(TandemFile.events.ERROR, response.error);
+        }
+        if (callback != null) {
+          return callback(response);
+        }
+      };
+    })(this), priority);
   };
 
   TandemFile.prototype.sendIfReady = function(callback) {
@@ -16089,12 +16105,12 @@ TandemNetworkAdapter = (function(_super) {
     return this;
   };
 
-  TandemNetworkAdapter.prototype.send = function(route, packet, callback, priority) {
+  TandemNetworkAdapter.prototype.queue = function(route, packet, callback, priority) {
     if (priority == null) {
       priority = false;
     }
     if (this.ready) {
-      return this._send(route, packet, callback, priority);
+      return this.send(route, packet, callback, priority);
     } else {
       if (priority) {
         return this.sendQueue.unshift([route, packet, callback]);
@@ -16102,6 +16118,10 @@ TandemNetworkAdapter = (function(_super) {
         return this.sendQueue.push([route, packet, callback]);
       }
     }
+  };
+
+  TandemNetworkAdapter.prototype.send = function(route, packet, callback) {
+    return console.warn("Should be overwritten by descendant");
   };
 
   TandemNetworkAdapter.prototype.setReady = function() {
@@ -16115,7 +16135,7 @@ TandemNetworkAdapter = (function(_super) {
         var elem, packet, route, sendCallback;
         elem = _this.sendQueue.shift();
         route = elem[0], packet = elem[1], sendCallback = elem[2];
-        return _this._send(route, packet, function() {
+        return _this.send(route, packet, function() {
           var args;
           args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
           if (sendCallback != null) {
@@ -16129,10 +16149,6 @@ TandemNetworkAdapter = (function(_super) {
         return _this.ready = true;
       };
     })(this));
-  };
-
-  TandemNetworkAdapter.prototype._send = function(route, packet, callback) {
-    return console.warn("Should be overwritten by descendant");
   };
 
   return TandemNetworkAdapter;
@@ -16313,7 +16329,7 @@ TandemSocketAdapter = (function(_super) {
     return this;
   };
 
-  TandemSocketAdapter.prototype._send = function(route, packet, callback) {
+  TandemSocketAdapter.prototype.send = function(route, packet, callback) {
     track.call(this, TandemSocketAdapter.SEND, route, packet);
     return setTimeout((function(_this) {
       return function() {
@@ -16362,9 +16378,9 @@ TandemClient = (function() {
     }
   }
 
-  TandemClient.prototype.open = function(fileId, authObj, initial) {
+  TandemClient.prototype.open = function(fileId, authObj, initial, callback) {
     this.adapter = _.isFunction(this.settings.network) ? new this.settings.network(this.endpointUrl, fileId, this.settings.userId, authObj, this.options) : this.settings.network;
-    return new TandemFile(fileId, this.adapter, initial);
+    return new TandemFile(fileId, this.adapter, initial, callback);
   };
 
   return TandemClient;

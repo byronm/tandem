@@ -1,6 +1,6 @@
 {
   "name": "tandem",
-  "version": "0.12.10",
+  "version": "0.13.0",
   "dependencies": {
     "async"         : "0.2.x",
     "commander"     : "2.1.x",
