@@ -13,9 +13,9 @@ class TandemClient
     @settings = _.extend({}, TandemClient.DEFAULTS, options)
     @settings.userId = 'anonymous-' + _.random(1000000) unless @settings.userId?
 
-  open: (fileId, authObj, initial) ->
+  open: (fileId, authObj, initial, callback) ->
     @adapter = if _.isFunction(@settings.network) then new @settings.network(@endpointUrl, fileId, @settings.userId, authObj, @options) else @settings.network
-    return new TandemFile(fileId, @adapter, initial)
+    return new TandemFile(fileId, @adapter, initial, callback)
 
 
 module.exports = TandemClient

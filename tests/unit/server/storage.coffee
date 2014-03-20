@@ -22,6 +22,7 @@ describe('Server Storage', ->
           switch fileId
             when 'basic-auth-file' then callback(null, helloDelta, 10)
             when 'close-file' then callback(null, helloDelta, 10)
+            when 'error-file' then callback('Error file')
             else callback('File not found')
         update: (fileId, head, version, deltas, callback) ->
           eventEmitter.emit('update', head, version, deltas)
@@ -68,16 +69,25 @@ describe('Server Storage', ->
     file = client.open('basic-auth-file-none', { secret: 1337 })
     async.parallel({
       client: (callback) =>
-        file.on(TandemClient.File.events.ERROR, (message) ->
-          expect(message).to.equal("File not found")
+        file.on(TandemClient.File.events.ERROR, (err) ->
+          expect(err).to.equal("File not found")
           callback(null)
         )
       server: (callback) =>
         server.on(TandemServer.Server.events.ERROR, (err) ->
           expect(err).to.equal('File not found')
+          server.removeAllListeners(TandemServer.Server.events.ERROR)
           callback(null)
         )
     }, (err) =>
+      file.close()
+      done()
+    )
+  )
+
+  it('should pass open errors to callback', (done) ->
+    client.open('error-file', { secret: 1337 }, (err, file) ->
+      expect(err).to.equal('Error file')
       file.close()
       done()
     )

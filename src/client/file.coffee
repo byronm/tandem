@@ -6,13 +6,6 @@ Delta = require('tandem-core/delta')
 if EventEmitter2.EventEmitter2?
   EventEmitter2 = EventEmitter2.EventEmitter2
 
-warn = (args...) ->
-  return unless console?.warn?
-  if _.isFunction(console.warn.apply)
-    console.warn(args...)
-  else
-    console.warn(args)
-
 initAdapterListeners = ->
   @adapter.listen(TandemFile.routes.UPDATE, (packet) =>
     return unless @ready
@@ -23,10 +16,7 @@ initAdapterListeners = ->
   )
 
 initHealthListeners = ->
-  @adapter.on(@adapter.constructor.events.READY, =>
-    this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
-    sendSync.call(this)
-  ).on(@adapter.constructor.events.RECONNECT, (transport, attempts) =>
+  @adapter.on(@adapter.constructor.events.RECONNECT, (transport, attempts) =>
     sendSync.call(this)
   ).on(@adapter.constructor.events.RECONNECTING, (timeout, attempts) =>
     this.emit(TandemFile.events.HEALTH, TandemFile.health.ERROR, @health) if attempts == 1
@@ -63,8 +53,10 @@ sendResync = (callback) ->
     callback() if callback?
   )
 
-sendSync = ->
+sendSync = (callback) ->
   this.send(TandemFile.routes.SYNC, { version: @version }, (response) =>
+    callback(response.error, this) if _.isFunction(callback)
+    return if response.error?
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
     if response.resync
       @ready = false
@@ -89,6 +81,12 @@ sendUpdate = ->
   @updateCallbacks = []
   this.send(TandemFile.routes.UPDATE, packet, (response) =>
     clearTimeout(updateTimeout)
+    if response.error
+      _.each(callbacks, (callback) =>
+        callback.call(this, response.error)
+      )
+      this.sendIfReady()
+      return
     this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health) unless @health == TandemFile.health.HEALTHY
     if response.resync
       warn("Update requesting resync", @id, packet, response)
@@ -111,6 +109,13 @@ setReady = (delta, version, resend = false) ->
   sendUpdate.call(this) if resend and !@inFlight.isIdentity()
   this.emit(TandemFile.events.READY, delta, version)
 
+warn = (args...) ->
+  return unless console?.warn?
+  if _.isFunction(console.warn.apply)
+    console.warn(args...)
+  else
+    console.warn(args)
+
 
 class TandemFile extends EventEmitter2
   @events:
@@ -130,7 +135,11 @@ class TandemFile extends EventEmitter2
     SYNC      : 'ot/sync'
     UPDATE    : 'ot/update'
 
-  constructor: (@fileId, @adapter, initial = {}) ->
+  constructor: (@fileId, @adapter, initial, callback) ->
+    if !callback? and _.isFunction(initial)
+      callback = initial
+      initial = {}
+    initial ?= {}
     @id = _.uniqueId('file-')
     @health = TandemFile.health.WARNING
     @ready = false
@@ -141,7 +150,12 @@ class TandemFile extends EventEmitter2
     @updateCallbacks = []
     if @adapter.ready
       this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
-      sendSync.call(this)
+      sendSync.call(this, callback)
+    else
+      @adapter.once(@adapter.constructor.events.READY, =>
+        this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
+        sendSync.call(this, callback)
+      )
     initListeners.call(this)
 
   broadcast: (type, packet, callback) ->
@@ -179,15 +193,10 @@ class TandemFile extends EventEmitter2
       sendResync.call(this)
 
   send: (route, packet, callback = null, priority = false) ->
-    if callback?
-      @adapter.queue(route, packet, (response) =>
-        unless response.error?
-          callback(response) if callback?
-        else
-          this.emit(TandemFile.events.ERROR, response.error)
-      , priority)
-    else
-      @adapter.queue(route, packet)
+    @adapter.queue(route, packet, (response) =>
+      if response.error? then this.emit(TandemFile.events.ERROR, response.error)
+      callback(response) if callback?
+    , priority)
 
   sendIfReady: (callback) ->   # Exposed for fuzzer
     @updateCallbacks.push(callback) if callback?
