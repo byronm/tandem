@@ -1,5 +1,5 @@
 Tandem = require('./browser.bare')
-TandemSocket = require('./src/client/network/socket')
+TandemSocket = require('./build/client/network/socket')
 
 Tandem.Network.Socket = TandemSocket
 Tandem.Client.DEFAULTS.network = TandemSocket

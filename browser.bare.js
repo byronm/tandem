@@ -1,8 +1,8 @@
 Tandem         = require('tandem-core');
-Tandem.Client  = require('./src/client/tandem');
-Tandem.File    = require('./src/client/file');
+Tandem.Client  = require('./build/client/tandem');
+Tandem.File    = require('./build/client/file');
 Tandem.Network = {
-  Adapter: require('./src/client/network/adapter')
+  Adapter: require('./build/client/network/adapter')
 };
 
 module.exports = Tandem

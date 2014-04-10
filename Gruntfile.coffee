@@ -19,19 +19,10 @@ module.exports = (grunt) ->
         cwd: 'src/'
         expand: true
         dest: 'build/'
-        src: ['server/**/*.coffee']
+        src: ['**/*.coffee']
         ext: '.js'
 
-    browserify: 
-      options:
-        extensions: ['.js', '.coffee']
-        transform: ['coffeeify']
-        # Browserify for some reason passes in false into a (which is really require minified)
-        # This breaks require.js's (at least the almond implementation) attempt to be 
-        # compatible with commonjs
-        postBundleCB: (err, src, next) ->
-          src = src.replace('a(o,!0);', 'a(o);')
-          next(err, src)
+    browserify:
       standard:
         options:
           external: ['async', 'eventemitter2', 'lodash']
@@ -55,11 +46,11 @@ module.exports = (grunt) ->
 
     concat:
       options:
-        banner: 
+        banner:
           '/*! Tandem Realtime Coauthoring Engine - v<%= meta.version %> - <%= grunt.template.today("yyyy-mm-dd") %>\n' +
           ' *  Copyright (c) <%= grunt.template.today("yyyy") %>\n' +
           ' *  Jason Chen, Salesforce.com\n' +
-          ' *  Byron Milligan, Salesforce.com\n' + 
+          ' *  Byron Milligan, Salesforce.com\n' +
           ' */\n\n'
       'build/tandem.all.js': ['build/tandem.all.js']
       'build/tandem.bare.js': ['build/tandem.bare.js']
