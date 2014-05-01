@@ -16,7 +16,7 @@ class CustomAdapter extends TandemClient.Network.Socket
 
 describe('Client File', ->
   httpServer = server = client = null
-  
+
   before( ->
     httpServer = http.createServer()
     httpServer.listen(9090)
@@ -52,6 +52,18 @@ describe('Client File', ->
     file.update(TandemClient.Delta.makeInsertDelta(0, 0, "a"), (err) ->
       expect(err).to.equal('Custom file error')
       done()
+    )
+  )
+
+  it('sending invalid delta to server should trigger a resync',  (done) ->
+    file = client.open('update-resync-test')
+    file.update(TandemClient.Delta.makeInsertDelta(0, 0, "ab"), (err) ->
+      file.arrived = TandemClient.Delta.makeInsertDelta(0, 0, "a")
+      file.inLine = TandemClient.Delta.getIdentity(1)
+      file.update(TandemClient.Delta.makeInsertDelta(1, 1, "c"), (err) ->
+        expect(file.version).to.equal(2)
+        done()
+      )
     )
   )
 )

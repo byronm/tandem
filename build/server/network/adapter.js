@@ -64,14 +64,18 @@
                 return resyncHandler(err, file, callback);
               }
               return file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), function(err, delta, version) {
-                return callback(err, {
-                  fileId: fileId,
-                  version: version
-                }, {
-                  delta: delta,
-                  fileId: fileId,
-                  version: version
-                });
+                if (err != null) {
+                  return resyncHandler(err, file, callback);
+                } else {
+                  return callback(null, {
+                    fileId: fileId,
+                    version: version
+                  }, {
+                    delta: delta,
+                    fileId: fileId,
+                    version: version
+                  });
+                }
               });
             default:
               return callback(new Error('Unexpected network route'));

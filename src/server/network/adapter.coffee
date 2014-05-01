@@ -45,14 +45,20 @@ class TandemNetworkAdapter
         when TandemNetworkAdapter.routes.UPDATE
           return resyncHandler(err, file, callback) if err?
           file.update(Tandem.Delta.makeDelta(packet.delta), parseInt(packet.version), (err, delta, version) =>
-            callback(err, {
-              fileId  : fileId
-              version : version
-            }, {
-              delta   : delta
-              fileId  : fileId
-              version : version
-            })
+            if err?
+              # XXX: Is resync the proper way to handle all err cases from
+              # file#update? For example, file#transform could return with 'No
+              # version in history'
+              resyncHandler(err, file, callback)
+            else
+              callback(null, {
+                fileId  : fileId
+                version : version
+              }, {
+                delta   : delta
+                fileId  : fileId
+                version : version
+              })
           )
         else
           callback(new Error('Unexpected network route'))
