@@ -1,7 +1,7 @@
 {
   "name": "tandem",
   "main": "build/tandem.all.js",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "homepage": "https://github.com/tandem/tandem",
   "dependencies": {
     "async"             : "0.2.x",

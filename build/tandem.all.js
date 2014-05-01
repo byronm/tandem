@@ -1,10 +1,12 @@
-/*! Tandem Realtime Coauthoring Engine - v0.13.1 - 2014-05-01
+/*! Tandem Realtime Coauthoring Engine - v0.13.2 - 2014-05-01
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
  *  Byron Milligan, Salesforce.com
  */
 
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"N9Ybct":[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Tandem=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"async":[function(_dereq_,module,exports){
+module.exports=_dereq_('N9Ybct');
+},{}],"N9Ybct":[function(_dereq_,module,exports){
 (function (process){
 /*global setImmediate: false, setTimeout: false, console: false */
 (function () {
@@ -966,9 +968,7 @@
 }());
 
 }).call(this,_dereq_("/Users/bmilligan/Documents/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
-},{"/Users/bmilligan/Documents/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":15}],"async":[function(_dereq_,module,exports){
-module.exports=_dereq_('N9Ybct');
-},{}],"NXkH85":[function(_dereq_,module,exports){
+},{"/Users/bmilligan/Documents/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":15}],"NXkH85":[function(_dereq_,module,exports){
 (function (process){
 ;!function(exports, undefined) {
 
@@ -1535,6 +1535,8 @@ module.exports=_dereq_('N9Ybct');
 }).call(this,_dereq_("/Users/bmilligan/Documents/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
 },{"/Users/bmilligan/Documents/tandem/node_modules/grunt-browserify/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":15}],"eventemitter2":[function(_dereq_,module,exports){
 module.exports=_dereq_('NXkH85');
+},{}],"lodash":[function(_dereq_,module,exports){
+module.exports=_dereq_('uXtNMH');
 },{}],"uXtNMH":[function(_dereq_,module,exports){
 (function (global){
 /**
@@ -8324,8 +8326,8 @@ module.exports=_dereq_('NXkH85');
 }.call(this));
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],"lodash":[function(_dereq_,module,exports){
-module.exports=_dereq_('uXtNMH');
+},{}],"socket.io-client":[function(_dereq_,module,exports){
+module.exports=_dereq_('An1XJG');
 },{}],"An1XJG":[function(_dereq_,module,exports){
 /*! Socket.IO.js build:0.9.16, development. Copyright(c) 2011 LearnBoost <dev@learnboost.com> MIT Licensed */
 
@@ -12200,8 +12202,6 @@ if (typeof define === "function" && define.amd) {
   define([], function () { return io; });
 }
 })();
-},{}],"socket.io-client":[function(_dereq_,module,exports){
-module.exports=_dereq_('An1XJG');
 },{}],9:[function(_dereq_,module,exports){
 Tandem         = _dereq_('tandem-core');
 Tandem.Client  = _dereq_('./build/client/tandem');
