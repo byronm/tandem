@@ -1,4 +1,4 @@
-/*! Tandem Realtime Coauthoring Engine - v0.13.1 - 2014-04-10
+/*! Tandem Realtime Coauthoring Engine - v0.13.1 - 2014-05-01
  *  Copyright (c) 2014
  *  Jason Chen, Salesforce.com
  *  Byron Milligan, Salesforce.com
@@ -149,7 +149,7 @@ module.exports = Tandem
   };
 
   sendUpdate = function() {
-    var callbacks, packet, updateTimeout;
+    var packet, updateTimeout;
     packet = {
       delta: this.inFlight,
       version: this.version
@@ -160,13 +160,11 @@ module.exports = Tandem
         return _this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, _this.health);
       };
     })(this), 10000);
-    callbacks = this.updateCallbacks;
-    this.updateCallbacks = [];
     return this.send(TandemFile.routes.UPDATE, packet, (function(_this) {
       return function(response) {
         clearTimeout(updateTimeout);
         if (response.error) {
-          _.each(callbacks, function(callback) {
+          _.each(_this.updateCallbacks.inFlight, function(callback) {
             return callback.call(_this, response.error);
           });
           _this.sendIfReady();
@@ -183,7 +181,7 @@ module.exports = Tandem
           _this.version = response.version;
           _this.arrived = _this.arrived.compose(_this.inFlight);
           _this.inFlight = Delta.getIdentity(_this.arrived.endLength);
-          _.each(callbacks, function(callback) {
+          _.each(_this.updateCallbacks.inFlight, function(callback) {
             return callback.call(_this, null, _this.arrived);
           });
           return _this.sendIfReady();
@@ -257,7 +255,10 @@ module.exports = Tandem
       this.arrived = initial.head || Delta.getInitial('');
       this.inFlight = Delta.getIdentity(this.arrived.endLength);
       this.inLine = Delta.getIdentity(this.arrived.endLength);
-      this.updateCallbacks = [];
+      this.updateCallbacks = {
+        inFlight: [],
+        inLine: []
+      };
       if (this.adapter.ready) {
         this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, this.health);
         sendSync.call(this, callback);
@@ -336,11 +337,13 @@ module.exports = Tandem
 
     TandemFile.prototype.sendIfReady = function(callback) {
       if (callback != null) {
-        this.updateCallbacks.push(callback);
+        this.updateCallbacks.inLine.push(callback);
       }
       if (this.inFlight.isIdentity() && !this.inLine.isIdentity()) {
         this.inFlight = this.inLine;
         this.inLine = Delta.getIdentity(this.inFlight.endLength);
+        this.updateCallbacks.inFlight = this.updateCallbacks.inLine;
+        this.updateCallbacks.inLine = [];
         sendUpdate.call(this);
         return true;
       }

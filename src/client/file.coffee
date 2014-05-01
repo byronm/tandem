@@ -80,12 +80,10 @@ sendUpdate = ->
     warn('Update taking over 10s to respond')
     this.emit(TandemFile.events.HEALTH, TandemFile.health.WARNING, @health)
   , 10000)
-  callbacks = @updateCallbacks
-  @updateCallbacks = []
   this.send(TandemFile.routes.UPDATE, packet, (response) =>
     clearTimeout(updateTimeout)
     if response.error
-      _.each(callbacks, (callback) =>
+      _.each(@updateCallbacks.inFlight, (callback) =>
         callback.call(this, response.error)
       )
       this.sendIfReady()
@@ -99,7 +97,7 @@ sendUpdate = ->
       @version = response.version
       @arrived = @arrived.compose(@inFlight)
       @inFlight = Delta.getIdentity(@arrived.endLength)
-      _.each(callbacks, (callback) =>
+      _.each(@updateCallbacks.inFlight, (callback) =>
         callback.call(this, null, @arrived)
       )
       this.sendIfReady()
@@ -107,7 +105,7 @@ sendUpdate = ->
 
 setReady = (delta, version, resend = false) ->
   @ready = true
-  # May need to resend before emitting ready since listeners on ready might immediately 
+  # May need to resend before emitting ready since listeners on ready might immediately
   # send an update and thus if send is after it will duplicate the packet
   sendUpdate.call(this) if resend and !@inFlight.isIdentity()
   this.emit(TandemFile.events.READY, delta, version)
@@ -151,7 +149,10 @@ class TandemFile extends EventEmitter2
     @arrived = initial.head or Delta.getInitial('')
     @inFlight = Delta.getIdentity(@arrived.endLength)
     @inLine = Delta.getIdentity(@arrived.endLength)
-    @updateCallbacks = []
+    @updateCallbacks =
+      inFlight: []
+      inLine: []
+
     if @adapter.ready
       this.emit(TandemFile.events.HEALTH, TandemFile.health.HEALTHY, @health)
       sendSync.call(this, callback)
@@ -203,10 +204,12 @@ class TandemFile extends EventEmitter2
     , priority)
 
   sendIfReady: (callback) ->   # Exposed for fuzzer
-    @updateCallbacks.push(callback) if callback?
+    @updateCallbacks.inLine.push(callback) if callback?
     if @inFlight.isIdentity() and !@inLine.isIdentity()
       @inFlight = @inLine
       @inLine = Delta.getIdentity(@inFlight.endLength)
+      @updateCallbacks.inFlight = @updateCallbacks.inLine
+      @updateCallbacks.inLine = []
       sendUpdate.call(this)
       return true
     return false
